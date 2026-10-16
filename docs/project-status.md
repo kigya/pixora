@@ -10,7 +10,7 @@
 
 ## Интеграция
 
-Публичный репозиторий kigya/pixora. PR1–12 merged в release/0.8.0, включая iOS/shared engine и splash1500. Main пока bootstrap7ad1c20. Итоговый PR13 остаётся draft до стабильных автоматических проверок. Текущая task-ветка test/08-automatic-acceptance содержит новые проверки/исправления; её PR в release создаётся после независимого review. Затем один итоговый squash в main и проверка CI на фактическом SHA. CI только main push.
+Публичный репозиторий kigya/pixora. PR1–12 merged в release/0.8.0, включая iOS/shared engine и splash1500. Дополнительная автоматическая приёмка и исправления проходят task PR14 (fix/08-automatic-acceptance), source re-review завершено без оставшихся blockers. Итоговый PR13 предназначен для единственного squash в main и CI на фактическом SHA; текущее состояние merge/checks —в GitHub PR13 и Actions. CI только main push. Сохранённый bootstrap7ad1c20 не является продуктовым выпуском.
 
 ## Свежие автоматические результаты
 
