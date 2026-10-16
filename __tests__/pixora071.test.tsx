@@ -107,8 +107,8 @@ test.each([
 
 test('notice records measured height once for the collapse animation', async () => {
   Native.getTelemetrySettings.mockResolvedValueOnce({
-    analytics: false,
-    crashes: false,
+    analytics: true,
+    crashes: true,
     noticeSeen: false,
     consentVersion: 0,
   });
@@ -117,6 +117,7 @@ test('notice records measured height once for the collapse animation', async () 
       <TelemetryNotice />
     </AppProvider>,
   );
+  expect(screen.queryByRole('switch')).toBeNull();
   let node = (await screen.findByText(strings.en.telemetryIntro)).parent!;
   while (!node.props.onLayout) node = node.parent!;
   await act(() =>

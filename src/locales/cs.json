@@ -231,7 +231,7 @@
   "profilesUnavailable": "Režimy zpracování jsou dočasně nedostupné. Poslední výsledek můžete stále uložit.",
   "profileChanged": "Vybraný režim není dostupný. Byl vybrán jiný.",
   "telemetryTitle": "Pomozte zlepšit Pixora",
-  "telemetryIntro": "Fotografie se zpracovávají v telefonu. Aplikace odesílá informace o používání a chybách, abychom ji mohli zlepšovat.",
+  "telemetryIntro": "Fotky zůstávají ve vašem telefonu. Analytika používání a hlášení chyb jsou ve výchozím nastavení zapnuté, aby nám pomohly aplikaci zlepšovat. Každou možnost můžete v Nastavení vypnout samostatně.",
   "analyticsTitle": "Analýza používání",
   "analyticsBody": "Informace o používaných funkcích. Bez fotografií a textu zpětné vazby.",
   "crashesTitle": "Hlášení chyb",

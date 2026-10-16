@@ -231,7 +231,7 @@
   "profilesUnavailable": "Tryby przetwarzania są chwilowo niedostępne. Nadal możesz zapisać ostatni wynik.",
   "profileChanged": "Wybrany tryb jest niedostępny. Wybrano inny.",
   "telemetryTitle": "Pomóż ulepszyć Pixora",
-  "telemetryIntro": "Zdjęcia są przetwarzane na telefonie. Aplikacja wysyła informacje o użyciu i błędach, abyśmy mogli ją ulepszać.",
+  "telemetryIntro": "Twoje zdjęcia pozostają w telefonie. Analityka użycia i raporty o błędach są domyślnie włączone, aby pomóc nam ulepszać aplikację. Każdą opcję możesz wyłączyć osobno w Ustawieniach.",
   "analyticsTitle": "Analiza użycia",
   "analyticsBody": "Informacje o używanych funkcjach. Bez zdjęć i treści opinii.",
   "crashesTitle": "Raporty błędów",

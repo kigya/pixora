@@ -231,7 +231,7 @@
   "profilesUnavailable": "Mode pemrosesan sedang tidak tersedia. Anda masih dapat menyimpan hasil terakhir.",
   "profileChanged": "Mode yang dipilih tidak tersedia. Mode lain telah dipilih.",
   "telemetryTitle": "Bantu tingkatkan Pixora",
-  "telemetryIntro": "Foto diproses di ponsel Anda. Aplikasi mengirim informasi penggunaan dan kesalahan untuk membantu kami memperbaikinya.",
+  "telemetryIntro": "Foto Anda tetap tersimpan di ponsel. Analitik penggunaan dan laporan kesalahan aktif secara default untuk membantu kami menyempurnakan aplikasi. Anda dapat menonaktifkan masing-masing secara terpisah di Setelan.",
   "analyticsTitle": "Analitik penggunaan",
   "analyticsBody": "Menunjukkan fitur yang digunakan. Foto dan masukan tidak disertakan.",
   "crashesTitle": "Laporan kesalahan",

@@ -231,7 +231,7 @@
   "profilesUnavailable": "A feldolgozási módok átmenetileg nem érhetők el. Az utolsó eredményt továbbra is elmentheted.",
   "profileChanged": "A kiválasztott mód nem érhető el. Másik módot választottunk.",
   "telemetryTitle": "Segíts jobbá tenni a Pixorát",
-  "telemetryIntro": "A fotók a telefonon készülnek el. Az alkalmazás használati és hibainformációkat küld, hogy javíthassuk.",
+  "telemetryIntro": "A fotóid a telefonodon maradnak. A használati statisztikák és a hibajelentések alapértelmezés szerint be vannak kapcsolva, hogy segítsenek az alkalmazás fejlesztésében. A Beállításokban külön-külön kikapcsolhatod őket.",
   "analyticsTitle": "Használati elemzés",
   "analyticsBody": "Megmutatja a használt funkciókat. Fotókat és visszajelzéseket nem tartalmaz.",
   "crashesTitle": "Hibajelentések",

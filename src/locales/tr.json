@@ -231,7 +231,7 @@
   "profilesUnavailable": "İşleme modları geçici olarak kullanılamıyor. Son sonucunuzu yine de kaydedebilirsiniz.",
   "profileChanged": "Seçilen mod kullanılamıyor. Başka bir mod seçildi.",
   "telemetryTitle": "Pixora'yı geliştirmeye yardımcı olun",
-  "telemetryIntro": "Fotoğraflar telefonunuzda işlenir. Uygulamayı geliştirmemize yardımcı olmak için kullanım ve hata bilgileri gönderilir.",
+  "telemetryIntro": "Fotoğraflarınız telefonunuzda kalır. Uygulamayı geliştirmemize yardımcı olması için kullanım analizi ve hata raporları varsayılan olarak açıktır. Ayarlar’dan her birini ayrı ayrı kapatabilirsiniz.",
   "analyticsTitle": "Kullanım analizi",
   "analyticsBody": "Kullanılan özellikleri gösterir. Fotoğraflar ve geri bildirimler dahil değildir.",
   "crashesTitle": "Hata raporları",

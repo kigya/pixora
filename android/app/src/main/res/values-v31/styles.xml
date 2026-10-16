@@ -1,0 +1,7 @@
+<resources>
+    <style name="AppTheme" parent="AppThemeBase">
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_animated</item>
+        <item name="android:windowSplashScreenAnimationDuration">600</item>
+        <item name="android:windowSplashScreenBackground">@color/window_background</item>
+    </style>
+</resources>

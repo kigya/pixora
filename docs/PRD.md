@@ -186,3 +186,7 @@ Explicit owner instruction changes package ID/namespace to `dev.kigya.pixora`, d
 ## Approved 0.8.0 plan — 2026-10-16
 
 Requirement changes: [workflow PRD](product/prd.md) and [decisions](engineering/decisions.md). Explicitly approved: iOS, pre-collection consent, neutral reviews, R8 off, more locales and GitHub. These supersede conflicting historical statements above only for 0.8.0. Verification uses Samsung SM-S916B instead of Xiaomi. A plan alone does not establish implementation.
+
+### Manual-review clarification — 2026-10-16
+
+The owner confirmed manual review and requested hiding suggestions after Apply, consistent centered Feedback/Privacy/Licenses headers, removal of the duplicate Having Issues button, animated startup branding and stable switches. Analytics/Crashlytics now default ON with a notice, preserving independent saved opt-outs; this supersedes the conflicting 0.8 default-OFF rule. Further app tests were paused by owner instruction; a release-mode Samsung build/install and manual confirmation are required. Historical results do not verify these latest changes.
