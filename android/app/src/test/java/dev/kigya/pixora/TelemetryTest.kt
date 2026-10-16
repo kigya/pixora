@@ -31,6 +31,25 @@ class TelemetryTest {
     @After fun reset() {
         for(name in listOf("context","sink")) Telemetry::class.java.getDeclaredField(name).apply{isAccessible=true}.set(Telemetry,null)
     }
+    @Test fun defaultSinkInitializationStopsWhenPreSdkReconciliationCannotPersist() {
+        Telemetry::class.java.getDeclaredField("sink").apply { isAccessible = true }.set(Telemetry, null)
+        val analytics=context.getSharedPreferences("com.google.android.gms.measurement.prefs",0)
+        val wrapped=object:android.content.ContextWrapper(context) {
+            override fun getApplicationContext():Context=this
+            override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
+                val delegate=super.getSharedPreferences(name,mode)
+                if(name!="com.google.android.gms.measurement.prefs") return delegate
+                return object:android.content.SharedPreferences by delegate {
+                    override fun edit()=rejectingPreferencesEditor()
+                }
+            }
+        }
+        configured.clear()
+        Telemetry.init(wrapped)
+        assertTrue(configured.isEmpty())
+        assertFalse(analytics.contains("measurement_enabled"))
+    }
+
     @Test fun collectionSettingsAreIndependentAndDisabledByDefaultInCoverage() {
         assertEquals(false to false,configured.single())
         val initial=Telemetry.settings();assertFalse(initial.getBoolean("noticeSeen"))
@@ -93,9 +112,7 @@ class TelemetryTest {
                 val delegate=super.getSharedPreferences(name,mode)
                 if(name!="com.google.android.gms.measurement.prefs") return delegate
                 return object:android.content.SharedPreferences by delegate {
-                    override fun edit()=object:android.content.SharedPreferences.Editor by delegate.edit() {
-                        override fun commit()=false
-                    }
+                    override fun edit()=rejectingPreferencesEditor()
                 }
             }
         }
@@ -114,6 +131,22 @@ class TelemetryTest {
         assertTrue(analytics.getBoolean("measurement_enabled",false))
         assertTrue(analytics.getBoolean("measurement_enabled_from_api",false))
     }
+    @Test fun failedCrashPreferenceReconciliationAlsoKeepsSdkInitializationBlocked() {
+        val crashPrefs=context.getSharedPreferences("com.google.firebase.crashlytics",0)
+        crashPrefs.edit().clear().commit()
+        val wrapped=object:android.content.ContextWrapper(context) {
+            override fun getApplicationContext():Context=this
+            override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
+                val delegate=super.getSharedPreferences(name,mode)
+                if(name!="com.google.firebase.crashlytics") return delegate
+                return object:android.content.SharedPreferences by delegate {
+                    override fun edit()=rejectingPreferencesEditor()
+                }
+            }
+        }
+        assertFalse(Telemetry.prepare(wrapped))
+        assertTrue(crashPrefs.contains("firebase_crashlytics_collection_enabled").not())
+    }
     @Test fun parametersAreAllowListedAndRejectPrivatePayloadsAndNonFiniteNumbers() {
         Telemetry.update(true,true,true)
         Telemetry.event("unrecognised",JSONObject().put("value","safe"));assertTrue(received.isEmpty())
@@ -126,11 +159,10 @@ class TelemetryTest {
         val preferences=context.getSharedPreferences("telemetry",0)
         val wrapped=object:android.content.ContextWrapper(context) {
             override fun getApplicationContext():Context=this
-            override fun getSharedPreferences(name:String,mode:Int)=object:android.content.SharedPreferences by preferences {
-                override fun edit()=object:android.content.SharedPreferences.Editor by preferences.edit() {
-                    override fun putString(key:String?,value:String?):android.content.SharedPreferences.Editor=this
-                    override fun putBoolean(key:String?,value:Boolean):android.content.SharedPreferences.Editor=this
-                    override fun commit()=false
+            override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
+                if(name!="telemetry") return super.getSharedPreferences(name,mode)
+                return object:android.content.SharedPreferences by preferences {
+                    override fun edit()=rejectingPreferencesEditor()
                 }
             }
         }
@@ -149,22 +181,45 @@ class TelemetryTest {
         val preferences=context.getSharedPreferences("telemetry",0)
         val wrapped=object:android.content.ContextWrapper(context) {
             override fun getApplicationContext():Context=this
-            override fun getSharedPreferences(name:String,mode:Int)=object:android.content.SharedPreferences by preferences {
-                override fun edit()=object:android.content.SharedPreferences.Editor by preferences.edit() {
-                    override fun putBoolean(key:String?,value:Boolean):android.content.SharedPreferences.Editor=this
-                    override fun commit()=false
+            override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
+                if(name!="telemetry") return super.getSharedPreferences(name,mode)
+                return object:android.content.SharedPreferences by preferences {
+                    override fun edit()=rejectingPreferencesEditor()
                 }
             }
         }
         Telemetry.init(wrapped,sink)
         assertEquals(true to true,configured.last())
-        try { Telemetry.update(false,false,true); fail("Expected failed preference write") }
+        try { Telemetry.update(true,false,true); fail("Expected failed preference write") }
         catch (_:IllegalStateException) {}
         assertEquals(true,preferences.getBoolean("analytics",false))
         assertEquals(true,preferences.getBoolean("crashes",false))
+        assertEquals(true to false,configured.last())
+        Telemetry.event("ui_action")
+        assertEquals("an analytics opt-in remains active when only crash opt-out persistence fails",1,received.size)
+        try { Telemetry.update(false,false,true); fail("Expected failed preference write") }
+        catch (_:IllegalStateException) {}
         assertEquals(false to false,configured.last())
         Telemetry.event("ui_action")
-        assertTrue(received.isEmpty())
+        assertEquals(1,received.size)
+    }
+    @Test fun failedOptInBeforeSinkInitializationDoesNotTouchASink() {
+        Telemetry::class.java.getDeclaredField("sink").apply{isAccessible=true}.set(Telemetry,null)
+        val preferences=context.getSharedPreferences("telemetry",0)
+        val wrapped=object:android.content.ContextWrapper(context) {
+            override fun getApplicationContext():Context=this
+            override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
+                if(name!="telemetry") return super.getSharedPreferences(name,mode)
+                return object:android.content.SharedPreferences by preferences {
+                    override fun edit()=rejectingPreferencesEditor()
+                }
+            }
+        }
+        Telemetry::class.java.getDeclaredField("context").apply{isAccessible=true}.set(Telemetry,wrapped)
+        configured.clear()
+        try { Telemetry.update(true,true,true); fail("Expected failed preference write") }
+        catch (_:IllegalStateException) { }
+        assertTrue(configured.isEmpty())
     }
     @Test fun terminalJobIsRecordedOnceAndGpuFallbackKeepsAttemptContext() {
         Telemetry.update(true,false,true)
@@ -172,6 +227,8 @@ class TelemetryTest {
         val next=JSONObject().put("jobId","attempt-1").put("mode","natural").put("backend","CPU").put("scale",4).put("state","RUNNING").put("modelId","model-v1")
         Telemetry.observeJob(before,next)
         assertEquals("job_backend_changed",received.single().first)
+        Telemetry.observeJob(before,JSONObject(next.toString()).put("backend","GPU"))
+        assertEquals("same-backend GPU progress does not report a fallback",1,received.size)
         assertEquals("attempt-1",received.single().second.getString("attempt_token"))
         for((state,error,status) in listOf(Triple("SUCCEEDED","","success"),Triple("CANCELLED","","cancelled"),Triple("INTERRUPTED","","interrupted"),Triple("FAILED","TIME_LIMIT","time_limit"),Triple("FAILED","LOW_MEMORY","error"))) {
             val job=JSONObject(next.toString()).put("jobId",state+error).put("state",state).put("error",error).put("elapsedMs",123)
@@ -180,6 +237,8 @@ class TelemetryTest {
         }
         assertEquals(6,received.size)
         Telemetry.observeJob(JSONObject(),JSONObject().put("state","FAILED"))
+        assertEquals(6,received.size)
+        Telemetry.observeJob(JSONObject().put("backend","CPU"),JSONObject().put("backend","CPU").put("state","RUNNING"))
         assertEquals(6,received.size)
         Telemetry.update(false,false,true)
         val offline=JSONObject(next.toString()).put("jobId","opted-out").put("state","SUCCEEDED")
