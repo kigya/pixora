@@ -235,5 +235,16 @@
   "analyticsTitle": "Análisis de uso",
   "analyticsBody": "Qué funciones se usan. No incluye fotos ni comentarios.",
   "crashesTitle": "Informes de errores",
-  "crashesBody": "Ayudan a detectar fallos. No incluyen fotos ni comentarios."
+  "crashesBody": "Ayudan a detectar fallos. No incluyen fotos ni comentarios.",
+  "recommendationTitle": "Sugerencia para esta imagen",
+  "recommendationApply": "Aplicar sugerencia",
+  "recommendationReason": {
+    "generic": "Para una imagen poco clara, se sugiere un modo general.",
+    "photo": "Parece una fotografía.",
+    "art": "Parece un dibujo con líneas definidas.",
+    "pixel": "Se detectó una cuadrícula de píxeles marcada."
+  },
+  "preparationWhy": "Una copia de trabajo más pequeña puede reducir el uso de memoria y el tiempo de procesamiento.",
+  "preparationDetailLoss": "Los detalles finos pueden cambiar o perderse.",
+  "preparationFast": "El modo rápido también limita a 512 px el lado más largo de la entrada de IA. Es un límite distinto al de la copia de trabajo."
 }
