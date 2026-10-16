@@ -23,3 +23,7 @@
 
 
 Для 0.6 исходник Code.gs использует Pixora. Уже развёрнутый обработчик продолжает доставлять письма через прежний endpoint, но содержит старую тему Upselora. В Apps Script замените исходник, затем Deploy → Manage deployments → Edit → New version → Deploy; URL прежнего deployment сохраняется.
+
+## Installed-app QA0.8
+
+After explicit user consent for exactly two test messages, the installed Samsung debug app sent one synthetic message with a reply address and one without. Both were received in the fixed support inbox on2026-10-16 with platform=android/version=0.8.0; Gmail Show details confirmed Reply-To present only for the addressed submission. Neither contained media or personal message content. Existing Apps Script deployment was updated to version2 from reviewed GitHub PR7, keeping URL/access/execution identity. Private message IDs and screenshots remain ignored local evidence. This confirms Android debug feedback delivery; it does not confirm Firebase Analytics/Crashlytics delivery or iOS physical delivery.

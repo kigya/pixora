@@ -55,8 +55,13 @@ jobs:
           .p-build-app/local/bin/gitleaks git --redact --no-banner
           .p-build-app/local/bin/actionlint
           .p-build-app/local/bin/zizmor --offline .github/workflows/main.yml
-      - name: Dependency audit
-        run: .p-build-app/local/bin/osv-scanner scan source --lockfile=package-lock.json --format=json --output-file=coverage/osv.json
+      - name: Dependency audits
+        run: |
+          .p-build-app/local/bin/osv-scanner scan source --lockfile=package-lock.json --lockfile=Gemfile.lock --format=json --output-file=coverage/osv.json
+          .p-build-app/local/bin/osv-scanner scan source --config=scripts/osv-tooling.toml --lockfile=scripts/security-requirements.txt --format=json --output-file=coverage/osv-tooling.json
+          mkdir -p .p-build-app/local/native-locks
+          cp ios/Podfile.lock scripts/ios-project/Package.resolved .p-build-app/local/native-locks/
+          .p-build-app/local/bin/trivy fs --scanners vuln --format json --output coverage/native-dependencies.json --cache-dir .p-build-app/local/trivy-cache --exit-code 1 .p-build-app/local/native-locks
       - name: Mobile source scan
         run: |
           python3 -m venv .p-build-app/local/security-python
@@ -71,7 +76,8 @@ jobs:
           path: |
             coverage/coverage-summary.json
             coverage/lcov.info
-            coverage/osv.json
+            coverage/osv*.json
+            coverage/native-dependencies.json
             coverage/mobile-*.json
           retention-days: 1
 
@@ -143,6 +149,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: '3.3.12'
       - uses: github/codeql-action/init@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
         with:
           languages: cpp
