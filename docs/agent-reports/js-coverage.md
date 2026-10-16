@@ -5,3 +5,7 @@ Updated the owned JavaScript test boundary for the current 0.8 behavior. The nat
 Validation used Node 22.23.2 and the installed dependencies; no lockfiles or dependencies changed. Full Jest coverage passed: 14 suites, 168 tests. Strict JS coverage reported statements 869/869, branches 632/632, functions 275/275, and lines 807/807 (all 100%). `npm run typecheck` passed. `npm run lint` exited successfully with zero errors and 88 warnings, primarily existing inline-style warnings. No device/build checks were run.
 
 Evidence logs and the machine-readable coverage summary are saved under `.p-build-app/local/evidence/js-final-*`.
+
+## 0.8.1 verification
+
+Rechecked after the lockfile/package version correction with Node 22.23.2 and the existing dependency install. Full Jest passed again: 14 suites, 168 tests. Strict metrics remain statements 869/869, branches 632/632, functions 275/275, and lines 807/807 (100%). Typecheck passed. Lint exited 0 with 88 warnings and no errors. Evidence is saved under `.p-build-app/local/evidence/js-081-*`. No app source, package, or lockfile changes were made in this verification.

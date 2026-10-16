@@ -28,3 +28,7 @@ CocoaPods lookup is unsupported by OSV2.7. Trivy0.76.0 is pinned to official Git
 После разрешения автоматических проверок выполнены текущие root scans: gitleaks26commits/7,83MB —0leaks; actionlint PASS; zizmor offline0findings (6 ранее рассмотренных локальных suppressions). OSV package-lock+Gemfile44Ruby/932npm —exit0, только прежние2 адресные app-tooling dispositions; OSVscanner-lock77packages —exit0 с прежними35адресными dispositions. TrivyrootCocoaPods/Swift —0vulnerabilities. MobSFscanAndroidmain+resolvedreleaseManifest и iOSNative/Pixora —exit0, толькоINFO (безWARN/ERROR). Это source/dependency/security проверки, не runtime acceptance. Повторный финальный CodeQL требует mainCI текущегоSHA.
 
 Финальные mobile-source scans повторены после startup cleanup/clock refactors на root исходниках и resolved release manifest b52: Android/iOS exit0, только прежниеINFO, WARN/ERROR отсутствуют. Ни один scanner/coverage denominator не отключён.
+
+## Исправление воспроизводимости 0.8.1
+
+После исправления lockfile выполнена установка npm ci с новым пустым кэшем: 995 пакетов, exit0. Проверены все 932 resolved URLs; единственный старый404text-table0.3.0 устранён, остальные931дали2xx. OSV текущих app/Ruby locks: exit0 с прежними двумя адресными tooling dispositions; новых advisory нет. actionlint/zizmor для setup-java6.1.0 pin PASS, общие suppressions не расширялись. Неудачный main CI0.8.0 сохранён; main CI/CodeQL0.8.1 проверяются на новом SHA.

@@ -19,3 +19,13 @@
 - ADR-813: по повторному ручному ревью splash удерживается до JS NavigationContainer.onReady после initial settings/session refresh и минимум1500ms; длительность animator отдельно1500ms. UI/JS-потоки не блокируются. LESSON-0002 хранится только в общей локальной базе. Пользователь подтвердил остальные правки и продолжение flow.
 
 - ADR-814: после отдельного уточнения пользователь разрешил автоматические проверки и исправления без UI на Samsung. Установку нового релиза пока не выполнять. Предыдущий запрет тестов снят только в этой части; финальные strict coverage/security/build/CI проверяются автоматически. Физические UI/install не заменяются фиктивным PASS.
+
+## ADR-815 — корректирующая версия 0.8.1 после main CI
+
+Единственный main squash 0.8.0 — PR №13, commit `2ea2dd2`. [Run 38955818843](https://github.com/kigya/pixora/actions/runs/38955818843) завершился ошибкой: setup-java v4 отклонил формат JDK 21.0.12.1+1; npm ci получил 404 для text-table 0.3.0. По согласованному flow история сохраняется, исправления идут через release/0.8.1, task PR и один новый version squash. Новых продуктовых функций нет. Samsung install/UI остаются отложенными.
+
+Lockfile восстановлен по официальному registry: [eslint 8.57.1](https://registry.npmjs.org/eslint/8.57.1) требует text-table ^0.2.0; [text-table 0.2.0](https://registry.npmjs.org/text-table/0.2.0) задаёт правильные version/URL. Integrity уже соответствовал 0.2.0 и не менялся. Empty-cache npm ci установила 995 пакетов; проверка всех 932 URL нашла единственный старый 404, остальные 931 вернули 2xx.
+
+setup-java обновлён до v6.1.0, immutable SHA `b843ebf9b913146b38da2eaa7aeddf76074ae1ad`. Независимое ревью [normalization/matching](https://github.com/actions/setup-java/blob/b843ebf9b913146b38da2eaa7aeddf76074ae1ad/src/util.ts) и [Temurin resolver](https://github.com/actions/setup-java/blob/b843ebf9b913146b38da2eaa7aeddf76074ae1ad/src/distributions/temurin/installer.ts) подтвердило точный patch/build без подстановки старого JDK. Версия 0.8.1 / code 11 согласована в package/lock, Android и iOS project/generator.
+
+После clean npm ci локальный Gradle MCP не нашёл bare npx при обновлении autolinking cache (b53 остановился до тестов). settings.gradle вызывает установленный CLI 20.2.0 напрямую через NODE_BINARY либо node из PATH. Стандартные working directory и lock/config cache inputs RN 0.87.1 сохранены; fallback download/пропуска библиотек нет. Изменение прошло независимое ревью. Автоматические gates и сборки повторяются для 0.8.1.
