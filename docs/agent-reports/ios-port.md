@@ -1,4 +1,6 @@
-# FEAT-803 iOS port — completed implementation and automated verification
+# FEAT-803 iOS port — 0.8.1 automated verification
+
+Corrective release 0.8.1/code 11 was reverified after CI environment and lockfile metadata fixes. This pass changes only two native fallback version strings and their matching test expectation; no processing or product behavior changed. Prior 0.8.0 evidence remains under `artifacts/ios/0.8.0/`.
 
 Implemented bare React Native 0.87.1 iOS support for `dev.kigya.pixora` (`.debug` in Debug), iOS 15.1+, with Objective-C++ TurboModule implementations for the shared API: import, preparation, recommendations, jobs, cancellation, journal recovery, PNG/JPEG/WebP export, share/open, settings/locales, notifications, neutral review, legal text, feedback and startup readiness.
 
@@ -10,11 +12,11 @@ The native brand overlay remains until JavaScript startup readiness and at least
 
 Pinned tooling includes ncnn 20260526 checksum-verified archives, CocoaPods locks, libwebp 1.5.0, Ruby 3.3.12/Bundler 4.0.23 and patched gems. Project editing uses pinned XcodeProj. Generated dependencies, SDKs, configuration bytes and artifacts remain ignored. Unsigned verification defers Crashlytics symbol upload.
 
-Final evidence on Xcode 26.6 (17F113), SDK/runtime 26.5:
+Final 0.8.1 evidence on Xcode 26.6 (17F113), SDK/runtime 26.5:
 
 - **52/52 XCTest cases passed** against the final ROOT source snapshot. Cases exercise all eight presets/five actual models, codec round trips, preparation, real lite-model tiled/whole inference (maximum byte difference 1), alpha, cancellation, expiration, recovery, failure ownership, bounded copying, retention, telemetry choices and startup timing/motion.
 - **Owned iOS coverage: 607/607 lines and 794/794 branches (100%); 198/198 functions.** All three `ios/Native/*.mm` files and `AppDelegate.mm` are included. Shared C++ has its separate core/classifier reports. No coverage denominator was weakened.
-- `coverage/ios/coverage.json` maps only exact paths whose ROOT/build bytes match the SHA manifest. Original counters and entries are unchanged. Raw export, source manifest and mapping metadata are preserved under `artifacts/ios/`; `xctest-final.log` records the full run. The older-OS notification fallback is a narrowly scoped test-only simulation, not a real iOS 15 runtime claim.
-- **Unsigned generic-device Release build passed.** `artifacts/ios/DeviceRelease/` contains the actual app/dSYM; metadata confirms platform iOS, arm64, minimum 15.1, version 0.8.0 (10), unsigned state and absence of test hooks/LLVM profiling symbols. The final source manifest still matches ROOT.
+- `coverage/ios/coverage.json` maps only exact paths whose ROOT/build bytes match the SHA manifest. Original counters and entries are unchanged. Versioned raw export, source manifest and path mapping are preserved under `artifacts/ios/` (`coverage-0.8.1.raw.json`, `source-manifest-0.8.1.json`, `coverage-0.8.1-path-map.json`); `xctest-0.8.1.log` records the full run. The older-OS notification fallback is a narrowly scoped test-only simulation, not a real iOS 15 runtime claim.
+- **Unsigned generic-device Release build passed.** `artifacts/ios/DeviceRelease-0.8.1/` contains the actual app/dSYM; metadata confirms platform iOS, arm64, minimum 15.1, version 0.8.1 (11), unsigned state and absence of test hooks/LLVM profiling symbols. The final source manifest still matches ROOT.
 
 Limitations: unsigned simulator Firebase installation/Remote Config reports Keychain -34018; server receipt/activation is unverified. No real feedback sent. Background execution is best effort; expiration interrupts and requires manual retry. No physical iOS, signing, installation, App Store or publication claim. Debug/Release builds must run sequentially because RN prebuilt Pods paths are shared. Git integration belongs to the main agent.

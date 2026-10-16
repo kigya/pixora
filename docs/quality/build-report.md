@@ -39,3 +39,9 @@ b55 normal assembleRelease/bundleRelease: SUCCESS, 3m22s, без firebaseDiagnos
 Новые артефакты НЕ установлены. b54: 111/111 unit tests, 1062/1062 lines и 1106/1106 branches, source-presence PASS. b53 остановился до тестов из-за локального npx lookup; исправление locked CLI command в settings.gradle прошло ревью и b54/b55. После всех Gradle запусков пять временных dependency command-path overrides восстановлены до исходных hashes.
 
 Main CI 0.8.0 failed из-за JDK action/lockfile, несмотря на локальные 0.8.0 builds; исправления и новые доказательства 0.8.1 не стирают тот результат. iOS final 0.8.1 proof фиксируется после version fallback alignment.
+
+## Финальный iOS 0.8.1 / build 11 — PASS
+
+После alignment обоих native version fallbacks повторены 52/52 XCTest со строгими 607/607 lines и 794/794 branches, затем serial unsigned generic-device Release: exit0. Bundle dev.kigya.pixora 0.8.1(11), arm64, min15.1, platformIOS/SDK26.5. Binary SHA-256 `ed77cfd255a61d66b2eee8a2719f8202c9e9dac5a15ce2d50bddb40fd1c3ad19`.
+
+Фактические app/dSYM: `artifacts/ios/DeviceRelease-0.8.1/`. Versioned metadata/log: device-release-0.8.1-metadata.json и device-release-0.8.1.log. codesign подтверждает отсутствие подписи; test-hook/fishhook/__llvm_profile symbols отсутствуют. Все 37 source/config hashes повторно совпали с ROOT после сборки. Первичный interrupted build и прежние 0.8.0 доказательства сохранены отдельно; они не подменяют этот PASS. Физического iPhone/Samsung теста из этого результата не следует.

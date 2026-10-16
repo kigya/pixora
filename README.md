@@ -4,7 +4,7 @@ Pixora enlarges small photos and illustrations on the device. The existing Andro
 
 ## Development status
 
-This repository imports the existing **0.7.2 Android baseline**. Version **0.8.0 is in progress**: content-based recommendations applied by a button, clearer preparation sizes, an offline iOS CPU port, independent telemetry settings, neutral review requests and 34 active languages. The owner reviewed the Android build and requested final UI changes; the requested changes are implemented. Local automatic coverage/security checks and Android/iOS release builds passed; the updated splash build is available locally, with Samsung installation and further device UI checks deferred by the owner. Full release acceptance is still open.
+This repository contains **Pixora 0.8.1**, including the approved 0.8 feature line: content-based recommendations applied by a button, clearer preparation sizes, an offline iOS CPU port, independent telemetry settings, neutral review requests and 34 active languages. Local automatic coverage/security checks and Android/iOS release builds passed. The current main CI result is available in [GitHub Actions](https://github.com/kigya/pixora/actions/workflows/main.yml). Updated Samsung installation and further device UI checks are deferred by the owner; full release acceptance remains open.
 
 [Current requirements](docs/PRD.md) · [0.8.0 requirements](docs/product/prd.md) · [Project status](docs/project-status.md) · [Feature registry](docs/product/features.md)
 
@@ -24,4 +24,4 @@ Version0.8.0 has34 active language dictionaries, including Hebrew, Gujarati, Pun
 
 ## Contribution flow
 
-Task branches → PRs into `release/0.8.0` → independent review/owner acceptance → one squash merge to `main`. CI runs only on main push. Release publication and final signing are a separate workflow.
+Task branches → PRs into `release/<version>` → independent review/owner acceptance → one squash merge to `main`. CI runs only on main push. Release publication and final signing are a separate workflow.
