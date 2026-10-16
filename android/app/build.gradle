@@ -246,7 +246,12 @@ tasks.withType(Test).configureEach {
 
 // Private local input becomes encoded native data, never a BuildConfig/JS string.
 tasks.register("encodeFeedbackEndpoint", Exec) {
-    inputs.file(rootProject.file("feedback.properties")).optional()
+    // Optional means the property may be absent, not that a declared file may be missing.
+    // Public CI intentionally has no private feedback.properties.
+    inputs.files(providers.provider {
+        def source = rootProject.file("feedback.properties")
+        source.exists() ? [source] : []
+    })
     outputs.file(layout.buildDirectory.file("generated/feedback/feedback_endpoint.h"))
     commandLine("python3", "../../scripts/encode-feedback-endpoint.py", rootProject.file("feedback.properties"), layout.buildDirectory.file("generated/feedback/feedback_endpoint.h").get().asFile)
 }
