@@ -6,6 +6,7 @@ import {
   act,
   fireEvent,
   userEvent,
+  waitFor,
 } from '@testing-library/react-native';
 import { AppProvider } from '../src/application/AppProvider';
 import { ProcessingCard } from '../src/ui/processingCard';
@@ -116,6 +117,98 @@ test('telemetry controls persist independently and retain state after a failed w
   expect(
     screen.getByRole('switch', { name: strings.en.analyticsTitle }),
   ).toHaveProp('value', false);
+});
+
+test('stale telemetry write failure cannot roll back a newer queued choice', async () => {
+  Native.getTelemetrySettings.mockResolvedValue({
+    analytics: false,
+    crashes: false,
+    noticeSeen: true,
+    consentVersion: 2,
+  });
+  let rejectFirst!: (error: Error) => void;
+  let resolveSecond!: (value: any) => void;
+  Native.updateTelemetrySettings
+    .mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectFirst = reject; }))
+    .mockImplementationOnce(() => new Promise(resolve => { resolveSecond = resolve; }));
+  await render(
+    <AppProvider>
+      <TelemetryControls />
+    </AppProvider>,
+  );
+  await fireEvent(
+    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
+    'valueChange',
+    true,
+  );
+  await fireEvent(
+    screen.getByRole('switch', { name: strings.en.crashesTitle }),
+    'valueChange',
+    true,
+  );
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+  await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
+  await act(async () => rejectFirst(new Error('stale write failed')));
+  await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(2));
+  expect(screen.queryByText(strings.en.errors.INFERENCE_FAILED)).toBeNull();
+  expect(Native.updateTelemetrySettings.mock.calls).toEqual([
+    [true, false, true],
+    [true, true, true],
+  ]);
+  await act(async () => resolveSecond({
+    analytics: true,
+    crashes: true,
+    noticeSeen: true,
+    consentVersion: 2,
+  }));
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+});
+
+test('latest telemetry write failure rolls back only to the last confirmed settings', async () => {
+  Native.getTelemetrySettings.mockResolvedValue({
+    analytics: false,
+    crashes: false,
+    noticeSeen: true,
+    consentVersion: 2,
+  });
+  let resolveFirst!: (value: any) => void;
+  let rejectSecond!: (error: Error) => void;
+  Native.updateTelemetrySettings
+    .mockImplementationOnce(() => new Promise(resolve => { resolveFirst = resolve; }))
+    .mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectSecond = reject; }));
+  await render(
+    <AppProvider>
+      <TelemetryControls />
+    </AppProvider>,
+  );
+  await fireEvent(
+    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
+    'valueChange',
+    true,
+  );
+  await fireEvent(
+    screen.getByRole('switch', { name: strings.en.crashesTitle }),
+    'valueChange',
+    true,
+  );
+  await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
+  await act(async () => resolveFirst({
+    analytics: true,
+    crashes: false,
+    noticeSeen: true,
+    consentVersion: 2,
+  }));
+  await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(2));
+  await act(async () => rejectSecond(new Error('latest write failed')));
+  expect(await screen.findByText(strings.en.errors.INFERENCE_FAILED)).toBeOnTheScreen();
+  expect(Native.updateTelemetrySettings.mock.calls).toEqual([
+    [true, false, true],
+    [true, true, true],
+  ]);
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', false);
 });
 
 test('informational first-launch notice keeps default-on choices and reports save failure', async () => {

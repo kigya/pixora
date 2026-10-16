@@ -2,8 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p coverage/native-core
-SHARED_ENGINE_DIR="${SHARED_ENGINE_DIR:-native/engine}"
-ANDROID_ENGINE_DIR="${ANDROID_ENGINE_DIR:-android/app/src/main/cpp/engine}"
+rm -f coverage/native-core/coverage.json coverage/native-core/combined.profdata \
+  coverage/native-core/core.profraw coverage/native-core/adapter.profraw
+SHARED_ENGINE_DIR="$(cd "${SHARED_ENGINE_DIR:-native/engine}" && pwd)"
+ANDROID_ENGINE_DIR="$(cd "${ANDROID_ENGINE_DIR:-android/app/src/main/cpp/engine}" && pwd)"
 SHARED_SOURCES=("$SHARED_ENGINE_DIR/engine.cpp" "$SHARED_ENGINE_DIR/pixels.cpp")
 SHARED_HEADERS=("$SHARED_ENGINE_DIR/engine.h" "$SHARED_ENGINE_DIR/pixels.h")
 ANDROID_SHIM="$ANDROID_ENGINE_DIR/upscale.cpp"

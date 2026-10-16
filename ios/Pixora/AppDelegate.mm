@@ -34,14 +34,7 @@
   [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(startupMotionChanged:) name:UIAccessibilityReduceMotionStatusDidChangeNotification object:nil];
   // Start guarded, then apply effective defaults and saved opt-outs immediately.
   [FIRApp configure];
-  NSUserDefaults* preferences=NSUserDefaults.standardUserDefaults;
-  BOOL explicitChoice=[preferences integerForKey:@"consentVersion"]==2;
-  BOOL analytics=!explicitChoice || [preferences boolForKey:@"analyticsConsent"];
-  BOOL crashes=!explicitChoice || [preferences boolForKey:@"crashConsent"];
-  [FIRAnalytics setAnalyticsCollectionEnabled:analytics];
-  [FIRAnalytics setConsent:@{FIRConsentTypeAnalyticsStorage:analytics?FIRConsentStatusGranted:FIRConsentStatusDenied,FIRConsentTypeAdStorage:FIRConsentStatusDenied,FIRConsentTypeAdUserData:FIRConsentStatusDenied,FIRConsentTypeAdPersonalization:FIRConsentStatusDenied}];
-  [[FIRCrashlytics crashlytics] setCrashlyticsCollectionEnabled:crashes];
-  if(!crashes)[[FIRCrashlytics crashlytics] deleteUnsentReports];
+  [self configureStartupTelemetry:NSUserDefaults.standardUserDefaults];
   self.dependencyProvider=[RCTAppDependencyProvider new];
   self.factory=[[RCTReactNativeFactory alloc] initWithDelegate:self];
   self.window=[[PixoraWindow alloc] initWithFrame:UIScreen.mainScreen.bounds];
@@ -51,9 +44,18 @@
   [self showStartupOverlay];
   return YES;
 }
+- (void)configureStartupTelemetry:(NSUserDefaults*)preferences {
+  BOOL explicitChoice=[preferences integerForKey:@"consentVersion"]==2;
+  BOOL analytics=!explicitChoice || [preferences boolForKey:@"analyticsConsent"];
+  BOOL crashes=!explicitChoice || [preferences boolForKey:@"crashConsent"];
+  [FIRAnalytics setAnalyticsCollectionEnabled:analytics];
+  [FIRAnalytics setConsent:@{FIRConsentTypeAnalyticsStorage:analytics?FIRConsentStatusGranted:FIRConsentStatusDenied,FIRConsentTypeAdStorage:FIRConsentStatusDenied,FIRConsentTypeAdUserData:FIRConsentStatusDenied,FIRConsentTypeAdPersonalization:FIRConsentStatusDenied}];
+  [[FIRCrashlytics crashlytics] setCrashlyticsCollectionEnabled:crashes];
+  if(!crashes)[[FIRCrashlytics crashlytics] deleteUnsentReports];
+}
+- (NSTimeInterval)startupUptime {return NSProcessInfo.processInfo.systemUptime;}
+- (BOOL)startupMotionLimited {return UIAccessibilityIsReduceMotionEnabled();}
 - (void)showStartupOverlay {
-  // Measure the brand's minimum display time from its presentation, not native setup.
-  self.startupStartedAt=NSProcessInfo.processInfo.systemUptime;
   UIView* overlay=[[UIView alloc] initWithFrame:self.window.bounds];
   overlay.autoresizingMask=UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
   overlay.backgroundColor=[UIColor colorNamed:@"LaunchBackground"];
@@ -81,8 +83,10 @@
   self.startupOverlay=overlay;
   self.startupLogo=logo;
   [self.window addSubview:overlay];
-  NSTimeInterval remaining=MAX(0.0,1.5-(NSProcessInfo.processInfo.systemUptime-self.startupStartedAt));
-  if(!UIAccessibilityIsReduceMotionEnabled() && remaining>0) {
+  // Construction must not consume the brand's minimum time in the window.
+  self.startupStartedAt=[self startupUptime];
+  NSTimeInterval remaining=MAX(0.0,1.5-([self startupUptime]-self.startupStartedAt));
+  if(![self startupMotionLimited] && remaining>0) {
     logo.transform=CGAffineTransformMakeScale(0.86,0.86);
     logo.alpha=0.7;
     [UIView animateKeyframesWithDuration:remaining delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubic animations:^{
@@ -92,7 +96,7 @@
   }
 }
 - (void)startupMotionChanged:(NSNotification*)notification {
-  if(UIAccessibilityIsReduceMotionEnabled()) {
+  if([self startupMotionLimited]) {
     [self.startupLogo.layer removeAllAnimations];
     self.startupLogo.transform=CGAffineTransformIdentity;
     self.startupLogo.alpha=1;
@@ -101,7 +105,7 @@
 - (void)startupFinished:(NSNotification*)notification {
   if(self.startupHideScheduled)return;
   self.startupHideScheduled=YES;
-  NSTimeInterval remaining=MAX(0.0,1.5-(NSProcessInfo.processInfo.systemUptime-self.startupStartedAt));
+  NSTimeInterval remaining=MAX(0.0,1.5-([self startupUptime]-self.startupStartedAt));
   __weak PixoraAppDelegate* weak=self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(remaining*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
     PixoraAppDelegate* owner=weak;

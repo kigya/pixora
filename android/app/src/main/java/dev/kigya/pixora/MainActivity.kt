@@ -13,7 +13,7 @@ class MainActivity : ReactActivity() {
   private val startupDeadline = SystemClock.uptimeMillis() + 1500L
   private var startupReady = false
   private var startupContent: View? = null
-  private var startupDrawListener: ViewTreeObserver.OnPreDrawListener? = null
+  private var startupDrawCleanup: (() -> Unit)? = null
 
   fun finishStartup() {
     startupReady = true
@@ -38,21 +38,22 @@ class MainActivity : ReactActivity() {
       override fun onPreDraw(): Boolean {
         if (!startupReady || SystemClock.uptimeMillis() < startupDeadline) return false
         content.viewTreeObserver.removeOnPreDrawListener(this)
-        startupDrawListener = null
+        startupDrawCleanup = null
         window.setBackgroundDrawableResource(R.color.window_background)
         return true
       }
     }
-    startupDrawListener = listener
     content.viewTreeObserver.addOnPreDrawListener(listener)
+    // Capture the registered view and listener together for lifecycle cleanup.
+    startupDrawCleanup = { content.viewTreeObserver.removeOnPreDrawListener(listener) }
     content.postDelayed({ content.postInvalidateOnAnimation() },
         (startupDeadline - SystemClock.uptimeMillis()).coerceAtLeast(0))
     updateSystemBars()
   }
 
   override fun onDestroy() {
-    startupDrawListener?.let { startupContent?.viewTreeObserver?.removeOnPreDrawListener(it) }
-    startupDrawListener = null
+    startupDrawCleanup?.invoke()
+    startupDrawCleanup = null
     startupContent = null
     super.onDestroy()
   }

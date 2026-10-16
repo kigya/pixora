@@ -83,7 +83,7 @@ test('exported result opens and changing format permits a new export', async () 
 });
 test('transparent JPEG requires confirmation for export and share', async () => {
  seed({state:'SUCCEEDED',image:{...image,hasAlpha:true},jobId:'job',resultUri:'file:///after.png'});
- await viewHome();await userEvent.press(screen.getByRole('button',{name:t.notNow}));await userEvent.press(await screen.findByRole('radio',{name:'JPEG'}));
+ await viewHome();await userEvent.press(await screen.findByRole('button',{name:t.continue}));await userEvent.press(await screen.findByRole('radio',{name:'JPEG'}));
  await userEvent.press(screen.getByRole('button',{name:t.save}));await userEvent.press(screen.getByRole('button',{name:t.cancel}));expect(Native.exportResult).not.toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.share}));await userEvent.press(screen.getByRole('button',{name:t.confirmJpeg}));expect(Native.shareResult).toHaveBeenCalledWith('job','jpeg');
 });

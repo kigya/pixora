@@ -1,28 +1,31 @@
-# Pixora0.8.0 — передача для ручной приёмки
+# Pixora0.8.0 — состояние передачи
 
-Статус: ОЖИДАЕТ ПОДТВЕРЖДЕНИЯ ПОЛЬЗОВАТЕЛЯ. Полный release handoff не объявлен готовым.
+Автоматическая приёмка текущих исходников завершена по coverage/source gates; финальные release builds и main CI фиксируются в build-report и итоговом [PR13](https://github.com/kigya/pixora/pull/13). Формальная готовность к публикации не объявляется: пользователь отложил новую установку/UI на Samsung, отдельные service QA остаются открытыми. Production signing, GitHub Release и stores относятся к отдельному release workflow.
 
-Пользователь самостоятельно проверил Android-приложение и сообщил «все ок», затем запросил последние UI/defaults изменения и явно остановил дальнейшие тесты приложения. Эти изменения включены через PR9, iOS/shared engine — через PR10 в release/0.8.0. Main пока содержит технический bootstrap. Финальный один squash в main ожидает ручного подтверждения; main CI не запускался для service branches по согласованному правилу.
+## Реализованное поведение
 
-## Установочная сборка
+Рекомендация после импорта применяется только кнопкой и скрывается для текущего фото. Подготовка большой копии объясняет точные исходные/рабочие/выходные размеры, стоимость памяти/времени, возможную потерю деталей и неизменный оригинал;1024px по длинной стороне, отдельно Fast512. Feedback использует центрированную панель как Privacy/Licenses без повторной Having Issues. Analytics/Error Reports default-ON с информационным notice, независимыми сохранёнными opt-outs и немедленным положением switches/serial native writes. Splash держится max(initial readiness,1500ms), анимация1500ms; iOS clock начинается после attachment, Reduce Motion учитывается.
 
-Версия0.8.0/code10, Android package dev.kigya.pixora, minSdk29; debug отдельный dev.kigya.pixora.debug. iOS15.1+, CPU ncnn. Android normal release APK/AAB b44 строятся с локальной тестовой подписью, без firebaseDiagnostics/coverage, R8 off. Сборка b44 SUCCESS; APK SHA-25640fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1. Полные артефакты/результат установки — в build-report.md и device-report.md. Финальная подпись для магазина не выполнялась.
+Offline ncnn/shared engine сохраняет provenance/hashes моделей; iOS CPU поддерживает8presets/5models, bounded background/cancel/recovery и PNG/JPEG/WebP.34active locales плюс pt compatibility; профессиональной вычитки нет. Примеры остаются предоставленными владельцем иллюстрациями, не оценкой качества моделей. Общие LESSON-0001/0002 сохранены вне репозитория.
 
-## Последние правки для проверки
+## Автоматические доказательства
 
-- Apply suggestion скрывает карточку для текущего изображения.
-- Feedback/Having Issues имеет центрированный заголовок по образцу Privacy/Licenses; повторная кнопка Having Issues удалена.
-- Analytics/Error Reports по умолчанию включены с информационным уведомлением и независимыми выключателями; сохранённые значения сохраняются. Switch position обновляется немедленно, native записи идут последовательно.
-- На Android12+ логотип системного запуска использует AnimatedVectorDrawable. Рабочим столом управляет лаунчер.
+JS168/168:869statements,632branches,275functions,807lines —100%; TypeScript PASS, lint0errors/88warnings. Kotlin b51:111/111,1062lines1106branches —100%. C++ engine207lines236branches, classifier110lines64branches, JNI48lines32branches —100%. iOS XCTest52/52,607lines794branches198functions —100%. Aggregate native2034/2034lines2232/2232branches; scripts/check-coverage.py/source-presence PASS. Все owned implementation files входят в reports, thresholds/exclusions не ослаблены. Полные commands/denominators и пределы в coverage.md.
 
-## Граница доказательств
+Независимое review не оставило source blockers после исправления iOS clock и Android listener ownership. Secret/workflow/dependency/mobile scans прошли с адресными dispositions, перечисленными в security.md. Финальный CodeQL/main CI оценивается по фактическому SHA, не по локальному build.
 
-Предыдущие JS166/Kotlin106/native/physical результаты приведены в coverage.md и device-report.md, но не приписываются последним изменениям. iOS preserved coverage513/514 строк,760/764 ветвей не достигает обязательных100%; полный повтор и финальная интегрированная сборка не завершены. После остановки тестов новые проверки приложения не запускались. Thresholds/denominators не ослаблены; незавершённые gates не объявлены passed.
+## Артефакты и платформы
 
-Ранее подтверждены доставка ровно двух разрешённых feedback писем, optional Reply-To, Android Analytics DebugView, прежние consent migration/revoke и читаемые JVM/NDK Crashlytics reports. Новые default-ON правила заменяют прежний opt-in по прямому указанию пользователя и ожидают ручной проверки. iOS Firebase ingestion не подтверждён (unsigned simulator Keychain-34018).
+Android dev.kigya.pixora0.8.0/code10,min29,target36; debug отдельный .debug. Normal release b52 assembleRelease/bundleRelease SUCCESS, R8off, без QA/coverage, локальная тестовая подпись. APK `artifacts/Pixora-0.8.0-automatic-acceptance.apk`: SHA-256 `67f77d759358edcaa9c36e3f4f8ed8398b1df8a8a46295b15601e5b29ac1343f`. AAB `artifacts/Pixora-0.8.0-automatic-acceptance.aab`: `50ff8e941123337cf578fdb5d7f581c3251127337a2e8456d5d570790a1f685d`. НЕ установлены по последнему указанию пользователя.
+
+iOS15.1+, Xcode26.6/iOS26.5 SDK; unsigned generic-device Release результат/metadata в build-report и agent-reports/ios-port.md. Unsigned build не доказывает App Store signing/install. Сырые отчёты, paths mapping и artifact hashes хранятся в ignored local evidence.
+
+## Физические и service ограничения
+
+Samsung SM-S916B/Android16 заменяет Xiaomi по ADR-805. Ранее выполнены описанные debug instrumentation/Maestro и реальные AI/export сценарии. Normal release b44 установлен, пользователь самостоятельно подтвердил остальные функции, затем запросил splash1500. После этого новая установка/UI явно отложены (ADR-814); новый splash не получает физический PASS по наследству. Актуальные physical gates остаются blocked/deferred в pipeline.
+
+Подтверждены ровно2 отдельно разрешённых feedback письма с optional Reply-To, Android Analytics DebugView, читаемые JVM/NDK Crashlytics QA reports. Новых реальных писем не отправлялось. Полная Firebase matrix/debug+JS crash QA и iOS ingestion не завершены; unsigned simulator ранее имел Keychain-34018. Unit/build не подменяет доставку. Remote Config независим от telemetry settings; inference/изображения/URI/имена/текст feedback в телеметрию не идут.
 
 ## Продолжение
 
-Следующее действие — пользователь проверяет установленный release APK и подтверждает результат. До этого main merge/полная приёмка остаются открытыми. GitHub Release, store publication, финальная подпись/backup ключей не выполнены и относятся к отдельному release workflow. Общий урок LESSON-0001 сохранён вне репозитория по явно вызванному p-capture-lesson.
-
-Дополнение после повторного ручного ревью16.10.2026: пользователь подтвердил остальные функции и продолжение flow. Последняя запрошенная правка — splash max(готовность начальных данных/навигации,1500ms), реализованная на Android/iOS. Бренд-анимация1500ms, без UI-thread sleep. Runtime проверка не выполняется по предыдущему указанию. Обновлённая установка ожидает повторного USB подключения Samsung.
+GitHub flow: task PRs в release/0.8.0, один итоговый squash PR13 в main, CI только main push; текущие ссылки/исходный SHA и machine receipts фиксирует pipeline. При падении main CI —новая corrective version/PR без стирания истории. Новая Samsung установка/UI возможна только после нового указания пользователя. Перед публикацией отдельный release workflow должен закрыть deferred physical/service gates, финальную подпись/backup и store disclosures; billing не включается.
