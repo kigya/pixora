@@ -4,10 +4,12 @@ include(${REACT_ANDROID_DIR}/cmake-utils/ReactNative-application.cmake)
 set(ncnn_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../vendor/ncnn/arm64-v8a/lib/cmake/ncnn)
 find_package(ncnn REQUIRED)
 # Keep allocation exceptions in the JNI wrapper; ncnn itself remains prebuilt.
-set_property(TARGET ncnn PROPERTY INTERFACE_COMPILE_OPTIONS -fno-rtti)
-add_library(upscale SHARED engine/upscale.cpp engine/pixels.cpp
+set_property(TARGET ncnn PROPERTY INTERFACE_COMPILE_OPTIONS -frtti -fexceptions)
+add_library(upscale SHARED engine/upscale.cpp
+  ../../../../../native/engine/engine.cpp ../../../../../native/engine/pixels.cpp
   engine/recommendation_jni.cpp ../../../../../native/recommendation/recommendation.cpp)
 target_include_directories(upscale PRIVATE ${FEEDBACK_GENERATED_DIR}
+  ../../../../../native/engine
   ../../../../../native/recommendation/include)
 target_compile_features(upscale PRIVATE cxx_std_17)
 target_compile_options(upscale PRIVATE -fexceptions)
