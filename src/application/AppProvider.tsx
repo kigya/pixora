@@ -7,7 +7,6 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
-import { getCrashlytics } from '@react-native-firebase/crashlytics';
 import { AppState, useColorScheme } from 'react-native';
 import Native, {
   type Session,
@@ -62,6 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notificationIntroSeen: false,
       notificationDismissedSession: '',
       systemLanguage: 'en',
+      languageChosen: false,
     }),
     [caps, setCaps] = useState<Capabilities | null>(null),
     [loading, setLoading] = useState(true),
@@ -83,6 +83,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     analytics: false,
     crashes: false,
     noticeSeen: true,
+    consentVersion: 0,
   });
   const systemTheme = useColorScheme();
   const dark =
@@ -108,7 +109,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTelemetry(tracking);
   }, []);
   useEffect(() => {
-    getCrashlytics();
     const subscription = Native.onSessionChanged(accept);
     const flagsSubscription =
       Native.onProfileAvailabilityChanged(setAvailability);

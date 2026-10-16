@@ -4,7 +4,6 @@ import zh from '../locales/zh-Hans.json';
 import es from '../locales/es.json';
 import hi from '../locales/hi.json';
 import ar from '../locales/ar.json';
-import pt from '../locales/pt.json';
 import fr from '../locales/fr.json';
 import de from '../locales/de.json';
 import ja from '../locales/ja.json';
@@ -28,6 +27,11 @@ import th from '../locales/th.json';
 import ta from '../locales/ta.json';
 import te from '../locales/te.json';
 import mr from '../locales/mr.json';
+import pa from '../locales/pa.json';
+import jv from '../locales/jv.json';
+import gu from '../locales/gu.json';
+import he from '../locales/he.json';
+import ptBR from '../locales/pt-BR.json';
 export type Copy = typeof en;
 export const strings = {
   en,
@@ -36,7 +40,7 @@ export const strings = {
   es,
   hi,
   ar,
-  pt,
+  'pt-BR': ptBR,
   fr,
   de,
   ja,
@@ -60,6 +64,10 @@ export const strings = {
   ta,
   te,
   mr,
+  pa,
+  jv,
+  gu,
+  he,
 } satisfies Record<string, Copy>;
 export type LocaleCode = keyof typeof strings;
 export function formatCopy(text: string, values: Record<string, string>) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AccessibilityInfo, StatusBar } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, StatusBar, View } from 'react-native';
 import {
   NavigationContainer,
   DarkTheme,
@@ -10,11 +10,14 @@ import { useTheme } from '../ui/theme';
 import { FeedbackScreen } from '../screens/Feedback';
 import { Home } from '../screens/Home';
 import { SettingsScreen } from '../screens/Settings';
+import { LanguageOnboarding } from '../screens/LanguageOnboarding';
+import { useApp } from '../application/AppProvider';
 import type { Routes } from './routes';
 const Stack = createNativeStackNavigator<Routes>();
 
 export function AppNavigation() {
   const { colors, dark } = useTheme();
+  const { loading, settings } = useApp();
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -24,6 +27,7 @@ export function AppNavigation() {
     );
     return () => listener.remove();
   }, []);
+  if (loading) return <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator color={colors.accent} /></View>;
   return (
     <>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
@@ -40,12 +44,15 @@ export function AppNavigation() {
         }}
       >
         <Stack.Navigator
+          key={settings.languageChosen ? 'main' : 'language'}
+          initialRouteName={settings.languageChosen ? 'Home' : 'LanguageOnboarding'}
           screenOptions={{
             headerShown: false,
             animation: reduceMotion ? 'none' : 'fade',
             contentStyle: { backgroundColor: colors.bg },
           }}
         >
+          <Stack.Screen name="LanguageOnboarding" component={LanguageOnboarding} />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />
