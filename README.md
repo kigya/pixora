@@ -1,43 +1,98 @@
-<p align="center"><img src="assets/brand/logo.svg" width="96" height="96" alt="Pixora logo"></p>
+<p align="center">
+  <img src="assets/brand/logo.svg" width="80" height="80" alt="Pixora logo">
+</p>
 
-# Pixora
+<h1 align="center">Pixora</h1>
 
-Make a larger copy of a photo or illustration, compare the details and save the result. Pixora runs its AI models on your device, so image processing works offline from the first launch.
+<p align="center">Enlarge a photo. Compare the details. Keep it on your device.</p>
 
-Free to use. No account, ads, subscriptions, credits or paid AI service.
+<p align="center">
+  <a href="https://github.com/kigya/pixora/actions/workflows/main.yml"><img src="https://github.com/kigya/pixora/actions/workflows/main.yml/badge.svg?branch=main" alt="Verify main workflow status"></a>
+  <a href="#platforms"><img src="https://img.shields.io/badge/Android-10%2B-34A853?style=flat-square&amp;logo=android&amp;logoColor=white" alt="Android 10 or later"></a>
+  <a href="#platforms"><img src="https://img.shields.io/badge/iOS-15.1%2B-7C3AED?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="iOS 15.1 or later"></a>
+</p>
 
-## From a small image to a new copy
+<p align="center">
+  <a href="#choose-a-look">Explore</a> ·
+  <a href="#privacy">Privacy</a> ·
+  <a href="#built-with">Tech stack</a> ·
+  <a href="#build-from-source">Build from source</a>
+</p>
 
-1. Choose a photo or illustration from your device.
-2. Pick a look and **2× or 4×** enlargement. A local suggestion can help you choose; applying it is always your decision.
-3. Process the image, compare before and after, then save or share as **PNG, JPEG or WebP**.
+![Pixora product illustration with the image picker, a mountain landscape and flowers](docs/images/readme/01-home.webp)
 
-Your original stays unchanged. Transparent images keep their alpha in PNG and lossless WebP. Large images show the actual preparation and output dimensions before you start. Processing can be canceled.
+Pixora makes **2× or 4×** copies of photos and illustrations using AI models bundled with the app. Processing works offline, including on the first launch. It is free, with no account, ads, subscriptions or credits.
 
-Eight presets cover photos, illustrations and pixel art. Seven use bundled ncnn/Real-ESRGAN models; Pixel Art uses nearest-neighbor scaling to keep pixel boundaries. AI can change small details and does not promise to recover information missing from the original.
+<sub>The four images on this page are product illustrations. Sample comparisons, dimensions and times are illustrative. Online services are described under <a href="#privacy">Privacy</a>.</sub>
 
-## Your images stay on your device
+## Choose a look
 
-Image processing does not upload photos or require a server. Images, filenames, URIs and support-message content are excluded from telemetry.
+![Illustrated preset picker showing Balanced and Sharp with sample comparisons](docs/images/readme/02-modes.webp)
 
-Usage analytics and error reporting use Firebase and have independent switches in Settings. They currently default to enabled with an informational notice; saved opt-outs are preserved. Remote Config separately controls mode availability. Feedback sends only the information you explicitly submit.
+Eight presets cover photos, illustrations and pixel art. Seven use bundled ncnn/Real-ESRGAN models; Pixel Art uses nearest-neighbor scaling to preserve pixel boundaries. A local suggestion can help you pick a mode. You decide whether to apply it.
 
-Read the [privacy policy](privacy/index.html) and [data-flow documentation](docs/observability/privacy.md).
+## Compare before you save
 
-## Platforms and availability
+![Illustrated result screen with a comparison divider and PNG, JPEG and WebP export options](docs/images/readme/03-before-after.webp)
 
-The source includes Android and iOS implementations. Android targets ARM64 phones and tablets running Android 10 or later; iOS targets 15.1 or later and uses CPU inference. Both apply a 3.5 GiB memory check. Performance depends on the device, image and preset.
+Move the divider or switch between Before and After, then save or share a new copy as **PNG, JPEG or WebP**. PNG and lossless WebP preserve transparency. Your original stays unchanged.
 
-Pixora 0.8.1 includes light, dark and system themes, 34 active interface languages, right-to-left layouts and scalable text. Translations have not been professionally reviewed. The iOS port has simulator tests and unsigned Release-build evidence; physical iPhone/iPad acceptance remains open. Updated Android physical-device acceptance is also deferred. This repository does not currently distribute a signed release or provide a store download.
+AI can alter fine details; it cannot guarantee recovery of information missing from the original. The illustrated comparisons above are not verified outputs of the bundled models.
 
-## For developers
+## See the size before you start
 
-Built with Bare React Native 0.87.1, React 19, TypeScript, Kotlin, Objective-C++ and C++/ncnn. Use Node 22 and JDK 21.
+![Illustrated preparation screen showing the original and working image dimensions](docs/images/readme/04-upscale.webp)
 
-- [Build, test and local configuration](docs/engineering/tooling.md)
-- [Product requirements](docs/PRD.md) and [feature registry](docs/product/features.md)
-- [Architecture](docs/ARCHITECTURE.md) and [test matrix](docs/quality/test-matrix.md)
-- [Model and asset notices](docs/THIRD_PARTY_NOTICES.txt)
-- [Current CI runs](https://github.com/kigya/pixora/actions/workflows/main.yml)
+Large images show their original, working and expected output dimensions before processing. Enlargement applies to the prepared image, so you can see the size you will get. While it runs, follow progress and elapsed time, or cancel the job.
 
-Models and sample assets retain their original licenses and checksums. Picker examples are supplied illustrations of a look, not verified outputs of the bundled models.
+## Privacy
+
+Photos are processed on your device and are never uploaded for inference. Images, filenames, URIs and support-message content are excluded from telemetry.
+
+Firebase usage analytics and error reporting have independent switches in Settings. Both currently default to enabled with an informational notice; saved opt-outs are preserved. Remote Config separately controls mode availability. Feedback sends your submitted fields, the app version and a random request ID.
+
+[Privacy policy](privacy/index.html) · [Data flow and telemetry](docs/observability/privacy.md)
+
+## Built with
+
+<p>
+  <a href="https://reactnative.dev/"><img src="https://img.shields.io/badge/React_Native-0.87.1-20232A?style=flat-square&amp;logo=react&amp;logoColor=61DAFB" alt="React Native 0.87.1"></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-19.2-20232A?style=flat-square&amp;logo=react&amp;logoColor=61DAFB" alt="React 19.2"></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript 6"></a>
+  <br>
+  <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&amp;logo=kotlin&amp;logoColor=white" alt="Kotlin"></a>
+  <a href="ios/Native"><img src="https://img.shields.io/badge/Objective--C%2B%2B-555555?style=flat-square&amp;logo=apple&amp;logoColor=white" alt="Objective-C++"></a>
+  <a href="native/engine"><img src="https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat-square&amp;logo=cplusplus&amp;logoColor=white" alt="C++17"></a>
+  <a href="https://github.com/Tencent/ncnn"><img src="https://img.shields.io/badge/Inference-ncnn-7C3AED?style=flat-square" alt="ncnn"></a>
+</p>
+
+- Bare React Native and TypeScript for the interface, with React Navigation and Reanimated.
+- Kotlin on Android, Objective-C++ on iOS and a shared C++ inference core.
+- ncnn runs the bundled models. Android uses Vulkan where supported, with CPU fallback; iOS uses CPU inference.
+- Firebase Analytics, Crashlytics and Remote Config support the separate online features described above.
+
+## Platforms
+
+Android targets ARM64 phones and tablets running Android 10 or later. iOS targets 15.1 or later. Both apply a 3.5 GiB memory check; processing time depends on the device, image and preset.
+
+The interface supports light, dark and system themes, **34 active languages**, right-to-left layouts and scalable text. Translations have not been professionally reviewed.
+
+Version 0.8.1 is available as source. This repository currently offers no signed release or store download. The iOS port has simulator-test and unsigned Release-build evidence; physical iPhone/iPad acceptance remains open. Updated Android physical-device acceptance is also deferred.
+
+## Build from source
+
+Use **Node 22** and **JDK 21**. Android requires the pinned SDK/NDK; iOS requires macOS and the pinned Xcode toolchain.
+
+```sh
+git clone https://github.com/kigya/pixora.git
+cd pixora
+npm ci
+```
+
+Continue with the [Android and iOS build guide](docs/engineering/tooling.md) for native dependencies, local configuration and verification commands.
+
+[Product requirements](docs/PRD.md) · [Feature registry](docs/product/features.md) · [Architecture](docs/ARCHITECTURE.md) · [Test matrix](docs/quality/test-matrix.md)
+
+## Models and acknowledgements
+
+Bundled models and sample assets retain their original licenses and checksums. See the [third-party notices](docs/THIRD_PARTY_NOTICES.txt) for sources and license texts.
