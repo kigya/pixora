@@ -61,16 +61,28 @@
       "command": "evidence",
       "phase": "implementation",
       "summary": null
+    },
+    {
+      "at": "2026-10-16T15:15:47.120217+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T15:16:18.903711+00:00",
+      "command": "checkpoint",
+      "phase": "implementation",
+      "summary": "Owner stopped further app tests after manual review. Latest UI/default-ON and iOS changes are integrated; normal release b44 built and installed on Samsung for owner confirmation. Do not resume testing without new instruction. Final main merge and incomplete strict gates remain pending."
     }
   ],
   "evidence": {
     "prd": {
       "status": "passed",
       "artifact": "docs/product/prd.md",
-      "artifact_sha256": "113ee97319498bba1505ee5ba537a86236b287ce4735f7d5c5152b400d6fd583",
-      "revision": "2e90909a5d03d16dd5187cf17d725880541b211f",
-      "source_fingerprint": "c34f57cb201bd9119669bc8c3cd4c546acebf27d17d9e16eea87b1fca4a213fc",
-      "recorded_at": "2026-10-16T11:42:01.231045+00:00"
+      "artifact_sha256": "85c1d83a24fe33d4a0033865e536a5c4285b85d1a8a0628ec64bcd47c04b21c4",
+      "revision": "4af94c542f15ad7df60ba8b82263ce6da03c7aec",
+      "source_fingerprint": "9e7d7a550bdacd0a5453f547b2835b062b51e9c4c8aa315ec3b361c20b9a49fd",
+      "recorded_at": "2026-10-16T15:15:47.118102+00:00"
     },
     "feature-registry": {
       "status": "passed",
