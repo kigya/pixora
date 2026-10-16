@@ -211,5 +211,16 @@
   "analyticsTitle": "Analisi dell’uso",
   "analyticsBody": "Quali funzioni vengono usate. Non include foto o contenuti del feedback.",
   "crashesTitle": "Rapporti sugli errori",
-  "crashesBody": "Aiutano a individuare i problemi. Non includono foto o contenuti del feedback."
+  "crashesBody": "Aiutano a individuare i problemi. Non includono foto o contenuti del feedback.",
+  "recommendationTitle": "Suggerimento per questa immagine",
+  "recommendationApply": "Applica suggerimento",
+  "recommendationReason": {
+    "generic": "Per un'immagine poco chiara, suggeriamo una modalità generale.",
+    "photo": "Sembra una foto.",
+    "art": "Sembra un disegno con linee definite.",
+    "pixel": "È stata rilevata una griglia di pixel netta."
+  },
+  "preparationWhy": "Una copia di lavoro più piccola può ridurre l'uso della memoria e il tempo di elaborazione.",
+  "preparationDetailLoss": "I dettagli fini possono cambiare o andare persi.",
+  "preparationFast": "La modalità veloce limita anche il lato lungo dell'input AI a 512 px. È un limite distinto dalla copia di lavoro."
 }

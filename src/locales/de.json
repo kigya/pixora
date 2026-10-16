@@ -235,5 +235,16 @@
   "analyticsTitle": "Nutzungsanalyse",
   "analyticsBody": "Welche Funktionen verwendet werden. Ohne Fotos und Feedback-Inhalte.",
   "crashesTitle": "Fehlerberichte",
-  "crashesBody": "Helfen bei der Fehlersuche. Ohne Fotos und Feedback-Inhalte."
+  "crashesBody": "Helfen bei der Fehlersuche. Ohne Fotos und Feedback-Inhalte.",
+  "recommendationTitle": "Vorschlag für dieses Bild",
+  "recommendationApply": "Vorschlag anwenden",
+  "recommendationReason": {
+    "generic": "Bei einem uneindeutigen Bild wird ein allgemeiner Modus vorgeschlagen.",
+    "photo": "Das sieht nach einem Foto aus.",
+    "art": "Das sieht nach einer Zeichnung mit klaren Linien aus.",
+    "pixel": "Ein deutliches Pixelraster wurde erkannt."
+  },
+  "preparationWhy": "Eine kleinere Arbeitskopie kann Speicherbedarf und Verarbeitungszeit senken.",
+  "preparationDetailLoss": "Feine Details können sich ändern oder verloren gehen.",
+  "preparationFast": "Der schnelle Modus begrenzt außerdem die lange Seite der KI-Eingabe auf 512 px. Das ist unabhängig von der Arbeitskopie."
 }
