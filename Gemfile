@@ -1,0 +1,8 @@
+source 'https://rubygems.org'
+ruby '3.3.12'
+gem 'cocoapods', '1.16.2'
+gem 'activesupport', '7.2.3.2'
+gem 'xcodeproj', '1.27.0'
+gem 'concurrent-ruby', '1.3.8'
+gem 'ffi', '1.17.3'
+gem 'logger', '1.6.6'
