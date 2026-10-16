@@ -1,0 +1,11 @@
+# Time-limited dispositions for Node build/test tooling. See docs/quality/security.md.
+# These do not declare the dependencies fixed; every other advisory still fails CI.
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "braces 3.0.3: Node CLI/Metro/Jest glob patterns are repository-controlled; no user image or app input reaches this API. Upstream has no patched release. Re-review before expiry or dependency/input-surface changes."
+
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "sprintf-js 1.0.3: js-yaml 3/argparse build/test configuration path; no runtime app import or user-controlled formatting. Upstream has no patched release. Re-review before expiry or dependency/input-surface changes."
