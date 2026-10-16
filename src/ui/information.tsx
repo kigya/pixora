@@ -7,6 +7,7 @@ import {
   ScrollView,
   FlatList,
   AccessibilityInfo,
+  Platform,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { usePane } from './layout';
@@ -294,10 +295,18 @@ export function BackgroundNotice({
         </View>
         <View style={{ flex: 1, gap: 6 }}>
           <Text style={[s.body, { color: colors.text, fontWeight: '600' }]}>
-            {enabled ? t.backgroundTitle : t.returnTitle}
+            {enabled
+              ? Platform.OS === 'ios'
+                ? t.notificationIntroTitleIos
+                : t.backgroundTitle
+              : t.returnTitle}
           </Text>
           <Text style={s.caption}>
-            {enabled ? t.backgroundBody : t.returnBody}
+            {enabled
+              ? Platform.OS === 'ios'
+                ? t.notificationIosBody
+                : t.backgroundBody
+              : t.returnBody}
           </Text>
         </View>
       </View>

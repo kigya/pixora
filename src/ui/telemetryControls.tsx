@@ -23,6 +23,7 @@ export function TelemetryNotice() {
   const s = createStyles(colors, rtl);
   const { operation, error, run } = useOperation();
   const [closing, setClosing] = useState(false);
+  const [choices, setChoices] = useState({ analytics: false, crashes: false });
   const height = useSharedValue(-1);
   const measuredHeight = useSharedValue(0);
   const opacity = useSharedValue(1);
@@ -35,7 +36,7 @@ export function TelemetryNotice() {
     opacity: opacity.value,
     transform: [{ translateY: offset.value }],
   }));
-  if (telemetry.noticeSeen) return null;
+  if (telemetry.consentVersion === 2) return null;
   return (
     <Animated.View
       onLayout={e => {
@@ -49,15 +50,27 @@ export function TelemetryNotice() {
           <Text style={[s.value, { flex: 1 }]}>{t.telemetryTitle}</Text>
         </View>
         <Text style={s.caption}>{t.telemetryIntro}</Text>
+        {(['analytics', 'crashes'] as const).map(key => (
+          <View key={key} style={[s.row, { flexWrap: 'nowrap' }]}>
+            <Text style={[s.body, { flex: 1 }]}>
+              {key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
+            </Text>
+            <Switch
+              accessibilityLabel={key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
+              value={choices[key]}
+              onValueChange={value => setChoices(current => ({ ...current, [key]: value }))}
+            />
+          </View>
+        ))}
         <Button
           secondary
-          title={t.understood}
+          title={t.continue}
           disabled={!!operation || closing}
           onPress={() =>
             run(async () => {
               const next = await Native.updateTelemetrySettings(
-                telemetry.analytics,
-                telemetry.crashes,
+                choices.analytics,
+                choices.crashes,
                 true,
               );
               setClosing(true);
@@ -81,6 +94,12 @@ export function TelemetryNotice() {
               );
             })
           }
+        />
+        <Button
+          secondary
+          title={t.notNow}
+          disabled={!!operation || closing}
+          onPress={() => run(async () => setTelemetry(await Native.updateTelemetrySettings(false, false, true)))}
         />
         {!!error && <Text style={s.errorText}>{errorText(error, lang)}</Text>}
       </Animated.View>

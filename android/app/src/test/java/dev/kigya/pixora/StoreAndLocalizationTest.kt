@@ -53,11 +53,12 @@ class StoreAndLocalizationTest {
         SessionStore.init(ctx);SessionStore.init(ctx)
         assertEquals("EMPTY",SessionStore.snapshot().getString("state"))
         assertEquals("system",SessionStore.settings(ctx).getString("language"))
+        assertFalse(SessionStore.settings(ctx).getBoolean("languageChosen"))
         val ids=Localizer.supported(ctx)
         assertEquals(org.json.JSONArray(readAssetText(ctx,"locales/registry.json")).length(),ids.size)
         for(id in ids)assertEquals(id,Localizer.resolve(ctx,id,"xx"))
         for(tag in listOf("zh","zh-TW","zh_CN"))assertEquals("zh-Hans",Localizer.resolve(ctx,"system",tag))
-        assertEquals("pt",Localizer.resolve(ctx,"system","pt-BR"));assertEquals("en",Localizer.resolve(ctx,"system","fi-FI"))
+        assertEquals("pt-BR",Localizer.resolve(ctx,"system","pt-BR"));assertEquals("en",Localizer.resolve(ctx,"system","fi-FI"))
         assertEquals("en",Localizer.language(ctx));assertTrue(Localizer.text(ctx,"stages.upscaling").isNotBlank())
         ctx.getSharedPreferences("settings",0).edit().putString("language","ru").commit()
         assertEquals("ru",Localizer.language(ctx));assertTrue(Localizer.text(ctx,"processing").contains("\u041e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430"))
@@ -68,6 +69,12 @@ class StoreAndLocalizationTest {
         assertEquals(Localizer.text(ctx,"processing"),"Processing")
         cache.remove("ru");if(original!=null)cache["ru"]=original
         ctx.getSharedPreferences("settings",0).edit().putInt("language",123).commit();assertEquals("en",Localizer.language(ctx))
+    }
+    @Test fun oldPortuguesePreferenceMigratesAndExistingChoicesRemainChosen() {
+        ctx.getSharedPreferences("settings",0).edit().putString("language","pt").putString("theme","dark").commit()
+        val settings=SessionStore.settings(ctx)
+        assertEquals("pt-BR",settings.getString("language"));assertTrue(settings.getBoolean("languageChosen"))
+        assertEquals("pt-BR",ctx.getSharedPreferences("settings",0).getString("language",null))
     }
     @Test fun migrationInterruptionAndInvalidJournals() {
         journal(base("RUNNING"));SessionStore.init(ctx)

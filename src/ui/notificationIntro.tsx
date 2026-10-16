@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AppState, Text } from 'react-native';
+import { AppState, Platform, Text } from 'react-native';
 import { Panel } from './information';
 import { Button, createStyles } from './components';
 import { useApp } from '../application/AppProvider';
@@ -44,9 +44,15 @@ export function useNotificationIntro() {
     element: (
       <Panel visible={visible} onClose={() => finish(null)}>
         <Text accessibilityRole="header" style={s.heading}>
-          {t.notificationIntroTitle}
+          {Platform.OS === 'ios'
+            ? t.notificationIntroTitleIos
+            : t.notificationIntroTitle}
         </Text>
-        <Text style={s.body}>{t.notificationIntroBody}</Text>
+        <Text style={s.body}>
+          {Platform.OS === 'ios'
+            ? t.notificationIosBody
+            : t.notificationIntroBody}
+        </Text>
         <Button
           title={t.notificationEnableContinue}
           onPress={() => finish(true)}

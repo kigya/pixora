@@ -259,34 +259,20 @@ test('retry of an interrupted legacy illustration keeps its old network until th
   );
 });
 
-test.each([1, 2, 3, 4])(
-  'review sends %s stars to support only after Continue',
-  async rating => {
-    const { ReviewDialog } = require('../src/ui/feedback');
-    const close = jest.fn(),
-      feedback = jest.fn();
-    await render(
-      <AppProvider>
-        <ReviewDialog visible onClose={close} onFeedback={feedback} />
-      </AppProvider>,
-    );
-    await userEvent.press(screen.getByRole('radio', { name: `${rating} / 5` }));
-    expect(feedback).not.toHaveBeenCalled();
-    await userEvent.press(screen.getByRole('button', { name: t.continue }));
-    expect(feedback).toHaveBeenCalledWith(rating);
-    await screen.rerender(
-      <AppProvider>
-        <ReviewDialog visible={false} onClose={close} onFeedback={feedback} />
-      </AppProvider>,
-    );
-    await screen.rerender(
-      <AppProvider>
-        <ReviewDialog visible onClose={close} onFeedback={feedback} />
-      </AppProvider>,
-    );
-    expect(screen.getByRole('button', { name: t.continue })).toBeDisabled();
-  },
-);
+test('a neutral Play request result is not reported as a submitted review', async () => {
+  seed({state:'SUCCEEDED',image,jobId:'review-job',resultUri:'file:///result.png'});
+  Native.claimReviewPrompt.mockResolvedValue(true);
+  Native.requestReview.mockResolvedValue(false);
+  await render(<AppProvider><Home {...props}/></AppProvider>);
+  await userEvent.press(await screen.findByRole('button',{name:t.save}));
+  expect(await screen.findByText(t.exportSuccess)).toBeOnTheScreen();
+  expect(Native.claimReviewPrompt).toHaveBeenCalledWith('review-job');
+  expect(Native.requestReview).toHaveBeenCalledTimes(1);
+  expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith(
+    'review_prompt_requested',expect.any(String),
+  );
+  expect(screen.queryByText(t.rateTitle)).toBeNull();
+});
 
 test('time ranges use seconds for short jobs and collapse equal bounds', () => {
   const copy = require('../src/locales/en.json');

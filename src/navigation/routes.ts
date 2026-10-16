@@ -1,7 +1,8 @@
 export type Routes = {
+  LanguageOnboarding: undefined;
   Home: undefined;
   Settings: undefined;
   Feedback:
-    | { rating?: number; context?: Readonly<Record<string, string | number>> }
+    | { context?: Readonly<Record<string, string | number>> }
     | undefined;
 };

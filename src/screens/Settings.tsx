@@ -5,6 +5,7 @@ import {
   Text,
   View,
   Pressable,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -138,7 +139,11 @@ export function SettingsScreen({
                     : t.notificationsOff}
                 </Text>
               </View>
-              <Text style={s.body}>{t.notificationBody}</Text>
+              <Text style={s.body}>
+                {Platform.OS === 'ios'
+                  ? t.notificationIosBody
+                  : t.notificationBody}
+              </Text>
               <Button
                 title={t.notificationSettings}
                 secondary

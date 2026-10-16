@@ -64,7 +64,7 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = true
+def enableProguardInReleaseBuilds = false
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -131,8 +131,8 @@ android {
             signingConfig signingConfigs.debug
         }
         release {
-            shrinkResources true
-            buildConfigField "boolean", "TELEMETRY_DEFAULT", "true"
+            shrinkResources false
+            buildConfigField "boolean", "TELEMETRY_DEFAULT", "false"
             firebaseCrashlytics {
                 mappingFileUploadEnabled !project.hasProperty("ci")
                 nativeSymbolUploadEnabled !project.hasProperty("ci")
@@ -145,7 +145,7 @@ android {
             // CI validates release compilation without access to production credentials.
             if (project.hasProperty("localTestSigning")) signingConfig signingConfigs.debug
             else if (hasLocalSigning) signingConfig signingConfigs.release
-            minifyEnabled enableProguardInReleaseBuilds
+            minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
         coverage {
@@ -194,6 +194,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-config")
     implementation("com.google.firebase:firebase-crashlytics-ndk")
+    implementation("com.google.android.play:review:2.0.2")
     implementation("androidx.window:window:1.5.1")
     implementation("androidx.window:window-java:1.5.1")
     // The version of react-native is set by the React Native Gradle Plugin
