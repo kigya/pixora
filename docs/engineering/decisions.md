@@ -19,3 +19,13 @@
 - ADR-813: after further manual review, splash remains visible until JS NavigationContainer.onReady following initial settings/session refresh, and for at least 1500 ms; the animator separately runs for 1500 ms. UI/JS threads remain responsive. The shared splash lesson is stored only in the private local database. The owner accepted the other fixes and continuation of the workflow.
 
 - ADR-814: the owner subsequently authorized automatic verification and fixes without Samsung UI interaction. Do not install the new release yet. The earlier test pause is lifted only for automatic strict coverage/security/build/CI checks. Physical UI/install checks must not receive a fabricated PASS.
+
+## ADR-815 — corrective version 0.8.1 after main CI
+
+The sole 0.8.0 main squash is PR #13, commit `2ea2dd2`. [Run 38955818843](https://github.com/kigya/pixora/actions/runs/38955818843) failed: setup-java v4 rejected JDK 21.0.12.1+1 formatting and npm ci received a 404 for text-table 0.3.0. The approved workflow preserves history and routes fixes through release/0.8.1, a task PR and one new version squash. No new product features. Samsung installation/UI remain deferred.
+
+The lockfile was restored against the official registry: [eslint 8.57.1](https://registry.npmjs.org/eslint/8.57.1) requires text-table ^0.2.0; [text-table 0.2.0](https://registry.npmjs.org/text-table/0.2.0) supplies the correct version/URL. Integrity already matched 0.2.0 and was unchanged. An empty-cache npm ci installed 995 packages; checking all 932 URLs found one old 404, with the other 931 returning 2xx.
+
+setup-java was updated to v6.1.0 at immutable SHA `b843ebf9b913146b38da2eaa7aeddf76074ae1ad`. Independent review of [normalization/matching](https://github.com/actions/setup-java/blob/b843ebf9b913146b38da2eaa7aeddf76074ae1ad/src/util.ts) and the [Temurin resolver](https://github.com/actions/setup-java/blob/b843ebf9b913146b38da2eaa7aeddf76074ae1ad/src/distributions/temurin/installer.ts) confirmed exact patch/build selection without an older-JDK fallback. Version 0.8.1/code 11 matches package/lock, Android and iOS project/generator.
+
+After clean npm ci, local Gradle MCP could not find bare npx while refreshing the autolinking cache (b53 stopped before tests). settings.gradle invokes installed CLI 20.2.0 directly through NODE_BINARY or node from PATH. Standard RN 0.87.1 working-directory and lock/config cache inputs remain; there is no download fallback or library skipping. Independent review passed. Automatic gates/builds are repeated for 0.8.1.
