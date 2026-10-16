@@ -1,9 +1,53 @@
 #include <cassert>
 #include <net.h>
 extern "C" int omp_get_num_places(){return 0;}
-#include "../../android/app/src/main/cpp/engine/upscale.cpp"
+#ifndef UPSCALE_ANDROID_SHIM
+#define UPSCALE_ANDROID_SHIM "../../android/app/src/main/cpp/engine/upscale.cpp"
+#endif
+#include UPSCALE_ANDROID_SHIM
+#include <atomic>
+#include <vector>
 using ncnn::fault;
+static void sharedProcessRejectsInvalidBoundaryViews() {
+    using namespace upscale;
+    std::vector<uint8_t> source(4*4*4),target(16*16*4);
+    PixelsView input{source.data(),4,4,16},output{target.data(),16,16,64};
+    std::atomic<bool> cancelled{false};
+    int stages=0,loads=0;
+    bool cancelAtFinalTiming=false;
+    Callbacks callbacks{
+        [&](int,int){return true;},
+        [&](int){++stages;return true;},
+        [&](int kind,double){if(cancelAtFinalTiming && kind==4)cancelled.store(true);return true;}
+    };
+    auto load=[&](void*,const Model&){++loads;return 0;};
+    auto run=[&](PixelsView in,PixelsView out,int tile=32,int profile=0) {
+        stages=0;loads=0;cancelled.store(false);
+        const int status=process(in,out,false,tile,profile,false,cancelled,callbacks,load);
+        assert(stages==0 && loads==0);
+        return status;
+    };
+    assert(run({nullptr,4,4,16},output)==-2);
+    assert(run(input,{nullptr,16,16,64})==-2);
+    assert(run({source.data(),0,4,0},output)==-2);
+    assert(run({source.data(),4,0,16},output)==-2);
+    assert(run(input,{target.data(),15,16,64})==-2);
+    assert(run(input,{target.data(),16,15,64})==-2);
+    assert(run(input,{target.data(),16,16,63})==-2);
+    assert(run(input,{target.data(),15,16,64})==-2);
+    assert(run(input,{target.data(),16,15,64})==-2);
+    assert(run({source.data(),4,4,15},output)==-2);
+    assert(run({source.data(),1025,4,4100}, {target.data(),4100,16,65600})==-2);
+    assert(run({source.data(),4,1025,16}, {target.data(),16,4100,256})==-2);
+    assert(run(input,output,31)==-2);
+    assert(run(input,output,32,-1)==-4);
+    assert(run(input,output,32,5)==-4);
+    stages=0;loads=0;cancelAtFinalTiming=true;cancelled.store(false);
+    assert(process(input,output,false,32,0,false,cancelled,callbacks,load)==1);
+    assert(cancelled.load() && stages==2 && loads==1);
+}
 int main(){
+    sharedProcessRejectsInvalidBoundaryViews();
     assert(JNI_OnLoad(nullptr,nullptr)==JNI_VERSION_1_6);
     JNIEnv env;AAssetManager assets;FakeBitmap in(33,35),out(132,140);
     assert(std::string(Java_dev_kigya_pixora_NativeEngine_feedbackEndpoint(&env,nullptr))=="x");
@@ -36,7 +80,7 @@ int main(){
     reset();fault.extractHook=[]{cancelled.store(true);};assert(invoke()==1);
     reset();env.progressHook=[]{cancelled.store(true);};assert(invoke()==1);
     reset();env.proceed=false;assert(invoke()==1);
-    for(int call:{1,2,3,4,5,6,7,8,9}){reset();env.throwAt=call;assert(invoke()!=0);}
+    for(int call:{1,2,3,4,5,6,7,8,9,10}){reset();env.throwAt=call;assert(invoke()!=0);}
     for(int call:{1,2,3,4,5,6,7,8,9,10}){reset();env.throwAt=call;assert(invoke(true,true,true)!=0);}
     reset();fault.fromEmpty=true;assert(invoke()==-5);
     for(bool gpu:{false,true}) {
