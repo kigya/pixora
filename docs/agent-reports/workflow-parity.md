@@ -31,3 +31,23 @@ Remaining blockers/limits:
 - Strict JS coverage remains a blocker for a 100% coverage claim; the full suite passes, but the measured 98.00% line / 98.01% branch report is below the repository gate. The newly added onboarding and platform-specific copy branches need focused test execution before that gate can pass.
 - Removing FirebaseInitProvider and pre-initialization reconciliation of both pinned Analytics keys and the Crashlytics collection preference establishes the intended source ordering. Tests cover legacy enabled SDK flags, including the API override, and current explicit preferences overriding stale SDK values. A live upgrade test against persisted SDK collection settings and old unsent crash reports is still needed before claiming runtime behavior is proven.
 - Firebase ingestion, Play review display, support-email delivery, policy/legal disclosures, and native-speaker translation review remain unverified.
+
+## Integrated acceptance follow-up (2026-10-16)
+
+This follow-up was performed in the main acceptance checkout after PR1–6 integration. It supersedes the earlier pre-integration Jest coverage blocker above: the integrated full Jest run now passes all four global thresholds without changing the thresholds, exclusions, or denominator.
+
+- Added behavioral coverage for language onboarding success/failure/pending states; optional-email validation and mail-app fallback with and without a reply address; independent consent-switch choices; and Android/iOS notification copy selection.
+- Added platform metadata to Android feedback requests (`platform: "android"`). Apps Script accepts `android`/`ios`, defaults an absent platform to `android` for legacy clients, rejects other values, and includes platform plus app version in the mail body. No deployment or real email was performed.
+- Updated the feedback privacy disclosure and platform-neutral unsupported-device/model-installation errors in all 35 locale dictionaries currently present (34 active locale schemas plus retained `pt.json` migration compatibility).
+- Updated `docs/FEEDBACK.md` and `docs/observability/privacy.md` for the new feedback metadata.
+
+Verification in this follow-up:
+
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run test:coverage -- --silent` — 14 suites, 166 tests pass; statements 100%, branches 100%, functions 100%, lines 100%. The `routes.ts` and `NativeUpscale.ts` tables show 0% because they have no executable statements (type-only route declarations and native module contract registration); they do not reduce the measured global metrics.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH npm run typecheck` — passed.
+- `PATH=/opt/homebrew/opt/node@22/bin:$PATH node --test support/apps-script/feedback.test.cjs` — 7 tests passed, including legacy default, both platform enum values, invalid enum rejection, and platform/version email metadata.
+- `python3 scripts/verify-locales.py` — 34 active locale schemas, placeholders, and bundled flag hashes passed; the retained `pt.json` dictionary is also updated for feedback and errors.
+
+Native verification remains with the root agent. As of its latest report, Kotlin b12 passed 76/81; the five failures were test-fake editor chains and passed after the helper fix in b14. b14/b15 reached 87/89, with the remaining failures in root-owned `ApplicationStartup` Mockito verification passing a nullable task to a non-null matcher; root applied a test fix for the next run. No fresh native coverage XML existed at that point. Build b16 was compiling the debug app and coverage Android test APK for physical validation. The `FeedbackClientTest` payload assertion was updated here but was not run because Gradle execution belongs to the root agent. No device, Firebase, Apps Script deployment, or email delivery check was run by this follow-up.
+
+Root review follow-up: independent review found a shared rate-limit key for all optional-email submissions. Root removed that collision, retained the global daily quota and request deduplication, and moved successful-send counting after MailApp returns. Two regression tests bring the backend suite to9/9. Re-review confirmed both fixes. `FeedbackClientTest` passed within b18/b20; those full JVM runs remain failed solely on separate new host/callback boundary tests, so no whole-native gate is claimed.
