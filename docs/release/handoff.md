@@ -1,6 +1,6 @@
 # Pixora 0.8.1 — состояние передачи
 
-Автоматическая приёмка текущих исходников завершена по coverage/source gates; финальные release builds и main CI фиксируются в build-report и итоговом [PR13](https://github.com/kigya/pixora/pull/13). Формальная готовность к публикации не объявляется: пользователь отложил новую установку/UI на Samsung, отдельные service QA остаются открытыми. Production signing, GitHub Release и stores относятся к отдельному release workflow.
+Автоматическая приёмка текущих исходников завершена по coverage/source gates; финальные release builds и main CI фиксируются в build-report и [main CI](https://github.com/kigya/pixora/actions/workflows/main.yml). Формальная готовность к публикации не объявляется: пользователь отложил новую установку/UI на Samsung, отдельные service QA остаются открытыми. Production signing, GitHub Release и stores относятся к отдельному release workflow.
 
 ## Реализованное поведение
 
@@ -28,7 +28,7 @@ Samsung SM-S916B/Android16 заменяет Xiaomi по ADR-805. Ранее вы
 
 ## Продолжение
 
-GitHub flow: task PRs в release/0.8.0, один итоговый squash PR13 в main, CI только main push; текущие ссылки/исходный SHA и machine receipts фиксирует pipeline. При падении main CI —новая corrective version/PR без стирания истории. Новая Samsung установка/UI возможна только после нового указания пользователя. Перед публикацией отдельный release workflow должен закрыть deferred physical/service gates, финальную подпись/backup и store disclosures; billing не включается.
+GitHub flow: task PRs в release/<version>, один итоговый squash на версию в main, CI только main push; текущие ссылки/исходный SHA и machine receipts фиксирует pipeline. При падении main CI —новая corrective version/PR без стирания истории. Новая Samsung установка/UI возможна только после нового указания пользователя. Перед публикацией отдельный release workflow должен закрыть deferred physical/service gates, финальную подпись/backup и store disclosures; billing не включается.
 
 ## Корректирующая версия
 
