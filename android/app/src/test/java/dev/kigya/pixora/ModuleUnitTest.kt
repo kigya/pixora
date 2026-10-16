@@ -389,6 +389,25 @@ class ModuleUnitTest {
         assertEquals(1,received.size)
     }
 
+    @Test fun finishStartupPostsAndOnlyFinishesTheCurrentMainActivity() {
+        val startupReady=MainActivity::class.java.getDeclaredField("startupReady").apply { isAccessible=true }
+        module.finishStartup() // No current Activity is a safe no-op.
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        val activity=Robolectric.buildActivity(MainActivity::class.java).get()
+        react.onHostResume(Activity())
+        module.finishStartup()
+        assertFalse(startupReady.getBoolean(activity))
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertFalse(startupReady.getBoolean(activity)) // A different current Activity is ignored.
+
+        react.onHostResume(activity)
+        module.finishStartup()
+        assertFalse(startupReady.getBoolean(activity)) // The bridge posts to the main looper.
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(startupReady.getBoolean(activity))
+    }
+
     @Test fun failedSettingsWritesRejectWithoutReportingSuccess() {
         val previous=call(module::getSettings) as ReadableMap
         react.rejectSettingsWrite=true

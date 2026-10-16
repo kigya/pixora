@@ -8,14 +8,26 @@ import {Home} from '../src/screens/Home';
 import {ThemeContext,darkColors,lightColors} from '../src/ui/theme';
 import {AppNavigation} from '../src/navigation/AppNavigation';
 import Native,{seed} from '../tests/nativeMock';
-jest.mock('@react-navigation/native',()=>({NavigationContainer:require('react-native').View,DarkTheme:{colors:{}},DefaultTheme:{colors:{}}}));
+jest.mock('@react-navigation/native',()=>{
+ const ReactRuntime=require('react');
+ const {View}=require('react-native');
+ return {
+  NavigationContainer:({children,onReady}:any)=>{
+   const called=ReactRuntime.useRef(false);
+   ReactRuntime.useEffect(()=>{if(!called.current){called.current=true;onReady?.()}},[onReady]);
+   return ReactRuntime.createElement(View,null,children);
+  },
+  DarkTheme:{colors:{}},DefaultTheme:{colors:{}}
+ };
+});
 jest.mock('@react-navigation/native-stack',()=>({createNativeStackNavigator:()=>({Navigator:require('react-native').View,Screen:({name,component:Component}:any)=>name==='Home'?<Component navigation={{navigate:()=>{}}}/>:null})}));
 beforeEach(()=>{jest.clearAllMocks();seed();});
-test('root mounts providers and the native navigation boundary',async()=>{await render(<App/>);expect(await screen.findByRole('button',{name:'Choose image'})).toBeOnTheScreen()});
+test('root mounts providers and finishes native startup after navigation is ready',async()=>{await render(<App/>);expect(await screen.findByRole('button',{name:'Choose image'})).toBeOnTheScreen();expect(Native.finishStartup).toHaveBeenCalledTimes(1)});
 test.each([false,true])('navigation honors theme and reduced motion %s',async dark=>{
  jest.spyOn(AccessibilityInfo,'isReduceMotionEnabled').mockResolvedValue(dark);
  await render(<AppProvider><ThemeContext.Provider value={{dark,colors:dark?darkColors:lightColors}}><AppNavigation/></ThemeContext.Provider></AppProvider>);
  expect(await screen.findByRole('button',{name:'Choose image'})).toBeOnTheScreen();
+ expect(Native.finishStartup).toHaveBeenCalledTimes(1);
 });
 test('native module resolves the registered contract',()=>{
  const getter=jest.spyOn(TurboModuleRegistry,'getEnforcing').mockReturnValue(Native as any);
@@ -33,7 +45,7 @@ test('initial failure is visible and later background refresh failure is contain
  Native.getCapabilities.mockRejectedValueOnce(new Error('missing model'));
  const callbacks:Array<(state:string)=>void>=[];
  const sub=jest.spyOn(AppState,'addEventListener').mockImplementation((_name,callback)=>{callbacks.push(callback as (s:string)=>void);return {remove:jest.fn()}});
- await render(<App/>);expect((await screen.findAllByText(strings.en.modelInvalid)).length).toBeGreaterThan(0);
+ await render(<App/>);expect((await screen.findAllByText(strings.en.modelInvalid)).length).toBeGreaterThan(0);expect(Native.finishStartup).toHaveBeenCalledTimes(1);
  Native.getCurrentSession.mockRejectedValueOnce(new Error('unavailable'));Native.getNotificationStatus.mockRejectedValueOnce(new Error('unavailable'));
  await act(async()=>{callbacks.forEach(callback=>callback('active'))});sub.mockRestore();
 });
