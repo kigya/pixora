@@ -1,0 +1,4 @@
+Upstream license declaration: MIT (SKILL.md front matter).
+Author: Vercel.
+Source: https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278/skills/react-native-skills
+The pinned upstream tree has no standalone LICENSE file. Its original license declaration, author metadata and references are preserved unmodified.
