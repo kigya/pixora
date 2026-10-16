@@ -1,6 +1,11 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    // Run the locked local CLI directly; NODE_BINARY also supports IDE-launched Gradle.
+    def nodeBinary = providers.environmentVariable("NODE_BINARY").getOrElse("node")
+    def cli = file("../node_modules/@react-native-community/cli/build/bin.js").absolutePath
+    ex.autolinkLibrariesFromCommand([nodeBinary, cli, "config"])
+}
 rootProject.name = 'UpscaleImage'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
