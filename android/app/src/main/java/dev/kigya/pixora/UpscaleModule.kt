@@ -63,6 +63,9 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         ctx.addActivityEventListener(activityListener)
     }
     override fun getName()=NAME
+    override fun finishStartup() {
+        main.post { (ctx.currentActivity as? MainActivity)?.finishStartup() }
+    }
     private fun async(p:Promise,fallback:String="INFERENCE_FAILED",executor:java.util.concurrent.Executor=io,block:()->Any?) {
         executor.execute {try{val result=block();if(result !== Deferred)p.resolve(result)}catch(e:Throwable){p.reject(if(e is AppFailure)e.code else if(e is OutOfMemoryError)"LOW_MEMORY" else fallback,"Operation failed")}}
     }

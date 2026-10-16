@@ -63,6 +63,7 @@ static PixoraUpscale* SharedUpscale;
 }
 + (NSString*)moduleName{return @"NativeUpscale";}
 + (BOOL)requiresMainQueueSetup{return YES;}
+- (void)finishStartup {dispatch_async(dispatch_get_main_queue(),^{[NSNotificationCenter.defaultCenter postNotificationName:@"PixoraStartupFinished" object:nil];});}
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams&)params{return std::make_shared<facebook::react::NativeUpscaleSpecJSI>(params);}
 - (instancetype)init {
  @synchronized(PixoraUpscale.class){if(SharedUpscale)return SharedUpscale;NSURL* root=[[NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject URLByAppendingPathComponent:@"Pixora" isDirectory:YES];SharedUpscale=[self initWithPreferences:NSUserDefaults.standardUserDefaults root:root remoteConfig:FIRRemoteConfig.remoteConfig services:pixora::services()];return SharedUpscale;}
