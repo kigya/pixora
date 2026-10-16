@@ -1,6 +1,6 @@
 {
   "name": "UpscaleImage",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -66,5 +66,8 @@
     "staticFeatureFlags": {
       "ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
     }
+  },
+  "overrides": {
+    "@grpc/grpc-js": "1.14.5"
   }
 }
