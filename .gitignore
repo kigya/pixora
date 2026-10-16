@@ -125,6 +125,10 @@ android/feedback.properties
 /docs/COVERAGE.md
 /docs/PLAN-*.md
 
+# Python caches
+__pycache__/
+*.py[cod]
+
 # Local workflow and generated evidence are never published.
 /.agents/
 /.codex/

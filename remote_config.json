@@ -1,0 +1,60 @@
+{
+  "parameters": {
+    "pixora_profile_standard_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora standard preset. Active jobs are unaffected."
+    },
+    "pixora_profile_lite_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora lite preset. Active jobs are unaffected."
+    },
+    "pixora_profile_natural_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora natural preset. Active jobs are unaffected."
+    },
+    "pixora_profile_details_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora details preset. Active jobs are unaffected."
+    },
+    "pixora_profile_balanced_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora balanced preset. Active jobs are unaffected."
+    },
+    "pixora_profile_sharp_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora sharp preset. Active jobs are unaffected."
+    },
+    "pixora_profile_art_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora art preset. Active jobs are unaffected."
+    },
+    "pixora_profile_pixel_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "valueType": "BOOLEAN",
+      "description": "Enable the Pixora pixel preset. Active jobs are unaffected."
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "repository": "https://github.com/xinntao/Real-ESRGAN",
+  "commit": "a4abfb2979a7bbff3f69f58f58ae324608821e27",
+  "license": "BSD-3-Clause",
+  "tools": {
+    "torch": "2.10.0",
+    "pnnx": "20260526",
+    "ncnn": "1.0.20260526"
+  },
+  "inputs": {
+    "srvgg_arch.py": {
+      "url": "https://raw.githubusercontent.com/xinntao/Real-ESRGAN/a4abfb2979a7bbff3f69f58f58ae324608821e27/realesrgan/archs/srvgg_arch.py",
+      "sha256": "7419a75e789ca09295266563d74a6d7c08d6c24502af6b0a919b1811d0a0be59"
+    },
+    "realesr-general-x4v3.pth": {
+      "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-general-x4v3.pth",
+      "sha256": "8dc7edb9ac80ccdc30c3a5dca6616509367f05fbc184ad95b731f05bece96292"
+    },
+    "LICENSE": {
+      "url": "https://raw.githubusercontent.com/xinntao/Real-ESRGAN/a4abfb2979a7bbff3f69f58f58ae324608821e27/LICENSE",
+      "sha256": "4a699ec4863d96a91fc265948a0c90033f7e8735d515524dcf3444736406e0c2"
+    }
+  },
+  "files": {
+    "realesr-general-x4v3.param": "b41dac5ec6a213cc6983792f5e66b066e906aead0e6eaed9bc4644b281186921",
+    "realesr-general-x4v3.bin": "bfdfaebf0b26be9442faa30b8cec617fe04a808ae2aa3616ece85b92d81ae0ce"
+  },
+  "conversion": {
+    "fp16": false,
+    "input": "in0",
+    "output": "out0",
+    "scale": 4,
+    "parity": [
+      {
+        "width": 8,
+        "height": 8,
+        "mae8bit": 0.0005177752464078367
+      },
+      {
+        "width": 40,
+        "height": 32,
+        "mae8bit": 0.0005069047911092639
+      },
+      {
+        "width": 49,
+        "height": 33,
+        "mae8bit": 0.0005021667457185686
+      }
+    ]
+  }
+}

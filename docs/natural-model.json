@@ -1,0 +1,48 @@
+{
+  "repository": "https://github.com/xinntao/Real-ESRGAN",
+  "license": "BSD-3-Clause",
+  "inputs": {
+    "rrdbnet_arch.py": {
+      "url": "https://raw.githubusercontent.com/XPixelGroup/BasicSR/v1.4.2/basicsr/archs/rrdbnet_arch.py",
+      "sha256": "6aa8eb3f77e918b90eeff4ebfaf8745abe0c40eb8fcc03abbc1928693d70ab58"
+    },
+    "RealESRNet_x4plus.pth": {
+      "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.1/RealESRNet_x4plus.pth",
+      "sha256": "a820b9bde89a874d7599d545567308ce6c128fc8754a53208eda016d40aa81df"
+    }
+  },
+  "files": {
+    "realesrnet-x4plus.param": "86de8b20eb53fc1a7b7cd56701c716132370f34a74b347079712fc954d04538f",
+    "realesrnet-x4plus.bin": "8a204b90d896079e86d4bb7a4adc585e4fc0a1536c6cf9524bb067a0cc5a8dae"
+  },
+  "conversion": {
+    "input": "in0",
+    "output": "out0",
+    "fp16": false,
+    "scale": 4,
+    "parity": [
+      {
+        "width": 8,
+        "height": 8,
+        "mae8bit": 0.0001618920941837132
+      },
+      {
+        "width": 19,
+        "height": 17,
+        "mae8bit": 0.00017414237663615495
+      },
+      {
+        "width": 49,
+        "height": 33,
+        "mae8bit": 0.00018675789760891348
+      }
+    ]
+  },
+  "architectureLicense": "Apache-2.0",
+  "tools": {
+    "torch": "2.10.0",
+    "numpy": "2.4.3",
+    "pnnx": "20260526",
+    "ncnn": "1.0.20260526"
+  }
+}
