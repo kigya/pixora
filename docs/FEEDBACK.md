@@ -1,6 +1,6 @@
 # Automated feedback integration
 
-The screen sends only email, message, optional personal rating, app version and a random request ID. No images, URIs, working files, logs or device identifiers. AI works offline; feedback uses the network only on explicit submission. The developer is the fixed recipient. Reply email is optional; Reply-To requires a valid nonempty address. Submission is independent of Analytics/Crashlytics choice.
+The screen sends only email, message, optional personal rating (not currently requested by UI), app version, normalized `android`/`ios` platform and a random request ID. Old clients without `platform` default to Android. No images, URIs, working files, logs or device identifiers. AI works offline; feedback uses the network only on explicit submission. The developer is the fixed recipient. Reply email is optional; Reply-To requires a valid nonempty address. Submission is independent of Analytics/Crashlytics choice.
 
 ## Free Google Apps Script setup
 
@@ -13,7 +13,7 @@ The screen sends only email, message, optional personal rating, app version and 
 
 Without a URL, submission is honestly unavailable; the app never shows a fake Sent result. Errors preserve form text. Canceling sends no email. Email/message are not stored in the working journal.
 
-The handler fixes the recipient, validates size/fields, limits repeat email per address to ten minutes and total volume to 50/day, and checks remaining free quota. Request IDs allow retries without a second email for six hours. Public handlers can be abused; limits reduce quota consumption but are not user authentication. Sending stops at quota exhaustion; no paid tier is enabled. [Google quotas](https://developers.google.com/apps-script/guides/services/quotas).
+The handler fixes the recipient, includes platform/version in email, validates size/fields, limits repeat email per address to ten minutes and total volume to 50/day, and checks remaining free quota. Request IDs allow retries without a second email for six hours. Public handlers can be abused; limits reduce quota consumption but are not authentication. Sending stops at quota exhaustion; no paid tier is enabled. [Google quotas](https://developers.google.com/apps-script/guides/services/quotas).
 
 Personal stars are not a Google Play rating and are never automatically published. Under the owner agreement, store navigation is available regardless of rating. Before publication, the link is explicitly marked as a test and requires confirmation; it must not ask users to review another app as Pixora. [Review policies](https://support.google.com/googleplay/android-developer/answer/9898684).
 

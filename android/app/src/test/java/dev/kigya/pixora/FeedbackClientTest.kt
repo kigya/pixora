@@ -36,7 +36,7 @@ class FeedbackClientTest {
         for(args in listOf(Triple("invalid","hello",0),Triple("x".repeat(255),"hello",0),Triple("a@b.com","four",0),Triple("a@b.com","a".repeat(4001),0),Triple("a@b.com","hello",6),Triple("a@b.com","hello",-1)))fail("FEEDBACK_INVALID"){client.send(args.first,args.second,args.third,id)}
         fail("FEEDBACK_INVALID"){client.send("a@b.com","hello",0,"bad")}
         assertTrue(client.send(" me@example.com "," hello ",4,id));assertTrue(c.closed)
-        val payload=org.json.JSONObject(c.output.toString("UTF-8"));assertEquals("me@example.com",payload.getString("email"));assertEquals(4,payload.getInt("rating"));assertEquals(5,payload.length());assertFalse(payload.has("image"))
+        val payload=org.json.JSONObject(c.output.toString("UTF-8"));assertEquals("me@example.com",payload.getString("email"));assertEquals(4,payload.getInt("rating"));assertEquals(BuildConfig.VERSION_NAME,payload.getString("version"));assertEquals("android",payload.getString("platform"));assertEquals(6,payload.length());assertFalse(payload.has("image"))
         val noReply=Connection(body="{\"ok\":true,\"id\":\"$id\"}")
         assertTrue(FeedbackClient(endpoint){noReply}.send(" "," hello ",0,id))
         assertEquals("",org.json.JSONObject(noReply.output.toString("UTF-8")).getString("email"))

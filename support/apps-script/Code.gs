@@ -10,8 +10,9 @@ function validateFeedback(input) {
   var rating = Number(input.rating);
   var id = String(input.id || '');
   var version = String(input.version || '');
-  if (email.length > 254 || (email && !/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(email)) || message.length < 5 || message.length > 4000 || !Number.isInteger(rating) || rating < 0 || rating > 5 || !/^[a-f0-9-]{36}$/.test(id) || !/^\d+\.\d+\.\d+$/.test(version)) throw new Error('INVALID');
-  return {email:email,message:message,rating:rating,id:id,version:version};
+  var platform = input.platform == null ? 'android' : String(input.platform);
+  if (email.length > 254 || (email && !/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(email)) || message.length < 5 || message.length > 4000 || !Number.isInteger(rating) || rating < 0 || rating > 5 || !/^[a-f0-9-]{36}$/.test(id) || !/^\d+\.\d+\.\d+$/.test(version) || ['android','ios'].indexOf(platform) < 0) throw new Error('INVALID');
+  return {email:email,message:message,rating:rating,id:id,version:version,platform:platform};
 }
 function doPost(event) {
   var lock = LockService.getScriptLock();
@@ -23,19 +24,20 @@ function doPost(event) {
     var cache = CacheService.getScriptCache();
     if (cache.get('sent:' + data.id)) response = {ok:true,id:data.id};
     else {
-      var hash = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, (data.email || 'anonymous').toLowerCase()).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('');
-      if (cache.get('email:' + hash)) throw new Error('RATE_LIMIT');
+      // An omitted reply address is not a shared user identity.
+      var hash = data.email ? Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, data.email.toLowerCase()).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('') : '';
+      if (hash && cache.get('email:' + hash)) throw new Error('RATE_LIMIT');
       var props = PropertiesService.getScriptProperties();
       var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
       var count = props.getProperty('day') === today ? Number(props.getProperty('count') || '0') : 0;
       // Stay below consumer quota; no paid plan or auto-upgrade is used.
       if (count >= 50 || MailApp.getRemainingDailyQuota() < 1) throw new Error('QUOTA');
-      props.setProperties({day:today,count:String(count+1)});
-      var mail = {to:RECIPIENT,subject:'Pixora '+data.version+' — feedback'+(data.rating ? ' ('+data.rating+'/5)' : ''),body:'Reply email: '+(data.email || 'not provided')+'\nRating: '+(data.rating || 'not supplied')+'\nVersion: '+data.version+'\n\n'+data.message};
+      var mail = {to:RECIPIENT,subject:'Pixora '+data.version+' — feedback'+(data.rating ? ' ('+data.rating+'/5)' : ''),body:'Reply email: '+(data.email || 'not provided')+'\nRating: '+(data.rating || 'not supplied')+'\nPlatform: '+data.platform+'\nVersion: '+data.version+'\n\n'+data.message};
       if (data.email) mail.replyTo = data.email;
       MailApp.sendEmail(mail);
+      props.setProperties({day:today,count:String(count+1)});
       cache.put('sent:'+data.id,'1',21600);
-      cache.put('email:'+hash,'1',600);
+      if (hash) cache.put('email:'+hash,'1',600);
       response={ok:true,id:data.id};
     }
   } catch(error) {
