@@ -1,19 +1,26 @@
-# Передача на релиз
+# Pixora0.8.0 — передача для ручной приёмки
 
-Статус: НЕ ГОТОВО. Этот шаблон не является подтверждением готовности.
+Статус: ОЖИДАЕТ ПОДТВЕРЖДЕНИЯ ПОЛЬЗОВАТЕЛЯ. Полный release handoff не объявлен готовым.
 
-## Версия и идентичность
+Пользователь самостоятельно проверил Android-приложение и сообщил «все ок», затем запросил последние UI/defaults изменения и явно остановил дальнейшие тесты приложения. Эти изменения включены через PR9, iOS/shared engine — через PR10 в release/0.8.0. Main пока содержит технический bootstrap. Финальный один squash в main ожидает ручного подтверждения; main CI не запускался для service branches по согласованному правилу.
 
-Version, commit, package IDs, repository/main PR/CI URL, minSdk/iOS minimum и feature registry.
+## Установочная сборка
 
-## Доказательства
+Версия0.8.0/code10, Android package dev.kigya.pixora, minSdk29; debug отдельный dev.kigya.pixora.debug. iOS15.1+, CPU ncnn. Android normal release APK/AAB b44 строятся с локальной тестовой подписью, без firebaseDiagnostics/coverage, R8 off. Сборка b44 SUCCESS; APK SHA-25640fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1. Полные артефакты/результат установки — в build-report.md и device-report.md. Финальная подпись для магазина не выполнялась.
 
-Unit/component/native/E2E результаты и 100% coverage; точные исключения; независимое ревью; security findings; Android/iOS release builds и hash; Xiaomi debug/release test текущего artifact. Указывать failed/blocked/не проверено честно.
+## Последние правки для проверки
 
-## Продукт и интеграции
+- Apply suggestion скрывает карточку для текущего изображения.
+- Feedback/Having Issues имеет центрированный заголовок по образцу Privacy/Licenses; повторная кнопка Having Issues удалена.
+- Analytics/Error Reports по умолчанию включены с информационным уведомлением и независимыми выключателями; сохранённые значения сохраняются. Switch position обновляется немедленно, native записи идут последовательно.
+- На Android12+ логотип системного запуска использует AnimatedVectorDrawable. Рабочим столом управляет лаунчер.
 
-30 языков/RTL/system selection, UI/performance, Analytics/Crashlytics/Remote Config/consent, privacy/data safety, feedback delivery/Reply-To и review policy. Ссылки на матрицы/документы.
+## Граница доказательств
 
-## Блокеры и граница следующего скилла
+Предыдущие JS166/Kotlin106/native/physical результаты приведены в coverage.md и device-report.md, но не приписываются последним изменениям. iOS preserved coverage513/514 строк,760/764 ветвей не достигает обязательных100%; полный повтор и финальная интегрированная сборка не завершены. После остановки тестов новые проверки приложения не запускались. Thresholds/denominators не ослаблены; незавершённые gates не объявлены passed.
 
-Все незавершённые условия и signing/publishing prerequisites. P Build App не подписывает окончательный релиз, не создаёт GitHub Release и не публикует магазины. Release skill повторно проверяет Xiaomi, если окончательная подписанная сборка отличается, и отдельно подтверждает публикацию/безопасную резервную копию ключей. Секреты в handoff не включать.
+Ранее подтверждены доставка ровно двух разрешённых feedback писем, optional Reply-To, Android Analytics DebugView, прежние consent migration/revoke и читаемые JVM/NDK Crashlytics reports. Новые default-ON правила заменяют прежний opt-in по прямому указанию пользователя и ожидают ручной проверки. iOS Firebase ingestion не подтверждён (unsigned simulator Keychain-34018).
+
+## Продолжение
+
+Следующее действие — пользователь проверяет установленный release APK и подтверждает результат. До этого main merge/полная приёмка остаются открытыми. GitHub Release, store publication, финальная подпись/backup ключей не выполнены и относятся к отдельному release workflow. Общий урок LESSON-0001 сохранён вне репозитория по явно вызванному p-capture-lesson.

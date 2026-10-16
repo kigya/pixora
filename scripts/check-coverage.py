@@ -1,35 +1,26 @@
 #!/usr/bin/env python3
-"""Fail if any production layer lacks complete line/branch coverage or a report."""
-import json
-import sys
-import xml.etree.ElementTree as ET
+"""Run the same strict owned-source gates used by CI across every production layer."""
 from pathlib import Path
+import subprocess
+import sys
 
 root = Path(__file__).resolve().parents[1]
+commands = [
+    [sys.executable, 'scripts/check-js-coverage.py'],
+    [sys.executable, 'scripts/check-native-coverage.py',
+     '--kotlin', 'android/app/build/reports/jacoco/nativeJvmCoverage/nativeJvmCoverage.xml',
+     '--kotlin-source-dir', 'android/app/src/main/java'],
+    [sys.executable, 'scripts/check-native-coverage.py',
+     '--llvm', 'coverage/native-core/coverage.json',
+     '--llvm', 'coverage/recommendation/coverage.json',
+     '--llvm', 'coverage/recommendation-jni/coverage.json',
+     '--llvm', 'coverage/ios/coverage.json',
+     '--source-dir', 'native/engine', '--source-dir', 'native/recommendation',
+     '--source-dir', 'ios/Native', '--source-dir', 'ios/Pixora',
+     '--require-source', 'android/app/src/main/cpp/engine/upscale.cpp',
+     '--require-source', 'android/app/src/main/cpp/engine/recommendation_jni.cpp'],
+]
 failed = False
-
-def check(label, covered, total):
-    global failed
-    print(f'{label}: {covered}/{total} ({100 * covered / total if total else 100:.2f}%)')
-    if total == 0 or covered != total:
-        failed = True
-
-try:
-    ts = json.loads((root / 'coverage/coverage-summary.json').read_text())['total']
-    for metric in ['lines', 'branches']:
-        check(f'TypeScript {metric}', ts[metric]['covered'], ts[metric]['total'])
-    cpp = json.loads((root / 'coverage/native-core/coverage.json').read_text())['data'][0]['totals']
-    for metric in ['lines', 'branches']:
-        check(f'C++ {metric}', cpp[metric]['covered'], cpp[metric]['count'])
-    kotlin = ET.parse(root / 'android/app/build/reports/jacoco/nativeJvmCoverage/nativeJvmCoverage.xml').getroot()
-    for metric in ['LINE', 'BRANCH']:
-        counter = kotlin.find(f"counter[@type='{metric}']")
-        check(f'Kotlin {metric.lower()}', int(counter.get('covered')), int(counter.get('covered')) + int(counter.get('missed')))
-    for source in kotlin.findall('.//sourcefile'):
-        gaps = [f"{item.get('nr')}(lines={int(item.get('ci')) == 0}, branches={item.get('mb')})" for item in source.findall('line') if (int(item.get('ci')) == 0 and int(item.get('mi')) > 0) or int(item.get('mb'))]
-        if gaps:
-            print(source.get('name') + ': ' + ', '.join(gaps))
-except (OSError, ValueError, AttributeError) as error:
-    print(f'Missing or invalid report: {error}', file=sys.stderr)
-    failed = True
+for command in commands:
+    failed = subprocess.run(command, cwd=root, check=False).returncode != 0 or failed
 sys.exit(1 if failed else 0)

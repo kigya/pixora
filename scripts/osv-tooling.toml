@@ -1,0 +1,176 @@
+# Scanner-only configuration. Never use for app dependency scans.
+
+[[IgnoredVulns]]
+id = "GHSA-2gx3-rcp4-g85q"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-42vr-xj54-vc7v"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-84m7-p3x7-pcfv"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-8wjv-2p76-3863"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-9j54-fg26-wv3r"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-9v7f-9g4p-ffgj"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-ffc3-869f-jxw9"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-gvp8-978c-rx2q"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-hvrp-rf83-w775"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-hxm8-2xgr-2p9m"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-jpw9-pfvf-9f58"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-jwrc-g2q2-pq5p"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-p4g4-x82p-q773"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-r6x4-923q-g947"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-vj7q-gjh5-988w"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-w2cx-738m-mc7w"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-w6j9-cwv2-h6wq"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "GHSA-x33g-cr3x-6449"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3481"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3482"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3483"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4140"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4141"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4142"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4143"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4144"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4145"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4146"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4147"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4148"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4149"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4150"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4151"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4152"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4183"
+ignoreUntil = 2026-11-16T00:00:00Z
+reason = "Only PyJWT2.13.0 and MCP1.23.3 required by pinned MobSFscan/Semgrep local-source scanner. No JWT verification, auth/cloud login or MCP server is invoked. Exact tooling lock only; independently reviewed. Re-evaluate on expiry, scanner upgrade, server/auth usage or new advisory. See docs/quality/security.md."
