@@ -1,0 +1,103 @@
+appId: ${APP_ID}
+name: Pixora settings, RTL persistence, theme, and feedback privacy
+tags:
+  - android
+  - acceptance
+---
+- launchApp:
+    permissions:
+      notifications: deny
+- scrollUntilVisible:
+    element:
+      text: "^Settings$"
+    direction: UP
+- tapOn: "^Settings$"
+- assertVisible: "^Settings$"
+- tapOn: "^Language: English$"
+- scrollUntilVisible:
+    element:
+      text: "^اردو$"
+    direction: DOWN
+- tapOn: "^اردو$"
+- extendedWaitUntil:
+    visible: "^Pixora$"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "^ترتیبات$"
+    direction: UP
+- tapOn: "^ترتیبات$"
+- assertVisible: "^ترتیبات$"
+- takeScreenshot: settings-urdu-rtl
+- tapOn: "^زبان: اردو$"
+- scrollUntilVisible:
+    element:
+      text: "^עברית$"
+    direction: DOWN
+- tapOn: "^עברית$"
+- extendedWaitUntil:
+    visible: "^Pixora$"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "^הגדרות$"
+    direction: UP
+- tapOn: "^הגדרות$"
+- assertVisible: "^הגדרות$"
+- takeScreenshot: settings-hebrew-rtl
+- stopApp
+- launchApp:
+    permissions:
+      notifications: deny
+- scrollUntilVisible:
+    element:
+      text: "^הגדרות$"
+    direction: UP
+- tapOn: "^הגדרות$"
+- assertVisible: "^הגדרות$"
+- tapOn: "^שפה: עברית$"
+- scrollUntilVisible:
+    element:
+      text: "^English$"
+    direction: UP
+- tapOn: "^English$"
+- extendedWaitUntil:
+    visible: "^Pixora$"
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      text: "^Settings$"
+    direction: UP
+- tapOn: "^Settings$"
+- assertVisible: "^Settings$"
+- tapOn: "^Dark$"
+- assertVisible:
+    text: "^Dark$"
+    selected: true
+- takeScreenshot: settings-dark
+- tapOn: "^System$"
+- assertVisible:
+    text: "^System$"
+    selected: true
+- scrollUntilVisible:
+    element:
+      text: ".*Having issues.*"
+    direction: DOWN
+- tapOn:
+    text: ".*Having issues.*"
+- assertVisible: "Your email is optional. Your message, app version, and platform are sent; images stay on your device."
+- assertVisible: "^Your email$"
+- assertVisible: "^Your message$"
+- assertVisible: "^Send feedback$"
+- pressKey: back
+- scrollUntilVisible:
+    element:
+      text: "^Settings$"
+    direction: UP
+- assertVisible: "^Settings$"
+- pressKey: back
+- scrollUntilVisible:
+    element:
+      text: "^Settings$"
+    direction: UP
+- assertVisible: "^Settings$"

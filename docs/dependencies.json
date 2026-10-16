@@ -1,0 +1,25 @@
+{
+  "ncnn": {
+    "version": "20260526",
+    "url": "https://github.com/Tencent/ncnn/releases/download/20260526/ncnn-20260526-android-vulkan.zip",
+    "sha256": "26909c92eed35afed4a966b5e9e503fcb0a529691ea3f910ec2c94a4fff52804"
+  },
+  "model": {
+    "version": "v0.2.5.0",
+    "repository": "https://github.com/xinntao/Real-ESRGAN",
+    "url": "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip",
+    "archiveSha256": "e5aa6eb131234b87c0c51f82b89390f5e3e642b7b70f2b9bbe95b6a285a40c96",
+    "files": {
+      "realesrgan-x4plus.param": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86",
+      "realesrgan-x4plus.bin": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+    }
+  },
+  "androidxWindow": {
+    "version": "1.5.1",
+    "modules": [
+      "androidx.window:window",
+      "androidx.window:window-java"
+    ],
+    "source": "https://developer.android.com/jetpack/androidx/releases/window"
+  }
+}

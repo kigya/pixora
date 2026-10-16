@@ -1,0 +1,67 @@
+[
+  {
+    "mode": "quality",
+    "model": "realesrgan-x4plus",
+    "input": [
+      128,
+      57
+    ],
+    "output": [
+      512,
+      228
+    ],
+    "afterSha256": "ccf3f8705121bb36f3bd7a73db9003a19880b8daba85c774661c728ee2d0170c"
+  },
+  {
+    "mode": "fast",
+    "model": "realesr-general-x4v3",
+    "input": [
+      128,
+      57
+    ],
+    "output": [
+      512,
+      228
+    ],
+    "afterSha256": "90ed1647f442b01de674afa2e604e936e6a3b222532b8a43e094d260d0d56254"
+  },
+  {
+    "mode": "illustration",
+    "model": "realesrgan-x4plus-anime",
+    "input": [
+      65,
+      49
+    ],
+    "output": [
+      260,
+      196
+    ],
+    "afterSha256": "af2461bd012365000ae93a59aaf2b675eeec8d8d1571de67cdf20e3a3455705f"
+  },
+  {
+    "mode": "illustration-fast",
+    "model": "realesr-animevideov3-x4",
+    "input": [
+      65,
+      49
+    ],
+    "output": [
+      260,
+      196
+    ],
+    "afterSha256": "85b1fc8a2bc1eaa63e58fc018b6f93f364e636ee522be2013a37add73d9f5cde"
+  },
+  {
+    "mode": "pixel",
+    "model": "nearest-neighbor",
+    "input": [
+      16,
+      12
+    ],
+    "output": [
+      64,
+      48
+    ],
+    "afterSha256": "e09f192a4eba82bb49084e8557b7b603b477dfddafe285adde6dd38731325935"
+  }
+]

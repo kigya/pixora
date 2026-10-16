@@ -36,7 +36,7 @@ local.properties
 
 # node.js
 #
-node_modules/
+node_modules
 npm-debug.log
 yarn-error.log
 
@@ -124,6 +124,14 @@ android/feedback.properties
 /docs/ANALYTICS.md
 /docs/COVERAGE.md
 /docs/PLAN-*.md
+
+# Python caches
+__pycache__/
+/ios/Vendor/
+/scripts/ios-project/.build/
+/ios/Native/feedback_endpoint.h
+/ios/.bundle/
+*.py[cod]
 
 # Local workflow and generated evidence are never published.
 /.agents/
