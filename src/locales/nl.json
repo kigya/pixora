@@ -237,5 +237,16 @@
   "crashesTitle": "Foutrapporten",
   "crashesBody": "Helpen ons crashes te vinden. Zonder foto's en feedbackinhoud.",
   "notificationIntroTitleIos": "Meldingen op iOS",
-  "notificationIosBody": "Op iOS kan de verwerking nog even doorgaan nadat je de app verlaat. Langere taken kunnen worden onderbroken; keer terug naar de app om opnieuw te starten. Een melding kan laten weten wanneer de verwerking klaar is."
+  "notificationIosBody": "Op iOS kan de verwerking nog even doorgaan nadat je de app verlaat. Langere taken kunnen worden onderbroken; keer terug naar de app om opnieuw te starten. Een melding kan laten weten wanneer de verwerking klaar is.",
+  "recommendationTitle": "Suggestie voor deze afbeelding",
+  "recommendationApply": "Suggestie toepassen",
+  "recommendationReason": {
+    "generic": "Voor een onduidelijke afbeelding wordt een algemene modus voorgesteld.",
+    "photo": "Dit lijkt op een foto.",
+    "art": "Dit lijkt op een tekening met duidelijke lijnen.",
+    "pixel": "Er is een duidelijk pixelraster gevonden."
+  },
+  "preparationWhy": "Een kleinere werkkopie kan het geheugengebruik en de verwerkingstijd verlagen.",
+  "preparationDetailLoss": "Fijne details kunnen veranderen of verloren gaan.",
+  "preparationFast": "De snelle modus beperkt ook de langste zijde van de AI-invoer tot 512 px. Dit staat los van de werkkopie."
 }

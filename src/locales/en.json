@@ -237,5 +237,16 @@
   "crashesTitle": "Error reports",
   "crashesBody": "Helps us find crashes. Photos and feedback are not included.",
   "notificationIntroTitleIos": "Notifications on iOS",
-  "notificationIosBody": "On iOS, processing may continue briefly after you leave. Longer tasks can be interrupted; return to the app to start again. A notification may tell you when processing finishes."
+  "notificationIosBody": "On iOS, processing may continue briefly after you leave. Longer tasks can be interrupted; return to the app to start again. A notification may tell you when processing finishes.",
+  "recommendationTitle": "Suggested for this image",
+  "recommendationApply": "Apply suggestion",
+  "recommendationReason": {
+    "generic": "A general suggestion for an unclear image.",
+    "photo": "This looks like a photo.",
+    "art": "This looks like a drawing with clear lines.",
+    "pixel": "A strong pixel grid was found."
+  },
+  "preparationWhy": "A smaller working copy can use less memory and processing time.",
+  "preparationDetailLoss": "Fine details may change or be lost.",
+  "preparationFast": "Fast mode also limits the AI input to 512 px on the long side. This is separate from the working copy."
 }

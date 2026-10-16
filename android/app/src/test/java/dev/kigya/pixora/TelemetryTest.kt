@@ -56,11 +56,11 @@ class TelemetryTest {
     @Test fun preFirebaseMigrationClearsOnlyKnownLegacySdkCollectionOverrides() {
         context.getSharedPreferences("telemetry",0).edit().putInt("consentVersion",1).commit()
         val analytics=context.getSharedPreferences("com.google.android.gms.measurement.prefs",0)
-        analytics.edit().putBoolean("measurement_enabled",true).putString("unrelated", "keep").commit()
+        analytics.edit().putBoolean("measurement_enabled",true).putBoolean("measurement_enabled_from_api",true).putString("unrelated", "keep").commit()
         val crashlytics=context.getSharedPreferences("com.google.firebase.crashlytics",0)
         crashlytics.edit().putBoolean("firebase_crashlytics_collection_enabled",true).putString("unrelated", "keep").commit()
         Telemetry.prepare(context)
-        assertFalse(analytics.contains("measurement_enabled"));assertEquals("keep",analytics.getString("unrelated",null))
+        assertFalse(analytics.contains("measurement_enabled"));assertFalse(analytics.contains("measurement_enabled_from_api"));assertEquals("keep",analytics.getString("unrelated",null))
         assertFalse(crashlytics.contains("firebase_crashlytics_collection_enabled"));assertEquals("keep",crashlytics.getString("unrelated",null))
         Telemetry.init(context,sink)
         assertEquals(false to false,configured.last())
@@ -69,17 +69,24 @@ class TelemetryTest {
         context.getSharedPreferences("telemetry",0).edit()
             .putInt("consentVersion",Telemetry.consentVersion).putBoolean("analytics",false).putBoolean("crashes",true).commit()
         val analytics=context.getSharedPreferences("com.google.android.gms.measurement.prefs",0)
-        analytics.edit().putBoolean("measurement_enabled",true).commit()
+        analytics.edit().putBoolean("measurement_enabled",true).putBoolean("measurement_enabled_from_api",true).commit()
         val crashlytics=context.getSharedPreferences("com.google.firebase.crashlytics",0)
         crashlytics.edit().putBoolean("firebase_crashlytics_collection_enabled",false).commit()
         Telemetry.prepare(context)
         assertFalse(analytics.getBoolean("measurement_enabled",true))
+        assertFalse(analytics.getBoolean("measurement_enabled_from_api",true))
         assertTrue(crashlytics.getBoolean("firebase_crashlytics_collection_enabled",false))
+
+        context.getSharedPreferences("telemetry",0).edit().putBoolean("analytics",true).commit()
+        analytics.edit().putBoolean("measurement_enabled",false).putBoolean("measurement_enabled_from_api",false).commit()
+        Telemetry.prepare(context)
+        assertTrue(analytics.getBoolean("measurement_enabled",false))
+        assertTrue(analytics.getBoolean("measurement_enabled_from_api",false))
     }
     @Test fun failedStartupReconciliationKeepsSettingsUsableAndTelemetryInertUntilNextLaunch() {
         Telemetry::class.java.getDeclaredField("sink").apply { isAccessible = true }.set(Telemetry, null)
         val analytics=context.getSharedPreferences("com.google.android.gms.measurement.prefs",0)
-        analytics.edit().putBoolean("measurement_enabled",true).commit()
+        analytics.edit().putBoolean("measurement_enabled",true).putBoolean("measurement_enabled_from_api",true).commit()
         val wrapped=object:android.content.ContextWrapper(context) {
             override fun getApplicationContext():Context=this
             override fun getSharedPreferences(name:String,mode:Int):android.content.SharedPreferences {
@@ -104,6 +111,8 @@ class TelemetryTest {
         // The next startup can reconcile the current explicit choice, then safely enable it.
         Telemetry.init(context,sink)
         assertEquals(true to false,configured.last())
+        assertTrue(analytics.getBoolean("measurement_enabled",false))
+        assertTrue(analytics.getBoolean("measurement_enabled_from_api",false))
     }
     @Test fun parametersAreAllowListedAndRejectPrivatePayloadsAndNonFiniteNumbers() {
         Telemetry.update(true,true,true)

@@ -237,5 +237,16 @@
   "crashesTitle": "Hlášení chyb",
   "crashesBody": "Pomáhají najít pády aplikace. Bez fotografií a textu zpětné vazby.",
   "notificationIntroTitleIos": "Oznámení v iOS",
-  "notificationIosBody": "V iOS může zpracování krátce pokračovat i po opuštění aplikace. Delší úlohy se mohou přerušit; vraťte se do aplikace a spusťte je znovu. Oznámení vás může informovat o dokončení."
+  "notificationIosBody": "V iOS může zpracování krátce pokračovat i po opuštění aplikace. Delší úlohy se mohou přerušit; vraťte se do aplikace a spusťte je znovu. Oznámení vás může informovat o dokončení.",
+  "recommendationTitle": "Doporučení pro tento obrázek",
+  "recommendationApply": "Použít doporučení",
+  "recommendationReason": {
+    "generic": "Pro nejednoznačný obrázek se doporučuje obecný režim.",
+    "photo": "Vypadá to jako fotografie.",
+    "art": "Vypadá to jako kresba s jasnými liniemi.",
+    "pixel": "Byla rozpoznána výrazná pixelová mřížka."
+  },
+  "preparationWhy": "Menší pracovní kopie může snížit využití paměti a dobu zpracování.",
+  "preparationDetailLoss": "Jemné detaily se mohou změnit nebo ztratit.",
+  "preparationFast": "Rychlý režim také omezuje delší stranu vstupu AI na 512 px. Jde o samostatné omezení pracovní kopie."
 }

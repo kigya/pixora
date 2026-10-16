@@ -237,5 +237,16 @@
   "crashesTitle": "Rapporti sugli errori",
   "crashesBody": "Aiutano a individuare i problemi. Non includono foto o contenuti del feedback.",
   "notificationIntroTitleIos": "Notifiche su iOS",
-  "notificationIosBody": "Su iOS, l’elaborazione può continuare brevemente dopo aver lasciato l’app. Le attività più lunghe possono interrompersi; torna nell’app per avviarle di nuovo. Una notifica può avvisarti al termine."
+  "notificationIosBody": "Su iOS, l’elaborazione può continuare brevemente dopo aver lasciato l’app. Le attività più lunghe possono interrompersi; torna nell’app per avviarle di nuovo. Una notifica può avvisarti al termine.",
+  "recommendationTitle": "Suggerimento per questa immagine",
+  "recommendationApply": "Applica suggerimento",
+  "recommendationReason": {
+    "generic": "Per un'immagine poco chiara, suggeriamo una modalità generale.",
+    "photo": "Sembra una foto.",
+    "art": "Sembra un disegno con linee definite.",
+    "pixel": "È stata rilevata una griglia di pixel netta."
+  },
+  "preparationWhy": "Una copia di lavoro più piccola può ridurre l'uso della memoria e il tempo di elaborazione.",
+  "preparationDetailLoss": "I dettagli fini possono cambiare o andare persi.",
+  "preparationFast": "La modalità veloce limita anche il lato lungo dell'input AI a 512 px. È un limite distinto dalla copia di lavoro."
 }

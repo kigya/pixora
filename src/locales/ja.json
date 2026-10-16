@@ -237,5 +237,16 @@
   "crashesTitle": "エラーレポート",
   "crashesBody": "不具合の発見に役立ちます。写真やご意見の内容は含みません。",
   "notificationIntroTitleIos": "iOS の通知",
-  "notificationIosBody": "iOS では、アプリを離れた後もしばらく処理が続くことがあります。時間のかかる処理は中断される場合があります。再開するにはアプリに戻ってやり直してください。完了時に通知が届くことがあります。"
+  "notificationIosBody": "iOS では、アプリを離れた後もしばらく処理が続くことがあります。時間のかかる処理は中断される場合があります。再開するにはアプリに戻ってやり直してください。完了時に通知が届くことがあります。",
+  "recommendationTitle": "この画像へのおすすめ",
+  "recommendationApply": "おすすめを適用",
+  "recommendationReason": {
+    "generic": "種類がはっきりしない画像には汎用モードをおすすめします。",
+    "photo": "写真のようです。",
+    "art": "線がはっきりしたイラストのようです。",
+    "pixel": "明確なピクセルグリッドを検出しました。"
+  },
+  "preparationWhy": "小さな作業用コピーにすると、メモリ使用量と処理時間を減らせる場合があります。",
+  "preparationDetailLoss": "細部が変わったり失われたりすることがあります。",
+  "preparationFast": "Fast モードでは AI 入力の長辺も 512 px に制限されます。作業用コピーとは別の制限です。"
 }

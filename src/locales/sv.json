@@ -237,5 +237,16 @@
   "crashesTitle": "Felrapporter",
   "crashesBody": "Hjälper oss hitta krascher. Foton och feedback ingår inte.",
   "notificationIntroTitleIos": "Notiser i iOS",
-  "notificationIosBody": "I iOS kan bearbetningen fortsätta en kort stund efter att du lämnat appen. Längre uppgifter kan avbrytas; gå tillbaka till appen för att starta om. En notis kan meddela när bearbetningen är klar."
+  "notificationIosBody": "I iOS kan bearbetningen fortsätta en kort stund efter att du lämnat appen. Längre uppgifter kan avbrytas; gå tillbaka till appen för att starta om. En notis kan meddela när bearbetningen är klar.",
+  "recommendationTitle": "Förslag för den här bilden",
+  "recommendationApply": "Använd förslaget",
+  "recommendationReason": {
+    "generic": "Ett allmänt läge föreslås när bilden är svår att avgöra.",
+    "photo": "Det här ser ut som ett foto.",
+    "art": "Det här ser ut som en teckning med tydliga linjer.",
+    "pixel": "Ett tydligt pixelrutnät upptäcktes."
+  },
+  "preparationWhy": "En mindre arbetskopia kan minska minnesanvändning och bearbetningstid.",
+  "preparationDetailLoss": "Små detaljer kan ändras eller försvinna.",
+  "preparationFast": "Snabbt läge begränsar också AI-indata till 512 px på den längsta sidan. Det är separat från arbetskopian."
 }

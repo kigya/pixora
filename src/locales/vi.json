@@ -237,5 +237,16 @@
   "crashesTitle": "Báo cáo lỗi",
   "crashesBody": "Giúp tìm lỗi khiến ứng dụng bị đóng. Không bao gồm ảnh và nội dung phản hồi.",
   "notificationIntroTitleIos": "Thông báo trên iOS",
-  "notificationIosBody": "Trên iOS, quá trình xử lý có thể tiếp tục trong thời gian ngắn sau khi bạn rời ứng dụng. Tác vụ lâu có thể bị gián đoạn; hãy quay lại ứng dụng để bắt đầu lại. Bạn có thể nhận thông báo khi hoàn tất."
+  "notificationIosBody": "Trên iOS, quá trình xử lý có thể tiếp tục trong thời gian ngắn sau khi bạn rời ứng dụng. Tác vụ lâu có thể bị gián đoạn; hãy quay lại ứng dụng để bắt đầu lại. Bạn có thể nhận thông báo khi hoàn tất.",
+  "recommendationTitle": "Gợi ý cho hình ảnh này",
+  "recommendationApply": "Áp dụng gợi ý",
+  "recommendationReason": {
+    "generic": "Với hình ảnh khó xác định, chế độ chung được đề xuất.",
+    "photo": "Hình ảnh này có vẻ là ảnh chụp.",
+    "art": "Hình ảnh này có vẻ là tranh với đường nét rõ.",
+    "pixel": "Đã phát hiện lưới điểm ảnh rõ rệt."
+  },
+  "preparationWhy": "Bản sao làm việc nhỏ hơn có thể giảm bộ nhớ và thời gian xử lý.",
+  "preparationDetailLoss": "Các chi tiết nhỏ có thể thay đổi hoặc mất đi.",
+  "preparationFast": "Chế độ Nhanh cũng giới hạn cạnh dài của đầu vào AI ở 512 px. Đây là giới hạn riêng với bản sao làm việc."
 }

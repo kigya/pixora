@@ -32,6 +32,12 @@ export type ProfileId =
   | 'art'
   | 'pixel';
 export type ProcessingSpeed = 'fast' | 'quality';
+export type ImageRecommendation = {
+  imageId: string;
+  profileId: ProfileId;
+  speed: ProcessingSpeed;
+  reasonId: 'generic' | 'photo' | 'art' | 'pixel';
+};
 export type Session = {
   profileId?: string;
   speed?: string;
@@ -137,6 +143,7 @@ export interface Spec extends TurboModule {
   getCapabilities(): Promise<Capabilities>;
   pickImage(): Promise<ImageInfo | null>;
   inspectSelection(selectionId: string): Promise<ImageInfo>;
+  getImageRecommendation(imageId: string): Promise<ImageRecommendation | null>;
   prepareSelection(selectionId: string): Promise<ImageInfo>;
   startJob(
     inputId: string,

@@ -237,5 +237,16 @@
   "crashesTitle": "오류 보고",
   "crashesBody": "앱 충돌을 찾는 데 도움이 됩니다. 사진과 의견 내용은 포함되지 않습니다.",
   "notificationIntroTitleIos": "iOS 알림",
-  "notificationIosBody": "iOS에서는 앱을 나간 뒤에도 처리가 잠시 계속될 수 있습니다. 오래 걸리는 작업은 중단될 수 있으니 다시 시작하려면 앱으로 돌아오세요. 처리가 끝나면 알림을 받을 수 있습니다."
+  "notificationIosBody": "iOS에서는 앱을 나간 뒤에도 처리가 잠시 계속될 수 있습니다. 오래 걸리는 작업은 중단될 수 있으니 다시 시작하려면 앱으로 돌아오세요. 처리가 끝나면 알림을 받을 수 있습니다.",
+  "recommendationTitle": "이 이미지에 대한 추천",
+  "recommendationApply": "추천 적용",
+  "recommendationReason": {
+    "generic": "유형이 불분명한 이미지에는 일반 모드를 추천합니다.",
+    "photo": "사진처럼 보입니다.",
+    "art": "선이 뚜렷한 그림처럼 보입니다.",
+    "pixel": "뚜렷한 픽셀 격자를 감지했습니다."
+  },
+  "preparationWhy": "더 작은 작업용 사본은 메모리 사용량과 처리 시간을 줄일 수 있습니다.",
+  "preparationDetailLoss": "작은 세부 사항이 바뀌거나 사라질 수 있습니다.",
+  "preparationFast": "빠른 모드는 AI 입력의 긴 쪽도 512px로 제한합니다. 작업용 사본과는 별개의 제한입니다."
 }

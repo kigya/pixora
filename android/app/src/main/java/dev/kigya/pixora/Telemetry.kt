@@ -15,17 +15,24 @@ object Telemetry {
     private val fields = setOf("screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile", "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase", "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms", "engagement_ms", "enabled_count")
     internal fun prepare(ctx: Context): Boolean {
         context = ctx.applicationContext
-        // Migrate SDK-level opt-ins from the older notice flow before eager Firebase components
-        // initialize. Only the two documented collection switches are cleared; other SDK state
-        // remains untouched. The app's versioned consent remains the source of truth.
+        // Reconcile SDK-level collection switches before eager Firebase components initialize.
+        // Analytics has both a general collection override and a setAnalyticsCollectionEnabled
+        // API override; clear or set both. Leave unrelated SDK preferences untouched.
         val version = prefs().getInt("consentVersion", 0)
         val analyticsSdk = context.getSharedPreferences("com.google.android.gms.measurement.prefs", 0)
         val crashlyticsSdk = context.getSharedPreferences("com.google.firebase.crashlytics", 0)
         val analyticsSaved = if (version == consentVersion) {
             // Reconcile SDK-persisted overrides with this app's explicit, independent choices.
-            analyticsSdk.edit().putBoolean("measurement_enabled", prefs().getBoolean("analytics", false)).commit()
+            val allowed = prefs().getBoolean("analytics", false)
+            analyticsSdk.edit()
+                .putBoolean("measurement_enabled", allowed)
+                .putBoolean("measurement_enabled_from_api", allowed)
+                .commit()
         } else {
-            analyticsSdk.edit().remove("measurement_enabled").commit()
+            analyticsSdk.edit()
+                .remove("measurement_enabled")
+                .remove("measurement_enabled_from_api")
+                .commit()
         }
         val crashesSaved = if (version == consentVersion) {
             crashlyticsSdk.edit().putBoolean("firebase_crashlytics_collection_enabled", prefs().getBoolean("crashes", false)).commit()
