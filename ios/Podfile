@@ -1,0 +1,33 @@
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve("react-native/scripts/react_native_pods.rb", {paths: [process.argv[1]]})', __dir__]).strip
+ENV['USE_FRAMEWORKS'] = 'static'
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+use_frameworks! :linkage => :static
+$RNFirebaseAsStaticFramework = true
+$RNFirebaseDisableSPM = true
+# Firebase version is inherited from pinned RNFB 26.4.0 (12.18.0).
+target 'Pixora' do
+  config = use_native_modules!
+  pod 'PixoraNative', :path => '..'
+  use_react_native!(:path => config[:reactNativePath], :app_path => "#{Pod::Config.instance.installation_root}/..")
+  target 'PixoraTests' do
+    inherit! :search_paths
+  end
+  post_install do |installer|
+    react_native_post_install(installer, config[:reactNativePath], :mac_catalyst_enabled => false)
+    # Worklets/Reanimated use rooted C++ includes under static frameworks.
+    # Keep their pinned source paths visible without modifying dependencies.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |build|
+        prior = Array(build.build_settings['HEADER_SEARCH_PATHS'] || '$(inherited)').join(' ')
+        build.build_settings['HEADER_SEARCH_PATHS'] = prior + ' "$(PODS_ROOT)/../build/generated/ios/ReactCodegen" "$(PODS_ROOT)/../../node_modules/react-native-worklets/Common/cpp" "$(PODS_ROOT)/../../node_modules/react-native-worklets/apple" "$(PODS_ROOT)/../../node_modules/react-native-reanimated/Common/cpp"'
+      end
+      if ['RNWorklets', 'RNReanimated'].include?(target.name)
+        target.build_configurations.each do |build|
+          build.build_settings['HEADER_SEARCH_PATHS'] = '$(inherited) "$(PODS_TARGET_SRCROOT)/Common/cpp" "$(PODS_TARGET_SRCROOT)/apple" "$(PODS_ROOT)/../build/generated/ios/ReactCodegen" "$(PODS_ROOT)/../../node_modules/react-native-worklets/Common/cpp" "$(PODS_ROOT)/../../node_modules/react-native-worklets/apple"'
+        end
+      end
+    end
+  end
+end

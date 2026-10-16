@@ -60,6 +60,11 @@
     "jsSrcsDir": "src/specs",
     "android": {
       "javaPackageName": "dev.kigya.pixora"
+    },
+    "ios": {
+      "modulesProvider": {
+        "NativeUpscale": "PixoraUpscale"
+      }
     }
   },
   "reanimated": {
