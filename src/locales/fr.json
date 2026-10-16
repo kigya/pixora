@@ -235,5 +235,16 @@
   "analyticsTitle": "Analyse d’utilisation",
   "analyticsBody": "Les fonctions utilisées. Sans photos ni contenu des commentaires.",
   "crashesTitle": "Rapports d’erreurs",
-  "crashesBody": "Aident à trouver les plantages. Sans photos ni contenu des commentaires."
+  "crashesBody": "Aident à trouver les plantages. Sans photos ni contenu des commentaires.",
+  "recommendationTitle": "Suggestion pour cette image",
+  "recommendationApply": "Appliquer la suggestion",
+  "recommendationReason": {
+    "generic": "Pour une image difficile à identifier, un mode général est suggéré.",
+    "photo": "Cela ressemble à une photo.",
+    "art": "Cela ressemble à un dessin aux contours nets.",
+    "pixel": "Une grille de pixels marquée a été détectée."
+  },
+  "preparationWhy": "Une copie de travail plus petite peut réduire la mémoire utilisée et le temps de traitement.",
+  "preparationDetailLoss": "Les détails fins peuvent changer ou disparaître.",
+  "preparationFast": "Le mode rapide limite aussi le plus grand côté de l’entrée IA à 512 px. Cette limite est distincte de la copie de travail."
 }
