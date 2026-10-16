@@ -194,3 +194,5 @@ The owner confirmed manual review and requested hiding suggestions after Apply, 
 Manual-review clarification on 2026-10-16: splash stays until initial data/navigation is ready and for at least 1500 ms, using max(loading, 1.5 s) without adding the two times. Brand animation also lasts 1500 ms. This is an explicit owner requirement and shared private lesson. The owner accepted other installed-release changes and requested continuation of the GitHub workflow. A repeated runtime app check was not requested.
 
 Current acceptance clarification, 2026-10-16 (ADR-814): automatic tests, builds, CI and fixes are authorized without repeated Samsung UI checks. Do not install the updated release yet. This supersedes the earlier blanket test pause; historical physical evidence retains its limitations.
+
+Technical continuation 0.8.1 (ADR-815): preserve failed 0.8.0 main CI, then fix lockfile/JDK-action reproducibility and aligned version/code 11. No new product features; 0.8 requirements and Samsung limits from ADR-814 remain.
