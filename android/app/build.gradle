@@ -186,7 +186,8 @@ android {
                 initWith debug
                 matchingFallbacks = ['debug']
                 enableAndroidTestCoverage false
-                externalNativeBuild { cmake { arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DPIXORA_FIREBASE_DIAGNOSTICS=ON" } }
+                // Fabric props must use the same debug ABI as the debug React Native AAR.
+                externalNativeBuild { cmake { arguments "-DCMAKE_BUILD_TYPE=Debug", "-DPIXORA_FIREBASE_DIAGNOSTICS=ON" } }
                 firebaseCrashlytics {
                     mappingFileUploadEnabled false
                     nativeSymbolUploadEnabled true
