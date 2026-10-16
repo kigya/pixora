@@ -1,0 +1,166 @@
+# OSX
+#
+.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+.kotlin/
+
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+**/fastlane/report.xml
+**/fastlane/Preview.html
+**/fastlane/screenshots
+**/fastlane/test_output
+
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+**/Pods/
+/vendor/bundle/
+
+# Temporary files created by Metro to check the health of the file watcher
+.metro-health-check*
+
+# testing
+/coverage
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Local signing material and generated/downloaded SDK dependencies
+android/signing.properties
+android/keystores/
+vendor/ncnn/
+artifacts/*.apk
+artifacts/*.aab
+artifacts/*.idsig
+*.log
+
+.tools/
+
+android/feedback.properties
+
+# Private local project notes; never commit
+/.local-private/
+
+# Personal workflow skills: BEGIN
+/.agents/skills/p-build-app
+/.agents/skills/p-find-ideas
+/.agents/skills/p-prepare-google-play
+# Personal workflow skills: END
+
+# Local workflow configuration
+/.agents/skills/p-build-app
+/.p-build-app/tooling.json
+/.p-build-app/npm-cache/
+/.p-build-app/local/
+/.local-private/
+.env
+.env.*
+!.env.example
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+# End local workflow configuration
+
+# Private historical research and raw validation evidence
+/artifacts/
+/research/
+/ideas/
+/.p-find-ideas/
+/.serena/
+/.cursor/
+/.codex/
+/docs/archive/
+/docs/VALIDATION*.md
+/docs/PERFORMANCE.md
+/docs/ANALYTICS.md
+/docs/COVERAGE.md
+/docs/PLAN-*.md
+
+# Local workflow and generated evidence are never published.
+/.agents/
+/.codex/
+/.cursor/
+/.serena/
+/.p-build-app/
+/.p-find-ideas/
+/.p-prepare-google-play/
+/.local-private/
+/.tools/
+AGENTS.md
+CLAUDE.md
+SKILL.md
+/docs/agent-reports/
+/docs/research/
+/docs/release/
+/docs/project-status.md
+/docs/SKILLS.md
+/docs/**/.gitignore
+/docs/quality/*.md
+!/docs/quality/test-matrix.md
+google-services.json
+GoogleService-Info.plist
+*.log
+*.apk
+*.aab
+*.ipa
+*.idsig
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.key
+*.pem
+*.mobileprovision
+/.coverage*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

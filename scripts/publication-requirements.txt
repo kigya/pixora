@@ -1,0 +1,1 @@
+coverage==7.6.12 --hash=sha256:eb8668cfbc279a536c633137deeb9435d2962caec279c3f8cf8b91fff6ff8953
