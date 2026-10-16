@@ -30,16 +30,19 @@ class FirebaseBoundaryTest {
                 analyticsStatic.`when`<FirebaseAnalytics>{FirebaseAnalytics.getInstance(context)}.thenReturn(analytics)
                 crashStatic.`when`<FirebaseCrashlytics>{FirebaseCrashlytics.getInstance()}.thenReturn(crashes)
                 val sink=FirebaseTelemetrySink(context)
-                sink.configure(true,true);sink.configure(false,false)
+                val parameters=android.os.Bundle().apply{putString("action","help_opened")}
+                sink.log("before_configuration",parameters)
+                verify(analytics,never()).logEvent("before_configuration",parameters)
+                sink.configure(true,true)
+                sink.log("ui_action",parameters);verify(analytics).logEvent("ui_action",parameters)
+                sink.configure(false,false)
                 verify(analytics).setAnalyticsCollectionEnabled(true);verify(analytics).setAnalyticsCollectionEnabled(false)
                 verify(crashes).setCrashlyticsCollectionEnabled(true);verify(crashes).setCrashlyticsCollectionEnabled(false)
                 verify(crashes,times(1)).deleteUnsentReports()
-                verify(analytics,times(2)).setConsent(mapOf(
+                verify(analytics,times(1)).setConsent(mapOf(
                     FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
                     FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
                     FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED))
-                val parameters=android.os.Bundle().apply{putString("action","help_opened")}
-                sink.log("ui_action",parameters);verify(analytics).logEvent("ui_action",parameters)
             }
         }
     }

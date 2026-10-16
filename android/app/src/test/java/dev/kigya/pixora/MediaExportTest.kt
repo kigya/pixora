@@ -27,12 +27,13 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class MediaExportTest {
     class Gallery:ContentProvider() {
-        var collision=false;var nullQuery=false;var rejectInsert=false;var failOpen=false;var failUpdate=false
+        var collision=false;var nullQuery=false;var failQuery=false;var rejectInsert=false;var failOpen=false;var failUpdate=false
         var inserted:ContentValues?=null;var deletes=0;var published=false
         lateinit var output:File
         override fun onCreate()=true
         override fun getType(uri:Uri)="image/png"
         override fun query(uri:Uri,projection:Array<out String>?,selection:String?,args:Array<out String>?,order:String?):Cursor? {
+            if(failQuery)throw SecurityException("controlled provider query failure")
             if(nullQuery)return null
             return MatrixCursor(arrayOf("_id")).apply{if(collision){addRow(arrayOf(1));collision=false}}
         }
@@ -55,11 +56,15 @@ class MediaExportTest {
     }
     private fun failure(action:()->Unit){try{action();fail("Expected export failure")}catch(_:Exception){}}
     @Test fun publicationCollisionBothFormatsAndNullableQuery() {
-        for(format in listOf("png","jpeg")) {
+        for((format,mime,extension) in listOf(
+            Triple("png","image/png","png"),
+            Triple("jpeg","image/jpeg","jpg"),
+            Triple("webp","image/webp","webp"),
+        )) {
             gallery.collision=true
             val out=ImageFiles.export(ctx,session,format)
-            assertEquals(format,out.getString("format"));assertEquals(16,out.getInt("width"));assertEquals(12,out.getInt("height"))
-            assertTrue(gallery.inserted!!.getAsString("_display_name").contains("_1."));assertTrue(gallery.published)
+            assertEquals(format,out.getString("format"));assertEquals(mime,out.getString("mime"));assertEquals(16,out.getInt("width"));assertEquals(12,out.getInt("height"))
+            assertTrue(gallery.inserted!!.getAsString("_display_name").contains("_1.$extension"));assertEquals(mime,gallery.inserted!!.getAsString("mime_type"));assertTrue(gallery.published)
             val decoded=BitmapFactory.decodeFile(gallery.output.path);assertEquals(16,decoded.width);decoded.recycle()
         }
         gallery.nullQuery=true;assertTrue(ImageFiles.export(ctx,session,"png").getLong("size")>0)

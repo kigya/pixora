@@ -1,0 +1,90 @@
+appId: ${APP_ID}
+name: Pixora recommendation, preparation, upscale, and save
+tags:
+  - android
+  - acceptance
+---
+- launchApp:
+    permissions:
+      notifications: deny
+- scrollUntilVisible:
+    element:
+      text: "^Apply suggestion$"
+- assertVisible:
+    text: "^Apply suggestion$"
+- tapOn:
+    text: "^Apply suggestion$"
+- scrollUntilVisible:
+    element:
+      text: ".*Choose image type: Lite.*"
+- assertVisible:
+    text: ".*Choose image type: Lite.*"
+- tapOn:
+    text: ".*Choose image type:.*"
+- tapOn:
+    text: "^Standard$"
+    below: "Processing example"
+- assertVisible:
+    text: ".*Choose image type: Standard.*"
+- scrollUntilVisible:
+    element:
+      text: "^Fast$"
+- tapOn:
+    text: "^Fast$"
+- assertVisible:
+    text: "^Fast$"
+    selected: true
+- scrollUntilVisible:
+    element:
+      text: "^4×$"
+- tapOn:
+    text: "^4×$"
+- assertVisible:
+    text: "^4×$"
+    selected: true
+- scrollUntilVisible:
+    element:
+      text: "^Upscale$"
+      below: "^4×$"
+- tapOn:
+    text: "^Upscale$"
+    below: "^4×$"
+- assertVisible: '^Prepare image\?$'
+- assertVisible: '(?s).*Fine details may change or be lost\..*'
+- assertVisible: '(?s).*The original file stays unchanged\..*'
+- tapOn:
+    text: "^Cancel$"
+- assertNotVisible: '^Prepare image\?$'
+- scrollUntilVisible:
+    element:
+      text: "^Upscale$"
+      below: "^4×$"
+- assertVisible:
+    text: "^Upscale$"
+    below: "^4×$"
+- tapOn:
+    text: "^Upscale$"
+    below: "^4×$"
+- assertVisible: '^Prepare image\?$'
+- tapOn: "Prepare and upscale"
+- runFlow:
+    when:
+      visible: "Continue without notifications"
+    commands:
+      - tapOn: "Continue without notifications"
+- scrollUntilVisible:
+    element:
+      text: "^Save$"
+    timeout: 180000
+- assertVisible:
+    text: "^Save$"
+- tapOn:
+    text: "^Save$"
+- scrollUntilVisible:
+    element:
+      text: "^Open$"
+- assertVisible: "^Open$"
+- scrollUntilVisible:
+    element:
+      text: "^Share$"
+- assertVisible: "^Share$"
