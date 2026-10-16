@@ -22,8 +22,8 @@ for target in project.pbxproj.nativeTargets {
  }
  for config in target.buildConfigurationList?.buildConfigurations ?? [] {
   config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] = config.name == "Debug" ? "dev.kigya.pixora.debug" : "dev.kigya.pixora"
-  config.buildSettings["CURRENT_PROJECT_VERSION"] = "10"
-  config.buildSettings["MARKETING_VERSION"] = "0.8.0"
+  config.buildSettings["CURRENT_PROJECT_VERSION"] = "11"
+  config.buildSettings["MARKETING_VERSION"] = "0.8.1"
   config.buildSettings["ENABLE_USER_SCRIPT_SANDBOXING"] = "NO"
   config.buildSettings["DEBUG_INFORMATION_FORMAT"] = "dwarf-with-dsym"
  }

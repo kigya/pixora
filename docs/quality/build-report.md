@@ -28,3 +28,20 @@ Gradle MCP process не находил bare node в b45/b46. Локальные 
 b44 normal release был установлен для ручного review; пользователь принял остальные функции. APK SHA-256 `40fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1`. После требования splash1500 b47 normal release собран без установки: APK SHA `84cd89de20fcec578b4212d7729b54a4142b18d2b052e6d40d619396b44a23af`. Текущий b52 включает lifecycle cleanup и не получает старые физические PASS по наследству.
 
 QA-only diagnostic variants ранее собраны b43, symbols uploaded; normal variants защищены guard от firebaseDiagnostics (намеренный b40 отказ). Предыдущие diagnostics/coverage APK не подменяют текущий normal release. Исторические0.6/0.7benchmarks не доказывают производительность0.8. Все актуальные физические ограничения описаны в device-report.md.
+
+## Корректирующая 0.8.1 / code 11 — Android PASS
+
+b55 normal assembleRelease/bundleRelease: SUCCESS, 3m22s, без firebaseDiagnostics/coverage, R8 off, локальная тестовая подпись. aapt подтвердил dev.kigya.pixora, 0.8.1/code11, min29/target36.
+
+- APK `artifacts/Pixora-0.8.1-automatic-acceptance.apk`: 181001837 bytes; SHA-256 `6687c8239a27858b0a5d7f43ae51c290c08cc7ddd43db6322a2ce1b317219123`.
+- AAB `artifacts/Pixora-0.8.1-automatic-acceptance.aab`: 193596874 bytes; SHA-256 `333b177dab37ee91adb75c347a3fdc409eb527232666c299e076240ba542dddd`.
+
+Новые артефакты НЕ установлены. b54: 111/111 unit tests, 1062/1062 lines и 1106/1106 branches, source-presence PASS. b53 остановился до тестов из-за локального npx lookup; исправление locked CLI command в settings.gradle прошло ревью и b54/b55. После всех Gradle запусков пять временных dependency command-path overrides восстановлены до исходных hashes.
+
+Main CI 0.8.0 failed из-за JDK action/lockfile, несмотря на локальные 0.8.0 builds; исправления и новые доказательства 0.8.1 не стирают тот результат. iOS final 0.8.1 proof фиксируется после version fallback alignment.
+
+## Финальный iOS 0.8.1 / build 11 — PASS
+
+После alignment обоих native version fallbacks повторены 52/52 XCTest со строгими 607/607 lines и 794/794 branches, затем serial unsigned generic-device Release: exit0. Bundle dev.kigya.pixora 0.8.1(11), arm64, min15.1, platformIOS/SDK26.5. Binary SHA-256 `ed77cfd255a61d66b2eee8a2719f8202c9e9dac5a15ce2d50bddb40fd1c3ad19`.
+
+Фактические app/dSYM: `artifacts/ios/DeviceRelease-0.8.1/`. Versioned metadata/log: device-release-0.8.1-metadata.json и device-release-0.8.1.log. codesign подтверждает отсутствие подписи; test-hook/fishhook/__llvm_profile symbols отсутствуют. Все 37 source/config hashes повторно совпали с ROOT после сборки. Первичный interrupted build и прежние 0.8.0 доказательства сохранены отдельно; они не подменяют этот PASS. Физического iPhone/Samsung теста из этого результата не следует.

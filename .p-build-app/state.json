@@ -127,16 +127,82 @@
       "command": "evidence",
       "phase": "verification",
       "summary": null
+    },
+    {
+      "at": "2026-10-16T19:32:03.325312+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:32:52.909461+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:34:31.351885+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:40:07.253879+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:58:50.988441+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:00:49.568675+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:01:35.086522+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:02:16.765121+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:03:03.226869+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:03:48.037765+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T20:04:47.887625+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
     }
   ],
   "evidence": {
     "prd": {
       "status": "passed",
       "artifact": "docs/product/prd.md",
-      "artifact_sha256": "deb6926d4bc8a0f9b51319539f0330af639aaea31de0af4c34dae474c48d50d4",
-      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
-      "source_fingerprint": "1e164784ebaa3993f649e93b5d38961df83236e493b3d88fd1f7829ef258eed7",
-      "recorded_at": "2026-10-16T19:16:39.815921+00:00"
+      "artifact_sha256": "397add8047833150f7cfed8caa5a1731a5b983187d11ebbfaae8621a69d8b7d3",
+      "revision": "2ea2dd22db1b1f24bb67a8a5e160304c5b5d9851",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T19:58:50.984795+00:00"
     },
     "feature-registry": {
       "status": "passed",
@@ -156,35 +222,71 @@
     },
     "typescript": {
       "status": "passed",
-      "artifact": ".p-build-app/local/evidence/js-final-typecheck.log",
-      "artifact_sha256": "3624e33e300af4952f254680e9b5656c01a602a9dafcebd5a32a646604318c40",
-      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
-      "source_fingerprint": "1258a6ed2bb46c92af767237d2ea199fc257a69a65f5c97bcc8876b075131718",
-      "recorded_at": "2026-10-16T19:28:04.809088+00:00"
+      "artifact": ".p-build-app/local/evidence/js-081-typecheck.log",
+      "artifact_sha256": "f2b2f903d1309e5e08cb87b767cf6831542811896769b38efda2039917af1e9d",
+      "revision": "2ea2dd22db1b1f24bb67a8a5e160304c5b5d9851",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T20:00:49.563280+00:00"
     },
     "lint": {
       "status": "passed",
-      "artifact": ".p-build-app/local/evidence/js-final-lint.log",
-      "artifact_sha256": "443e91a29fe9e8116630039f1b3fb993016ca44a798bb896be0898c31078cfe7",
-      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
-      "source_fingerprint": "1258a6ed2bb46c92af767237d2ea199fc257a69a65f5c97bcc8876b075131718",
-      "recorded_at": "2026-10-16T19:29:00.508747+00:00"
+      "artifact": ".p-build-app/local/evidence/js-081-lint.log",
+      "artifact_sha256": "c0a8279d7f8547b71f083ebe54034fbd3759f288e7e5a7e491f5ec2216a8a8a4",
+      "revision": "2ea2dd22db1b1f24bb67a8a5e160304c5b5d9851",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T20:01:35.086157+00:00"
     },
     "unit-coverage": {
       "status": "passed",
-      "artifact": ".p-build-app/local/evidence/js-final-coverage-summary.json",
+      "artifact": ".p-build-app/local/evidence/js-081-coverage-summary.json",
       "artifact_sha256": "9330f4a87ccaf6a9b103385382b8f2f94a802d14d5cfc0fd4fd4dd04fb96bbcc",
-      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
-      "source_fingerprint": "fc3063e43a05bf39dc33f8f94d728855d1c3455a5ff7e2a1c13937fdc6df9f02",
-      "recorded_at": "2026-10-16T19:29:56.480000+00:00"
+      "revision": "7d705eb4b6a21b200f6d0679352aedddf0ae58b3",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T20:02:16.763689+00:00"
     },
     "native-coverage": {
       "status": "passed",
-      "artifact": ".p-build-app/local/evidence/native-coverage-summary.json",
-      "artifact_sha256": "5840b26d42f6b0a5ce583446b7b1397a2b9fcd3a8d7865c2302204a9c460c403",
-      "revision": "b205095d7b9a8ed13564dee86c74d9ddf5231f2e",
+      "artifact": ".p-build-app/local/evidence/native-081-coverage-summary.json",
+      "artifact_sha256": "ce734b9a170f8c37edc567402c22cff192de64ef840d1bb69915bea276b80929",
+      "revision": "7d705eb4b6a21b200f6d0679352aedddf0ae58b3",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T20:03:03.223467+00:00"
+    },
+    "security": {
+      "status": "passed",
+      "artifact": "docs/quality/security.md",
+      "artifact_sha256": "4aa27ce04abd7ae375be54a58e6ba5e3d653b3da88cbc4fe4f2ba6ae3e5f1eaa",
+      "revision": "7d705eb4b6a21b200f6d0679352aedddf0ae58b3",
+      "source_fingerprint": "682bb295bc507eca6172704f544c231ba9da724b821d748b8cd1008883db5f39",
+      "recorded_at": "2026-10-16T20:03:48.035939+00:00"
+    },
+    "android-release-build": {
+      "status": "passed",
+      "artifact": ".p-build-app/local/evidence/android-081-artifacts.json",
+      "artifact_sha256": "fecef421e21c76ee238a832fe30ad71dcd691dd33dea6503eaeef0a75de79281",
+      "revision": "7d705eb4b6a21b200f6d0679352aedddf0ae58b3",
+      "source_fingerprint": "3cc60872489880b6df2e412878e7f2276806cc74f1eabecac4c8d3f3cc5d62ad",
+      "recorded_at": "2026-10-16T20:04:47.699796+00:00",
+      "build_artifact": "artifacts/Pixora-0.8.1-automatic-acceptance.apk",
+      "build_sha256": "6687c8239a27858b0a5d7f43ae51c290c08cc7ddd43db6322a2ce1b317219123"
+    },
+    "ios-release-build": {
+      "status": "passed",
+      "artifact": "artifacts/ios/device-release-metadata.json",
+      "artifact_sha256": "80a3096904cbd37df9f896834b530055ddbaf4bbe01b036693a25e3304184712",
+      "revision": "94ccc54078ba1cd34f6663d30ec7fb00b0e3efe3",
       "source_fingerprint": "fc3063e43a05bf39dc33f8f94d728855d1c3455a5ff7e2a1c13937fdc6df9f02",
-      "recorded_at": "2026-10-16T19:30:49.902589+00:00"
+      "recorded_at": "2026-10-16T19:34:29.836605+00:00",
+      "build_artifact": "artifacts/ios/DeviceRelease/Pixora.app/Pixora",
+      "build_sha256": "3f3afec8d838e25ac93a1eb6bd4d54cc7eae7afc9926a0cff1910438b42bc628"
+    },
+    "ci-main": {
+      "status": "failed",
+      "artifact": ".p-build-app/local/evidence/ci-08-failure.json",
+      "artifact_sha256": "e0d0cd38d0ba70b05cab3cb71471b7e0df85e2734808a33b567ac36540f62db9",
+      "revision": "2ea2dd22db1b1f24bb67a8a5e160304c5b5d9851",
+      "source_fingerprint": "fc3063e43a05bf39dc33f8f94d728855d1c3455a5ff7e2a1c13937fdc6df9f02",
+      "recorded_at": "2026-10-16T19:40:07.252046+00:00"
     }
   },
   "release_boundary": "handoff_only",
@@ -195,5 +297,10 @@
     "subscriptions": false,
     "paid_ai_api": false
   },
-  "verification_blockers": {}
+  "verification_blockers": {
+    "ci-main": {
+      "status": "failed",
+      "artifact": ".p-build-app/local/evidence/ci-08-failure.json"
+    }
+  }
 }
