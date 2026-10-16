@@ -237,5 +237,16 @@
   "crashesTitle": "Rapoarte de erori",
   "crashesBody": "Ne ajută să găsim blocările aplicației. Nu includ fotografii sau feedback.",
   "notificationIntroTitleIos": "Notificări pe iOS",
-  "notificationIosBody": "Pe iOS, procesarea poate continua puțin după ce părăsești aplicația. Sarcinile mai lungi se pot întrerupe; revino în aplicație pentru a le porni din nou. O notificare te poate anunța când se termină."
+  "notificationIosBody": "Pe iOS, procesarea poate continua puțin după ce părăsești aplicația. Sarcinile mai lungi se pot întrerupe; revino în aplicație pentru a le porni din nou. O notificare te poate anunța când se termină.",
+  "recommendationTitle": "Sugestie pentru această imagine",
+  "recommendationApply": "Aplică sugestia",
+  "recommendationReason": {
+    "generic": "Pentru o imagine neclară, se sugerează un mod general.",
+    "photo": "Pare a fi o fotografie.",
+    "art": "Pare a fi un desen cu linii clare.",
+    "pixel": "A fost detectată o grilă clară de pixeli."
+  },
+  "preparationWhy": "O copie de lucru mai mică poate reduce memoria folosită și timpul de procesare.",
+  "preparationDetailLoss": "Detaliile fine se pot schimba sau pierde.",
+  "preparationFast": "Modul rapid limitează și latura lungă a intrării AI la 512 px. Aceasta este o limită separată de copia de lucru."
 }

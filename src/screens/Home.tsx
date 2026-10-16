@@ -40,6 +40,8 @@ import { TelemetryNotice } from '../ui/telemetryControls';
 import { needsAspectWarning } from '../domain/presentation';
 import { track, jobContext, useTrackedScreen } from '../application/telemetry';
 import { beginUpscale } from '../application/beginUpscale';
+import { RecommendationRequestGate } from '../domain/recommendation';
+import { RecommendationCard } from '../ui/recommendationCard';
 
 export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const v = useSession();
@@ -70,6 +72,10 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const [mode, setMode] = useState<ProfileId>('standard');
   const [scale, setScale] = useState(2),
     [format, setFormat] = useState(settings.format);
+  const [recommendation, setRecommendation] = useState<
+    Awaited<ReturnType<typeof Native.getImageRecommendation>>
+  >(null);
+  const recommendationGate = useRef(new RecommendationRequestGate());
   const { operation, error, run } = useOperation(() => setMessage(''));
   useEffect(() => {
     setFormat(settings.format);
@@ -98,6 +104,34 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
     }
   }, [v]);
   const anyProfiles = profileIds.some(id => availability[id]);
+  useEffect(() => {
+    const gate = recommendationGate.current;
+    const imageId = v.image?.id;
+    const request = gate.begin();
+    setRecommendation(null);
+    if (
+      busy ||
+      v.state === 'SUCCEEDED' ||
+      !imageId ||
+      typeof Native.getImageRecommendation !== 'function'
+    )
+      return () => gate.invalidate();
+
+    Native.getImageRecommendation(imageId)
+      .then(value => {
+        if (
+          gate.accepts(
+            request,
+            imageId,
+            value,
+            availability,
+          )
+        )
+          setRecommendation(value);
+      })
+      .catch(() => {});
+    return () => gate.invalidate();
+  }, [v.image?.id, v.state, busy, availability]);
   useEffect(() => {
     if (busy || availability[mode]) return;
     const first = profileIds.find(id => availability[id]);
@@ -148,10 +182,19 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
         v.image,
         scale,
         legacyMode || mode,
-        async image =>
-          confirm(
+        async image => {
+          const selectedMode = legacyMode || mode;
+          const selectedSpeed =
+            selectedMode === 'fast' || selectedMode.endsWith('-fast')
+              ? 'fast'
+              : selectedMode === 'pixel'
+                ? 'quality'
+                : speed;
+          const fastNote =
+            selectedSpeed === 'fast' ? `\n${t.preparationFast}` : '';
+          return confirm(
             t.prepareTitle,
-            `${t.prepareNote}\n\n${t.original}: ${ltrValue(
+            `${t.preparationWhy}\n${t.preparationDetailLoss}${fastNote}\n\n${t.original}: ${ltrValue(
               `${number(image.width)} × ${number(image.height)}`,
             )}\n${t.preparationLabel}: ${ltrValue(
               `${number(image.workWidth)} × ${number(image.workHeight)}`,
@@ -162,7 +205,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
             )}`,
             t.prepare,
             t.cancel,
-          ),
+          );
+        },
         legacyMode ? undefined : mode === 'pixel' ? 'quality' : speed,
         async () => {
           const enabled = await Native.getNotificationStatus();
@@ -335,8 +379,34 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                         )}
                       </Text>
                     </View>
+                    <Text style={s.caption}>{t.preparationWhy}</Text>
+                    <Text style={s.caption}>{t.preparationDetailLoss}</Text>
+                    {(speed === 'fast' || legacyMode === 'fast' || legacyMode.endsWith('-fast')) && (
+                      <Text style={s.caption}>{t.preparationFast}</Text>
+                    )}
                     <Text style={s.caption}>{t.originalSafe}</Text>
+                    <View style={s.row}>
+                      <Text style={s.caption}>{t.output}</Text>
+                      <Text style={s.value}>
+                        {ltrValue(
+                          `${number(working.workWidth * scale)} × ${number(
+                            working.workHeight * scale,
+                          )}`,
+                        )}
+                      </Text>
+                    </View>
                   </>
+                )}
+                {recommendation && (
+                  <RecommendationCard
+                    value={recommendation}
+                    copy={t}
+                    onApply={value => {
+                      setLegacyMode('');
+                      setMode(value.profileId);
+                      setSpeed(value.speed);
+                    }}
+                  />
                 )}
                 <Text style={s.label}>{t.profileTitle}</Text>
                 <ProcessingPicker

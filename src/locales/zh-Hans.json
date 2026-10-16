@@ -237,5 +237,16 @@
   "crashesTitle": "错误报告",
   "crashesBody": "帮助发现崩溃。不包含照片和反馈内容。",
   "notificationIntroTitleIos": "iOS 通知",
-  "notificationIosBody": "在 iOS 上，离开应用后处理可能会短暂继续。耗时较长的任务可能会中断；请返回应用重新开始。处理完成时可能会收到通知。"
+  "notificationIosBody": "在 iOS 上，离开应用后处理可能会短暂继续。耗时较长的任务可能会中断；请返回应用重新开始。处理完成时可能会收到通知。",
+  "recommendationTitle": "此图像的建议",
+  "recommendationApply": "应用建议",
+  "recommendationReason": {
+    "generic": "图像类型不明确，建议使用通用模式。",
+    "photo": "看起来像照片。",
+    "art": "看起来像线条清晰的绘画。",
+    "pixel": "检测到明显的像素网格。"
+  },
+  "preparationWhy": "较小的工作副本可以减少内存占用和处理时间。",
+  "preparationDetailLoss": "细节可能会改变或丢失。",
+  "preparationFast": "快速模式还会将 AI 输入图像的最长边限制为 512 像素。这与工作副本是两项独立限制。"
 }

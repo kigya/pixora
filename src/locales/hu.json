@@ -237,5 +237,16 @@
   "crashesTitle": "Hibajelentések",
   "crashesBody": "Segítenek megtalálni az összeomlásokat. Fotókat és visszajelzéseket nem tartalmaznak.",
   "notificationIntroTitleIos": "Értesítések iOS-en",
-  "notificationIosBody": "iOS-en a feldolgozás rövid ideig folytatódhat az alkalmazás elhagyása után. A hosszabb feladatok megszakadhatnak; az újraindításhoz térjen vissza az alkalmazásba. Értesítés jelezheti, ha a feldolgozás befejeződött."
+  "notificationIosBody": "iOS-en a feldolgozás rövid ideig folytatódhat az alkalmazás elhagyása után. A hosszabb feladatok megszakadhatnak; az újraindításhoz térjen vissza az alkalmazásba. Értesítés jelezheti, ha a feldolgozás befejeződött.",
+  "recommendationTitle": "Javaslat ehhez a képhez",
+  "recommendationApply": "Javaslat alkalmazása",
+  "recommendationReason": {
+    "generic": "Bizonytalan képnél általános módot javaslunk.",
+    "photo": "Fényképnek tűnik.",
+    "art": "Tiszta vonalú rajznak tűnik.",
+    "pixel": "Jól látható pixelrácsot észleltünk."
+  },
+  "preparationWhy": "A kisebb munkapéldány csökkentheti a memóriahasználatot és a feldolgozási időt.",
+  "preparationDetailLoss": "Az apró részletek megváltozhatnak vagy elveszhetnek.",
+  "preparationFast": "A Gyors mód a mesterséges intelligencia bemenetének hosszabb oldalát is 512 képpontra korlátozza. Ez külön korlát a munkapéldánytól."
 }

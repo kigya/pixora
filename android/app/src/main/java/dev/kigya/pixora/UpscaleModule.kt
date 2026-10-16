@@ -93,6 +93,14 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         }
     }
     override fun inspectSelection(id:String,p:Promise)=async(p){val image=requireImage(id);image.remove("sourcePath");image.remove("workPath");map(image)}
+    override fun getImageRecommendation(id:String,p:Promise)=async(p){
+        val image=requireImage(id)
+        val reason=try { RecommendationEngine.analyze(image.getString("previewUri")) }
+        catch(_:Throwable) { "generic" }
+        val profile=when(reason) { "photo" -> "lite"; "art" -> "art"; "pixel" -> "pixel"; else -> "lite" }
+        if(!ProfileAvailability.allowed(profile)) null else map(JSONObject()
+            .put("imageId",id).put("profileId",profile).put("speed","quality").put("reasonId",reason))
+    }
     override fun prepareSelection(id:String,p:Promise)=async(p){
         SessionStore.requireIdle();val image=requireImage(id);val work=ImageFiles.prepare(image)
         SessionStore.update{it.getJSONObject("image").put("workPath",work.path)}

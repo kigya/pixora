@@ -237,5 +237,16 @@
   "crashesTitle": "Laporan kesalahan",
   "crashesBody": "Mbantu kita nemokake app sing ambruk. Foto lan tanggapan ora kalebu.",
   "notificationIntroTitleIos": "Notifikasi ing iOS",
-  "notificationIosBody": "Ing iOS, pangolahan bisa terus sedhela sawise sampeyan metu saka app. Tugas sing suwe bisa keganggu; bali menyang app kanggo miwiti maneh. Notifikasi bisa menehi kabar yen wis rampung."
+  "notificationIosBody": "Ing iOS, pangolahan bisa terus sedhela sawise sampeyan metu saka app. Tugas sing suwe bisa keganggu; bali menyang app kanggo miwiti maneh. Notifikasi bisa menehi kabar yen wis rampung.",
+  "recommendationTitle": "Saran kanggo gambar iki",
+  "recommendationApply": "Terapake saran",
+  "recommendationReason": {
+    "generic": "Saran umum kanggo gambar sing durung cetha.",
+    "photo": "Iki katon kaya foto.",
+    "art": "Iki katon kaya gambar kanthi garis sing cetha.",
+    "pixel": "Grid piksel sing katon cetha ditemokake."
+  },
+  "preparationWhy": "Salinan kerja sing luwih cilik bisa nggunakake memori lan wektu pangolahan luwih sithik.",
+  "preparationDetailLoss": "Rincian alus bisa owah utawa ilang.",
+  "preparationFast": "Mode Cepet uga matesi sisih dawa input AI nganti 512 px. Wates iki beda karo salinan kerja."
 }

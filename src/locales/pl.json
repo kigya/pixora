@@ -237,5 +237,16 @@
   "crashesTitle": "Raporty błędów",
   "crashesBody": "Pomagają znaleźć awarie. Bez zdjęć i treści opinii.",
   "notificationIntroTitleIos": "Powiadomienia w iOS",
-  "notificationIosBody": "W iOS przetwarzanie może trwać jeszcze krótko po opuszczeniu aplikacji. Dłuższe zadania mogą zostać przerwane; wróć do aplikacji, aby uruchomić je ponownie. Powiadomienie może poinformować o zakończeniu."
+  "notificationIosBody": "W iOS przetwarzanie może trwać jeszcze krótko po opuszczeniu aplikacji. Dłuższe zadania mogą zostać przerwane; wróć do aplikacji, aby uruchomić je ponownie. Powiadomienie może poinformować o zakończeniu.",
+  "recommendationTitle": "Sugestia dla tego obrazu",
+  "recommendationApply": "Zastosuj sugestię",
+  "recommendationReason": {
+    "generic": "Dla niejednoznacznego obrazu sugerujemy tryb ogólny.",
+    "photo": "To wygląda na zdjęcie.",
+    "art": "To wygląda na rysunek z wyraźnymi liniami.",
+    "pixel": "Wykryto wyraźną siatkę pikseli."
+  },
+  "preparationWhy": "Mniejsza kopia robocza może ograniczyć użycie pamięci i czas przetwarzania.",
+  "preparationDetailLoss": "Drobne szczegóły mogą się zmienić lub zniknąć.",
+  "preparationFast": "Tryb szybki ogranicza też dłuższy bok wejścia AI do 512 px. To osobny limit, niezależny od kopii roboczej."
 }

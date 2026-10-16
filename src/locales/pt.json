@@ -237,5 +237,16 @@
   "crashesTitle": "Relatórios de erros",
   "crashesBody": "Ajudam a identificar falhas. Não incluem fotos nem mensagens de feedback.",
   "notificationIntroTitleIos": "Notificações no iOS",
-  "notificationIosBody": "No iOS, o processamento pode continuar por pouco tempo depois de sair da aplicação. Tarefas longas podem ser interrompidas; volte à aplicação para começar de novo. Uma notificação pode avisar quando terminar."
+  "notificationIosBody": "No iOS, o processamento pode continuar por pouco tempo depois de sair da aplicação. Tarefas longas podem ser interrompidas; volte à aplicação para começar de novo. Uma notificação pode avisar quando terminar.",
+  "recommendationTitle": "Sugestão para esta imagem",
+  "recommendationApply": "Aplicar sugestão",
+  "recommendationReason": {
+    "generic": "Para uma imagem pouco clara, sugerimos um modo geral.",
+    "photo": "Parece uma fotografia.",
+    "art": "Parece um desenho com linhas nítidas.",
+    "pixel": "Foi detetada uma grelha de píxeis marcada."
+  },
+  "preparationWhy": "Uma cópia de trabalho menor pode reduzir a memória usada e o tempo de processamento.",
+  "preparationDetailLoss": "Os detalhes finos podem mudar ou perder-se.",
+  "preparationFast": "O modo rápido também limita a 512 px o lado maior da entrada de IA. É um limite separado da cópia de trabalho."
 }

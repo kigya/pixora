@@ -2,8 +2,8 @@
 
 Source: [workflow PRD](prd.md) and [primary PRD](../PRD.md).
 
-- FEAT-801: proposed; implementation/test evidence pending.
-- FEAT-802: proposed; implementation/test evidence pending.
+- FEAT-801: implemented; independent review and isolated unit/native checks passed; integrated Android/iOS and Samsung acceptance pending. See quality/recommendations-review.md.
+- FEAT-802: implemented; dimensions, explanation and confirmation covered by isolated UI checks; integrated build and Samsung acceptance pending.
 - FEAT-803: proposed; implementation/test evidence pending.
 - FEAT-804: proposed; implementation/test evidence pending.
 - FEAT-805: proposed; implementation/test evidence pending.

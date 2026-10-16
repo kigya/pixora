@@ -237,5 +237,16 @@
   "crashesTitle": "Rapports d’erreurs",
   "crashesBody": "Aident à trouver les plantages. Sans photos ni contenu des commentaires.",
   "notificationIntroTitleIos": "Notifications sur iOS",
-  "notificationIosBody": "Sur iOS, le traitement peut continuer brièvement après avoir quitté l’app. Les tâches longues peuvent être interrompues ; revenez dans l’app pour les relancer. Une notification peut signaler la fin du traitement."
+  "notificationIosBody": "Sur iOS, le traitement peut continuer brièvement après avoir quitté l’app. Les tâches longues peuvent être interrompues ; revenez dans l’app pour les relancer. Une notification peut signaler la fin du traitement.",
+  "recommendationTitle": "Suggestion pour cette image",
+  "recommendationApply": "Appliquer la suggestion",
+  "recommendationReason": {
+    "generic": "Pour une image difficile à identifier, un mode général est suggéré.",
+    "photo": "Cela ressemble à une photo.",
+    "art": "Cela ressemble à un dessin aux contours nets.",
+    "pixel": "Une grille de pixels marquée a été détectée."
+  },
+  "preparationWhy": "Une copie de travail plus petite peut réduire la mémoire utilisée et le temps de traitement.",
+  "preparationDetailLoss": "Les détails fins peuvent changer ou disparaître.",
+  "preparationFast": "Le mode rapide limite aussi le plus grand côté de l’entrée IA à 512 px. Cette limite est distincte de la copie de travail."
 }
