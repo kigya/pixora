@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "phase": "requirements",
+  "market_decision": "Conditional-Go",
+  "decision_report": {
+    "path": "docs/research/01-executive-decision.md",
+    "sha256": "514820c324bc6cb444dc5baec52d6e9ddc4f443075c23a295984dbdd5f1f9632"
+  },
+  "blocked_reason": null,
+  "history": [
+    {
+      "at": "2026-10-16T11:38:17.769810+00:00",
+      "command": "decision",
+      "phase": "research",
+      "summary": "User-approved existing-app improvements; recommendation usefulness is noncritical and has manual choice plus fallback."
+    },
+    {
+      "at": "2026-10-16T11:39:37.135117+00:00",
+      "command": "checkpoint",
+      "phase": "requirements",
+      "summary": "Approved existing-app scope and conditional noncritical recommendation hypothesis; public baseline import reviewed."
+    }
+  ],
+  "evidence": {},
+  "release_boundary": "handoff_only",
+  "stack": "bare-react-native",
+  "mvp": {
+    "free": true,
+    "ads": false,
+    "subscriptions": false,
+    "paid_ai_api": false
+  }
+}

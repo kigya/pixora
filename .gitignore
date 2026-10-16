@@ -125,3 +125,7 @@ android/feedback.properties
 /docs/ANALYTICS.md
 /docs/COVERAGE.md
 /docs/PLAN-*.md
+
+# Python caches
+__pycache__/
+*.py[cod]
