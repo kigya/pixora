@@ -2,6 +2,11 @@ package dev.kigya.pixora
 
 import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.SharedPreferences
+import android.content.res.AssetManager
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -12,6 +17,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import java.io.File
+import java.io.ByteArrayInputStream
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.ArgumentMatchers.eq
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk=[35], application=Application::class)
@@ -58,7 +67,8 @@ class StoreAndLocalizationTest {
         assertEquals(org.json.JSONArray(readAssetText(ctx,"locales/registry.json")).length(),ids.size)
         for(id in ids)assertEquals(id,Localizer.resolve(ctx,id,"xx"))
         for(tag in listOf("zh","zh-TW","zh_CN"))assertEquals("zh-Hans",Localizer.resolve(ctx,"system",tag))
-        assertEquals("pt-BR",Localizer.resolve(ctx,"system","pt-BR"));assertEquals("en",Localizer.resolve(ctx,"system","fi-FI"))
+        assertEquals("pt-BR",Localizer.resolve(ctx,"system","pt-BR"));assertEquals("pt-BR",Localizer.resolve(ctx,"system","pt-PT"));assertEquals("en",Localizer.resolve(ctx,"system","fi-FI"))
+        assertEquals("ru",Localizer.resolve(ctx,"system","ru-RU"))
         assertEquals("en",Localizer.language(ctx));assertTrue(Localizer.text(ctx,"stages.upscaling").isNotBlank())
         ctx.getSharedPreferences("settings",0).edit().putString("language","ru").commit()
         assertEquals("ru",Localizer.language(ctx));assertTrue(Localizer.text(ctx,"processing").contains("\u041e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430"))
@@ -70,11 +80,60 @@ class StoreAndLocalizationTest {
         cache.remove("ru");if(original!=null)cache["ru"]=original
         ctx.getSharedPreferences("settings",0).edit().putInt("language",123).commit();assertEquals("en",Localizer.language(ctx))
     }
+    @Test fun portugueseSystemFallbackUsesEnglishWhenBrazilianLocaleIsUnavailable() {
+        val assets=mock(AssetManager::class.java)
+        `when`(assets.open("locales/registry.json")).thenReturn(ByteArrayInputStream("[{\"id\":\"en\"}]".toByteArray()))
+        val englishOnly=object:ContextWrapper(ctx) {
+            override fun getAssets():AssetManager=assets
+        }
+        assertEquals("en",Localizer.resolve(englishOnly,"system","pt-PT"))
+    }
     @Test fun oldPortuguesePreferenceMigratesAndExistingChoicesRemainChosen() {
         ctx.getSharedPreferences("settings",0).edit().putString("language","pt").putString("theme","dark").commit()
         val settings=SessionStore.settings(ctx)
         assertEquals("pt-BR",settings.getString("language"));assertTrue(settings.getBoolean("languageChosen"))
         assertEquals("pt-BR",ctx.getSharedPreferences("settings",0).getString("language",null))
+    }
+    @Test fun settingsTreatNullLanguageAsSystemAndRecognizeAnUpgrade() {
+        SessionStore.init(ctx)
+        val prefs=mock(SharedPreferences::class.java)
+        `when`(prefs.getString("language","system")).thenReturn(null)
+        `when`(prefs.all).thenReturn(emptyMap())
+        `when`(prefs.contains("language")).thenReturn(false)
+        val info=PackageInfo().apply{firstInstallTime=10;lastUpdateTime=11}
+        val packageManager=mock(PackageManager::class.java)
+        `when`(packageManager.getPackageInfo(eq(ctx.packageName),eq(0))).thenReturn(info)
+        val wrapped=object:ContextWrapper(ctx) {
+            override fun getSharedPreferences(name:String,mode:Int):SharedPreferences = if(name=="settings") prefs else super.getSharedPreferences(name,mode)
+            override fun getPackageManager():PackageManager = packageManager
+        }
+        val settings=SessionStore.settings(wrapped)
+        assertEquals("system",settings.getString("language"))
+        assertTrue("a changed package version signals an existing install",settings.getBoolean("languageChosen"))
+        info.lastUpdateTime=info.firstInstallTime
+        assertFalse("a clean install with no settings or journal has no prior language choice",SessionStore.settings(wrapped).getBoolean("languageChosen"))
+    }
+    @Test fun settingsDetectEachExistingInstallSignalIndependently() {
+        SessionStore.init(ctx)
+        val prefs=ctx.getSharedPreferences("settings",0)
+        prefs.edit().clear().commit()
+        val info=PackageInfo().apply{firstInstallTime=10;lastUpdateTime=10}
+        val packageManager=mock(PackageManager::class.java)
+        `when`(packageManager.getPackageInfo(eq(ctx.packageName),eq(0))).thenReturn(info)
+        val wrapped=object:ContextWrapper(ctx) {
+            override fun getPackageManager():PackageManager=packageManager
+        }
+        val journal=File(ctx.filesDir,"session.json")
+        journal.delete()
+        assertFalse(SessionStore.settings(wrapped).getBoolean("languageChosen"))
+        prefs.edit().putString("theme","dark").commit()
+        assertTrue("an unrelated saved setting proves this is an existing install",SessionStore.settings(wrapped).getBoolean("languageChosen"))
+        prefs.edit().clear().commit()
+        journal.writeText("{}")
+        assertTrue("a persisted session journal proves this is an existing install",SessionStore.settings(wrapped).getBoolean("languageChosen"))
+        journal.delete()
+        info.lastUpdateTime=11
+        assertTrue("a package update proves this is an existing install",SessionStore.settings(wrapped).getBoolean("languageChosen"))
     }
     @Test fun migrationInterruptionAndInvalidJournals() {
         journal(base("RUNNING"));SessionStore.init(ctx)
