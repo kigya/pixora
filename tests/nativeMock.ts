@@ -76,6 +76,7 @@ const native = {
     consentVersion: 2,
   })),
   logTelemetryEvent: jest.fn(),
+  finishStartup: jest.fn(),
   getCurrentSession: jest.fn(async () => session),
   getImageRecommendation: jest.fn(
     async (): Promise<import('../src/specs/NativeUpscale').ImageRecommendation | null> => null,

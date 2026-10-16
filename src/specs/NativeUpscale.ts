@@ -129,6 +129,7 @@ export type TelemetrySettings = {
   consentVersion: number;
 };
 export interface Spec extends TurboModule {
+  finishStartup(): void;
   getProfileAvailability(): Promise<ProfileAvailability>;
   readonly onProfileAvailabilityChanged: CodegenTypes.EventEmitter<ProfileAvailability>;
   getTelemetrySettings(): Promise<TelemetrySettings>;
