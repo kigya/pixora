@@ -72,10 +72,10 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const [mode, setMode] = useState<ProfileId>('standard');
   const [scale, setScale] = useState(2),
     [format, setFormat] = useState(settings.format);
-  const [recommendation, setRecommendation] = useState<
-    Awaited<ReturnType<typeof Native.getImageRecommendation>>
-  >(null);
+  const [recommendation, setRecommendation] =
+    useState<Awaited<ReturnType<typeof Native.getImageRecommendation>>>(null);
   const recommendationGate = useRef(new RecommendationRequestGate());
+  const appliedRecommendationImage = useRef<string | undefined>(undefined);
   const { operation, error, run } = useOperation(() => setMessage(''));
   useEffect(() => {
     setFormat(settings.format);
@@ -113,20 +113,14 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
       busy ||
       v.state === 'SUCCEEDED' ||
       !imageId ||
+      appliedRecommendationImage.current === imageId ||
       typeof Native.getImageRecommendation !== 'function'
     )
       return () => gate.invalidate();
 
     Native.getImageRecommendation(imageId)
       .then(value => {
-        if (
-          gate.accepts(
-            request,
-            imageId,
-            value,
-            availability,
-          )
-        )
+        if (gate.accepts(request, imageId, value, availability))
           setRecommendation(value);
       })
       .catch(() => {});
@@ -188,13 +182,15 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
             selectedMode === 'fast' || selectedMode.endsWith('-fast')
               ? 'fast'
               : selectedMode === 'pixel'
-                ? 'quality'
-                : speed;
+              ? 'quality'
+              : speed;
           const fastNote =
             selectedSpeed === 'fast' ? `\n${t.preparationFast}` : '';
           return confirm(
             t.prepareTitle,
-            `${t.preparationWhy}\n${t.preparationDetailLoss}${fastNote}\n\n${t.original}: ${ltrValue(
+            `${t.preparationWhy}\n${t.preparationDetailLoss}${fastNote}\n\n${
+              t.original
+            }: ${ltrValue(
               `${number(image.width)} × ${number(image.height)}`,
             )}\n${t.preparationLabel}: ${ltrValue(
               `${number(image.workWidth)} × ${number(image.workHeight)}`,
@@ -381,7 +377,9 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     </View>
                     <Text style={s.caption}>{t.preparationWhy}</Text>
                     <Text style={s.caption}>{t.preparationDetailLoss}</Text>
-                    {(speed === 'fast' || legacyMode === 'fast' || legacyMode.endsWith('-fast')) && (
+                    {(speed === 'fast' ||
+                      legacyMode === 'fast' ||
+                      legacyMode.endsWith('-fast')) && (
                       <Text style={s.caption}>{t.preparationFast}</Text>
                     )}
                     <Text style={s.caption}>{t.originalSafe}</Text>
@@ -405,6 +403,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                       setLegacyMode('');
                       setMode(value.profileId);
                       setSpeed(value.speed);
+                      appliedRecommendationImage.current = v.image?.id;
+                      setRecommendation(null);
                     }}
                   />
                 )}

@@ -118,7 +118,7 @@ test('telemetry controls persist independently and retain state after a failed w
   ).toHaveProp('value', false);
 });
 
-test('first launch notice is dismissible and shows persistence failure without hiding it', async () => {
+test('informational first-launch notice keeps default-on choices and reports save failure', async () => {
   Native.getTelemetrySettings.mockResolvedValue({
     analytics: true,
     crashes: true,
@@ -134,8 +134,8 @@ test('first launch notice is dismissible and shows persistence failure without h
   const dismiss = await screen.findByRole('button', {
     name: strings.en.continue,
   });
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', false);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', false);
+  expect(screen.queryByRole('switch')).toBeNull();
+  expect(screen.queryByRole('button', { name: strings.en.notNow })).toBeNull();
   Native.updateTelemetrySettings.mockRejectedValueOnce(new Error('disk'));
   await user.press(dismiss);
   expect(
@@ -143,8 +143,8 @@ test('first launch notice is dismissible and shows persistence failure without h
   ).toBeOnTheScreen();
   await user.press(dismiss);
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
-    false,
-    false,
+    true,
+    true,
     true,
   );
   expect(screen.queryByText(strings.en.telemetryIntro)).not.toBeOnTheScreen();

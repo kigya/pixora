@@ -231,7 +231,7 @@
   "profilesUnavailable": "I modi di elaborazione non sono disponibili al momento. Puoi ancora salvare l’ultimo risultato.",
   "profileChanged": "Il modo scelto non è disponibile. È stato selezionato un altro modo.",
   "telemetryTitle": "Aiuta a migliorare Pixora",
-  "telemetryIntro": "Le foto vengono elaborate sul telefono. L’app invia informazioni sull’uso e sugli errori per aiutarci a migliorarla.",
+  "telemetryIntro": "Le tue foto restano sul telefono. Le statistiche di utilizzo e i rapporti sugli errori sono attivi per impostazione predefinita per aiutarci a migliorare l’app. Puoi disattivare ciascuna opzione separatamente nelle Impostazioni.",
   "analyticsTitle": "Analisi dell’uso",
   "analyticsBody": "Quali funzioni vengono usate. Non include foto o contenuti del feedback.",
   "crashesTitle": "Rapporti sugli errori",

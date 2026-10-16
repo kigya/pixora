@@ -231,7 +231,7 @@
   "profilesUnavailable": "Các chế độ xử lý tạm thời không khả dụng. Bạn vẫn có thể lưu kết quả gần nhất.",
   "profileChanged": "Chế độ đã chọn không khả dụng. Đã chọn một chế độ khác.",
   "telemetryTitle": "Giúp cải thiện Pixora",
-  "telemetryIntro": "Ảnh được xử lý trên điện thoại. Ứng dụng gửi thông tin sử dụng và lỗi để chúng tôi cải thiện ứng dụng.",
+  "telemetryIntro": "Ảnh của bạn vẫn ở trên điện thoại. Thống kê sử dụng và báo cáo lỗi được bật theo mặc định để giúp cải thiện ứng dụng. Bạn có thể tắt riêng từng mục trong Cài đặt.",
   "analyticsTitle": "Phân tích sử dụng",
   "analyticsBody": "Cho biết các tính năng được dùng. Không bao gồm ảnh và nội dung phản hồi.",
   "crashesTitle": "Báo cáo lỗi",

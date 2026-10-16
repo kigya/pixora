@@ -231,7 +231,7 @@
   "profilesUnavailable": "Processing modes are temporarily unavailable. You can still save your last result.",
   "profileChanged": "The selected mode is unavailable. Another mode was selected.",
   "telemetryTitle": "Help improve Pixora",
-  "telemetryIntro": "Photos are processed on your phone. The app sends usage and error information to help us improve it.",
+  "telemetryIntro": "Your photos stay on your phone. Usage analytics and error reports are on by default to help improve the app. You can turn each off separately in Settings.",
   "analyticsTitle": "Usage analytics",
   "analyticsBody": "Which features are used. Photos and feedback are not included.",
   "crashesTitle": "Error reports",
