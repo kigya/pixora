@@ -1,0 +1,13 @@
+<resources>
+    <style name="AppThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="colorAccent">#7C3AED</item>
+        <item name="android:colorAccent">#7C3AED</item>
+        <item name="android:enforceNavigationBarContrast">true</item>
+        <item name="android:navigationBarColor">@color/window_background</item>
+        <item name="android:windowLightStatusBar">@bool/light_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/light_bars</item>
+    </style>
+    <style name="AppTheme" parent="AppThemeBase" />
+</resources>

@@ -1,0 +1,31 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Exact public Firebase client config values; not administrative credentials."
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  "^android/app/google\\-services\\.json$",
+  "^android/app/src/release/google\\-services\\.json$",
+  "^android/app/src/debug/google\\-services\\.json$",
+  "^ios/Config/debug/GoogleService\\-Info\\.plist$",
+  "^ios/Config/release/GoogleService\\-Info\\.plist$",
+]
+regexes = [
+  "^AIzaSyDJPVFoFQiVqOmebFcz8dG6dlVG_A8XL8M$",
+]
+
+[[allowlists]]
+description = "Exact historical APK SHA-256; a checksum, not an API credential."
+condition = "AND"
+regexTarget = "secret"
+paths = ['^docs/PRD\.md$']
+regexes = ['^908ecaa06845a02f23b2cdc3f8f94f1b5f141000782b2120aad3a845ef6de47d$']
+
+[[allowlists]]
+description = "Exact CocoaPods React-cxxstableapi spec checksum; not an API credential."
+condition = "AND"
+regexTarget = "secret"
+paths = ['^ios/Podfile\.lock$']
+regexes = ['^9729effdd0475c76a2e3191caa1c2b1da7f1fb49$']

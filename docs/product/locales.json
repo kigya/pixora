@@ -1,0 +1,43 @@
+{
+  "locales": [
+    "en",
+    "zh-Hans",
+    "es",
+    "hi",
+    "ar",
+    "pt-BR",
+    "bn",
+    "ru",
+    "ja",
+    "pa",
+    "de",
+    "jv",
+    "ko",
+    "fr",
+    "tr",
+    "vi",
+    "ta",
+    "ur",
+    "it",
+    "fa",
+    "mr",
+    "te",
+    "id",
+    "th",
+    "gu",
+    "pl",
+    "uk",
+    "ro",
+    "nl",
+    "he"
+  ],
+  "rtl": [
+    "ar",
+    "fa",
+    "ur",
+    "he"
+  ],
+  "default": "system",
+  "fallback": "en",
+  "status": "required-not-implemented"
+}

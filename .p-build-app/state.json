@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "phase": "verification",
+  "market_decision": "Conditional-Go",
+  "decision_report": {
+    "path": "docs/research/01-executive-decision.md",
+    "sha256": "514820c324bc6cb444dc5baec52d6e9ddc4f443075c23a295984dbdd5f1f9632"
+  },
+  "blocked_reason": null,
+  "history": [
+    {
+      "at": "2026-10-16T11:38:17.769810+00:00",
+      "command": "decision",
+      "phase": "research",
+      "summary": "User-approved existing-app improvements; recommendation usefulness is noncritical and has manual choice plus fallback."
+    },
+    {
+      "at": "2026-10-16T11:39:37.135117+00:00",
+      "command": "checkpoint",
+      "phase": "requirements",
+      "summary": "Approved existing-app scope and conditional noncritical recommendation hypothesis; public baseline import reviewed."
+    },
+    {
+      "at": "2026-10-16T11:42:01.232798+00:00",
+      "command": "evidence",
+      "phase": "requirements",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T11:43:43.628655+00:00",
+      "command": "evidence",
+      "phase": "requirements",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T11:43:43.947964+00:00",
+      "command": "checkpoint",
+      "phase": "design",
+      "summary": "Independent requirements review complete; implementation-specific architecture and verification remain."
+    },
+    {
+      "at": "2026-10-16T11:44:31.402718+00:00",
+      "command": "evidence",
+      "phase": "design",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T11:44:31.578489+00:00",
+      "command": "checkpoint",
+      "phase": "implementation",
+      "summary": "Approved 0.8 scope; root integrates task PRs and Samsung QA. No acceptance gate complete yet."
+    },
+    {
+      "at": "2026-10-16T15:12:26.823889+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T15:13:48.330070+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T15:15:47.120217+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T15:16:18.903711+00:00",
+      "command": "checkpoint",
+      "phase": "implementation",
+      "summary": "Owner stopped further app tests after manual review. Latest UI/default-ON and iOS changes are integrated; normal release b44 built and installed on Samsung for owner confirmation. Do not resume testing without new instruction. Final main merge and incomplete strict gates remain pending."
+    },
+    {
+      "at": "2026-10-16T19:16:39.820184+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:19:12.377583+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:21:13.840949+00:00",
+      "command": "evidence",
+      "phase": "implementation",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:21:14.151052+00:00",
+      "command": "checkpoint",
+      "phase": "verification",
+      "summary": "Owner authorized automatic checks and fixes; Samsung installation and UI remain deferred. Fresh JS168 and C++ strict100 passed; Kotlin/iOS full checks and final PR13/current-main CI in progress. No physical acceptance or release handoff claimed."
+    },
+    {
+      "at": "2026-10-16T19:26:50.631623+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:28:04.811471+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:29:00.512427+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:29:56.481666+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    },
+    {
+      "at": "2026-10-16T19:30:49.905360+00:00",
+      "command": "evidence",
+      "phase": "verification",
+      "summary": null
+    }
+  ],
+  "evidence": {
+    "prd": {
+      "status": "passed",
+      "artifact": "docs/product/prd.md",
+      "artifact_sha256": "deb6926d4bc8a0f9b51319539f0330af639aaea31de0af4c34dae474c48d50d4",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "1e164784ebaa3993f649e93b5d38961df83236e493b3d88fd1f7829ef258eed7",
+      "recorded_at": "2026-10-16T19:16:39.815921+00:00"
+    },
+    "feature-registry": {
+      "status": "passed",
+      "artifact": "docs/product/features.md",
+      "artifact_sha256": "06648790131ae4195cb2dc857d2894130b6ff137ea7a4c11956eac9ef0355c2a",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "1258a6ed2bb46c92af767237d2ea199fc257a69a65f5c97bcc8876b075131718",
+      "recorded_at": "2026-10-16T19:26:50.626626+00:00"
+    },
+    "architecture": {
+      "status": "passed",
+      "artifact": "docs/engineering/architecture.md",
+      "artifact_sha256": "19ad95f4ac63d1002f1c8d1be39639e4e009516d4d5a2ac6a2227c291b84260b",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "5c4848c59a1a48a4b9f65f4788096c95e38c0576a553a6fc8eb66671c8ea553a",
+      "recorded_at": "2026-10-16T19:21:13.838752+00:00"
+    },
+    "typescript": {
+      "status": "passed",
+      "artifact": ".p-build-app/local/evidence/js-final-typecheck.log",
+      "artifact_sha256": "3624e33e300af4952f254680e9b5656c01a602a9dafcebd5a32a646604318c40",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "1258a6ed2bb46c92af767237d2ea199fc257a69a65f5c97bcc8876b075131718",
+      "recorded_at": "2026-10-16T19:28:04.809088+00:00"
+    },
+    "lint": {
+      "status": "passed",
+      "artifact": ".p-build-app/local/evidence/js-final-lint.log",
+      "artifact_sha256": "443e91a29fe9e8116630039f1b3fb993016ca44a798bb896be0898c31078cfe7",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "1258a6ed2bb46c92af767237d2ea199fc257a69a65f5c97bcc8876b075131718",
+      "recorded_at": "2026-10-16T19:29:00.508747+00:00"
+    },
+    "unit-coverage": {
+      "status": "passed",
+      "artifact": ".p-build-app/local/evidence/js-final-coverage-summary.json",
+      "artifact_sha256": "9330f4a87ccaf6a9b103385382b8f2f94a802d14d5cfc0fd4fd4dd04fb96bbcc",
+      "revision": "711e2e5d2ff675af25b97f713061d34c5ac2850c",
+      "source_fingerprint": "fc3063e43a05bf39dc33f8f94d728855d1c3455a5ff7e2a1c13937fdc6df9f02",
+      "recorded_at": "2026-10-16T19:29:56.480000+00:00"
+    },
+    "native-coverage": {
+      "status": "passed",
+      "artifact": ".p-build-app/local/evidence/native-coverage-summary.json",
+      "artifact_sha256": "5840b26d42f6b0a5ce583446b7b1397a2b9fcd3a8d7865c2302204a9c460c403",
+      "revision": "b205095d7b9a8ed13564dee86c74d9ddf5231f2e",
+      "source_fingerprint": "fc3063e43a05bf39dc33f8f94d728855d1c3455a5ff7e2a1c13937fdc6df9f02",
+      "recorded_at": "2026-10-16T19:30:49.902589+00:00"
+    }
+  },
+  "release_boundary": "handoff_only",
+  "stack": "bare-react-native",
+  "mvp": {
+    "free": true,
+    "ads": false,
+    "subscriptions": false,
+    "paid_ai_api": false
+  },
+  "verification_blockers": {}
+}
