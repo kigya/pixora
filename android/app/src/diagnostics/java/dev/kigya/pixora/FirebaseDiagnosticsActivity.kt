@@ -13,8 +13,8 @@ class FirebaseDiagnosticsActivity : Activity() {
     external fun crashNative()
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
-        Telemetry.update(true, true, true)
         val action = intent.getStringExtra("action") ?: "events"
+        Telemetry.update(action != "restore", action != "restore", true)
         val label = TextView(this).apply { textSize=20f; setPadding(24,48,24,24) }
         setContentView(label)
         label.text="Pixora Firebase QA: $action\n${ProfileAvailability.snapshot()}"

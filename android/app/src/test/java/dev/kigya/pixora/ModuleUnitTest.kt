@@ -7,6 +7,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Looper
@@ -28,6 +29,16 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.util.ReflectionHelpers
+import com.google.android.play.core.review.ReviewInfo
+import com.google.android.play.core.review.ReviewManager
+import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.gms.tasks.Tasks
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mockStatic
+import org.mockito.stubbing.Answer
+import org.mockito.Answers
 import java.io.File
 import java.lang.reflect.Proxy
 import java.util.concurrent.CountDownLatch
@@ -52,12 +63,7 @@ class ModuleUnitTest {
             val preferences=super.getSharedPreferences(name,mode)
             if(name!="settings" || !rejectSettingsWrite)return preferences
             return object:android.content.SharedPreferences by preferences {
-                override fun edit()=object:android.content.SharedPreferences.Editor by preferences.edit() {
-                    override fun putString(key:String?,value:String?):android.content.SharedPreferences.Editor=this
-                    override fun putInt(key:String?,value:Int):android.content.SharedPreferences.Editor=this
-                    override fun putBoolean(key:String?,value:Boolean):android.content.SharedPreferences.Editor=this
-                    override fun commit()=false
-                }
+                override fun edit()=rejectingPreferencesEditor()
             }
         }
         override fun hasActiveReactInstance()=active
@@ -173,6 +179,8 @@ class ModuleUnitTest {
         ReflectionHelpers.setStaticField(Build::class.java,"SUPPORTED_ABIS",arrayOf("arm64-v8a"));memory(1L*1024*1024*1024);assertFalse((call(module::getCapabilities) as ReadableMap).getBoolean("supported"))
         call(module::getWindowLayout);call(module::getLegalText);call(module::getSettings);call(module::getCurrentSession)
         for(theme in listOf("light","dark","system"))call{module.updateSettings("en","png",theme,it)}
+        assertEquals("pt-BR",(call{module.updateSettings("pt","jpeg","dark",it)} as ReadableMap).getString("language"))
+        assertEquals("system",(call{module.updateSettings("system","png","light",it)} as ReadableMap).getString("language"))
         fails("INFERENCE_FAILED"){module.updateSettings("xx","png","light",it)};fails("INFERENCE_FAILED"){module.updateSettings("en","gif","light",it)};fails("INFERENCE_FAILED"){module.updateSettings("en","png","xx",it)}
         fails("SOURCE_UNAVAILABLE"){module.inspectSelection("none",it)};fails("SOURCE_UNAVAILABLE"){module.prepareSelection("none",it)}
         fails("SOURCE_UNAVAILABLE"){module.dismissNotificationHint("wrong",it)};call{module.dismissNotificationHint("",it)}
@@ -222,6 +230,29 @@ class ModuleUnitTest {
         Shadows.shadowOf(RuntimeEnvironment.getApplication()).denyPermissions(Manifest.permission.POST_NOTIFICATIONS)
         prefs.edit().putBoolean("notificationAsked",false).commit();val pending=Reply();module.requestNotifications(pending.promise);Shadows.shadowOf(Looper.getMainLooper()).idle()
         prefs.edit().putBoolean("notificationAsked",false).commit();assertEquals(false,call(module::requestNotifications));module.invalidate();assertEquals(false,pending.await())
+    }
+    @Test fun reviewRequestHandlesNoActivityAndEachPlayTaskOutcome() {
+        assertEquals(false,call(module::requestReview))
+        val activity=Robolectric.buildActivity(Activity::class.java).setup().get();react.onHostResume(activity)
+        val manager=mock(ReviewManager::class.java)
+        val info=mock(ReviewInfo::class.java)
+        mockStatic(ReviewManagerFactory::class.java,Answer<Any?>{manager}).use {
+            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forResult(info))
+            `when`(manager.launchReviewFlow(activity,info)).thenReturn(Tasks.forResult<Void>(null))
+            assertEquals(true,call(module::requestReview))
+            org.mockito.Mockito.verify(manager).requestReviewFlow()
+            org.mockito.Mockito.verify(manager).launchReviewFlow(activity,info)
+
+            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forException(java.io.IOException("controlled review request failure")))
+            assertEquals(false,call(module::requestReview))
+
+            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forResult(info))
+            `when`(manager.launchReviewFlow(activity,info)).thenReturn(Tasks.forException(java.io.IOException("controlled review launch failure")))
+            assertEquals(false,call(module::requestReview))
+        }
+        mockStatic(ReviewManagerFactory::class.java,Answer<Any?>{throw IllegalStateException("Play unavailable")}).use {
+            assertEquals(false,call(module::requestReview))
+        }
     }
     @Test @Config(sdk=[29]) fun oldAndroidNeedsNoNotificationPermission(){
         assertEquals(true,call(module::requestNotifications))
@@ -380,6 +411,124 @@ class ModuleUnitTest {
         ctx.getSharedPreferences("remote_profiles",0).edit().clear().commit();ProfileAvailability.init(ctx)
     }
 
+    @Test fun imageRecommendationUsesPrivatePreviewMapsReasonsAndRespectsAvailability() {
+        ctx.getSharedPreferences("remote_profiles",0).edit().clear().commit()
+        ProfileAvailability.init(ctx)
+        val id=image()
+        val preview=File(ctx.cacheDir,"recommendation-preview.png")
+        try {
+            fails("SOURCE_UNAVAILABLE"){module.getImageRecommendation("missing",it)}
+            fun previewWith(pixel:Int) {
+                val bitmap=Bitmap.createBitmap(2,1,Bitmap.Config.ARGB_8888).apply { setPixel(0,0,pixel) }
+                ImageFiles.write(bitmap,preview,"png");bitmap.recycle()
+                SessionStore.update{it.getJSONObject("image").put("previewUri",Uri.fromFile(preview).toString())}
+            }
+            for ((pixel,reason,profile) in listOf(
+                Triple(0xff123456.toInt(),"photo","lite"),
+                Triple(0xff112233.toInt(),"art","art"),
+                Triple(0xffabcdef.toInt(),"pixel","pixel"),
+            )) {
+                previewWith(pixel)
+                assertEquals("host JNI fixture should receive the stored preview pixels",reason,RecommendationEngine.analyze(Uri.fromFile(preview).toString()))
+                val suggestion=call{module.getImageRecommendation(id,it)} as ReadableMap
+                assertEquals(id,suggestion.getString("imageId"));assertEquals(reason,suggestion.getString("reasonId"))
+                assertEquals(profile,suggestion.getString("profileId"));assertEquals("quality",suggestion.getString("speed"))
+            }
+            SessionStore.update{it.getJSONObject("image").put("previewUri",Uri.fromFile(File(ctx.cacheDir,"missing-preview.png")).toString())}
+            val fallback=call{module.getImageRecommendation(id,it)} as ReadableMap
+            assertEquals("generic",fallback.getString("reasonId"));assertEquals("lite",fallback.getString("profileId"))
+
+            val flags=JSONObject().put("source","test").put("updatedAt",0)
+            ProcessingProfiles.presets.forEach{flags.put(it,it!="pixel")}
+            ctx.getSharedPreferences("remote_profiles",0).edit().putString("snapshot",flags.toString()).commit()
+            ProfileAvailability.init(ctx)
+            previewWith(0xffabcdef.toInt())
+            assertNull(call{module.getImageRecommendation(id,it)})
+        } finally {
+            preview.delete()
+            ctx.getSharedPreferences("remote_profiles",0).edit().clear().commit();ProfileAvailability.init(ctx)
+        }
+    }
+
+    @Test fun recommendationAnalyzerBoundsDecodeAndRejectsInvalidPreviews() {
+        val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
+        try {
+            assertEquals("generic",RecommendationEngine.analyze("opaque:without/path"))
+            file.delete()
+            try { RecommendationEngine.analyze(Uri.fromFile(file).toString());fail("missing preview should fail") }
+            catch(_:IllegalArgumentException) { }
+        } finally { file.delete() }
+    }
+
+    @Test fun recommendationAnalyzerUsesBoundedPixelsAndReleasesDecodedBuffers() {
+        val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
+        try {
+            withRecommendationDecoder(file,1200,600,null) { sample ->
+                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+                assertEquals(8,sample.get())
+            }
+            val decoded=Bitmap.createBitmap(2,1,Bitmap.Config.ARGB_8888).apply{setPixel(0,0,0xff123456.toInt())}
+            try {
+                withRecommendationDecoder(file,1200,600,decoded) { sample ->
+                    assertEquals("photo",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+                    assertEquals(8,sample.get())
+                }
+                assertTrue(decoded.isRecycled)
+            } finally { if(!decoded.isRecycled)decoded.recycle() }
+        } finally { file.delete() }
+    }
+
+    @Test fun recommendationAnalyzerDownscalesOversizedDecodeAndPreservesIdentityResult() {
+        val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
+        val decoded=Bitmap.createBitmap(320,160,Bitmap.Config.ARGB_8888)
+        try {
+            withRecommendationDecoder(file,320,160,decoded) {
+                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+            }
+            assertTrue("a distinct reduced bitmap releases the decode buffer",decoded.isRecycled)
+        } finally { if(!decoded.isRecycled)decoded.recycle();file.delete() }
+
+        file.writeBytes(byteArrayOf(1))
+        val identical=Bitmap.createBitmap(320,160,Bitmap.Config.ARGB_8888)
+        try {
+            withRecommendationDecoder(file,320,160,identical) {
+                mockStatic(Bitmap::class.java,Answer<Any?>{invocation->
+                    if(invocation.method.name=="createScaledBitmap")identical else Answers.RETURNS_DEFAULTS.answer(invocation)
+                }).use {
+                    assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+                }
+            }
+            assertTrue("identity output remains readable and is released after analysis",identical.isRecycled)
+        } finally { if(!identical.isRecycled)identical.recycle();file.delete() }
+    }
+
+    @Test fun recommendationAnalyzerRejectsCorruptBoundsAndFallsBackWhenDecodeIsNull() {
+        val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
+        try {
+            for((width,height) in listOf(0 to 500,1 to 0)) {
+                withRecommendationDecoder(file,width,height,null) {
+                    try { RecommendationEngine.analyze(Uri.fromFile(file).toString());fail("invalid bounds should fail") }
+                    catch(_:IllegalArgumentException) { }
+                }
+            }
+            withRecommendationDecoder(file,1200,600,null) {
+                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+            }
+        } finally { file.delete() }
+    }
+
+    private fun withRecommendationDecoder(file:File,width:Int,height:Int,bitmap:Bitmap?,block:(java.util.concurrent.atomic.AtomicInteger)->Unit) {
+        val sample=java.util.concurrent.atomic.AtomicInteger()
+        val answer=Answer<Any?>{invocation->
+            if(invocation.method.name!="decodeFile") return@Answer null
+            if(invocation.getArgument<String>(0)!=file.path) return@Answer null
+            val options=invocation.getArgument<BitmapFactory.Options>(1)
+            if(options.inJustDecodeBounds) { options.outWidth=width;options.outHeight=height;null }
+            else { sample.set(options.inSampleSize);bitmap }
+        }
+        mockStatic(BitmapFactory::class.java,answer).use { block(sample) }
+    }
+
     @Test fun failedImportReportsAllowedFailureWithoutLeakingFileData() {
         val activity=Robolectric.buildActivity(Activity::class.java).setup().get();react.onHostResume(activity)
         val reply=Reply();module.pickImage(reply.promise);Shadows.shadowOf(Looper.getMainLooper()).idle()
@@ -400,6 +549,23 @@ class ModuleUnitTest {
         assertNotEquals(second.getString("id"),third.getString("id"));call(module::getCurrentSession)
         assertEquals(0,SessionStore.snapshot().getJSONArray("exports").length())
         assertEquals("SUCCEEDED",SessionStore.snapshot().getString("state"))
+    }
+
+    @Test fun currentSessionRemovesExportsWhenProviderQueriesFail() {
+        image()
+        val gallery=MediaExportTest.Gallery().apply {
+            output=File(ctx.cacheDir,"query-failure-output")
+            failQuery=true
+            attachInfo(ctx,android.content.pm.ProviderInfo().apply{authority="media-query-failure";exported=true})
+        }
+        org.robolectric.shadows.ShadowContentResolver.registerProviderInternal("media-query-failure",gallery)
+        SessionStore.update {
+            it.put("exports",org.json.JSONArray().put(JSONObject().put("id","export-id").put("format","png").put("uri","content://media-query-failure/item")))
+                .put("exportState","EXPORTED")
+        }
+        val current=call(module::getCurrentSession) as ReadableMap
+        assertEquals(0,current.getArray("exports")!!.size())
+        assertEquals("EXPORT_IDLE",current.getString("exportState"))
     }
 
 }

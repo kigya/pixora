@@ -10,7 +10,7 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.BridgeReactContext
 import com.facebook.react.bridge.ReadableMap
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -100,8 +100,8 @@ class Pixora08Test {
 
     private fun restoreSession(saved: JSONObject) {
         SessionStore.update { current ->
-            val currentKeys = current.keys()
-            while (currentKeys.hasNext()) current.remove(currentKeys.next())
+            val currentKeys = current.keys().asSequence().toList()
+            currentKeys.forEach { current.remove(it) }
             val savedKeys = saved.keys()
             while (savedKeys.hasNext()) {
                 val key = savedKeys.next()
@@ -110,7 +110,7 @@ class Pixora08Test {
         }
     }
 
-    private fun createModule() = UpscaleModule(ReactApplicationContext(ctx))
+    private fun createModule() = UpscaleModule(BridgeReactContext(ctx))
 
     private fun copyLicensedPhoto(): File {
         val file = File(ctx.cacheDir, "pixora08-${UUID.randomUUID()}.jpg")

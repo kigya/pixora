@@ -96,6 +96,14 @@ android {
     namespace "dev.kigya.pixora"
     testBuildType project.hasProperty("scrollBenchmark") ? "benchmark" : (project.hasProperty("coverage") ? "coverage" : "release")
     testOptions { unitTests.includeAndroidResources = true }
+    if (project.hasProperty('firebaseDiagnostics')) {
+        sourceSets {
+            diagnosticsDebug {
+                java.srcDir 'src/diagnostics/java'
+                manifest.srcFile 'src/diagnostics/AndroidManifest.xml'
+            }
+        }
+    }
     defaultConfig {
         applicationId "dev.kigya.pixora"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -164,7 +172,7 @@ android {
             diagnostics {
                 initWith release
                 matchingFallbacks = ['release']
-                debuggable true
+                debuggable false
                 enableAndroidTestCoverage false
                 buildConfigField "boolean", "TELEMETRY_DEFAULT", "false"
                 externalNativeBuild { cmake { arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DPIXORA_FIREBASE_DIAGNOSTICS=ON" } }
@@ -172,6 +180,17 @@ android {
                     mappingFileUploadEnabled true
                     nativeSymbolUploadEnabled true
                     unstrippedNativeLibsDir file("build/intermediates/merged_native_libs/diagnostics/mergeDiagnosticsNativeLibs/out/lib")
+                }
+            }
+            diagnosticsDebug {
+                initWith debug
+                matchingFallbacks = ['debug']
+                enableAndroidTestCoverage false
+                externalNativeBuild { cmake { arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo", "-DPIXORA_FIREBASE_DIAGNOSTICS=ON" } }
+                firebaseCrashlytics {
+                    mappingFileUploadEnabled false
+                    nativeSymbolUploadEnabled true
+                    unstrippedNativeLibsDir file("build/intermediates/merged_native_libs/diagnosticsDebug/mergeDiagnosticsDebugNativeLibs/out/lib")
                 }
             }
         }
@@ -259,9 +278,61 @@ tasks.register("encodeFeedbackEndpoint", Exec) {
 tasks.named("preBuild").configure { dependsOn("encodeFeedbackEndpoint") }
 
 // Symbol extraction must consume the matching variant's unstripped merged libraries.
+// The diagnostic debug build uses the same registered Firebase client as normal debug.
+if (project.hasProperty('firebaseDiagnostics')) {
+    gradle.projectsEvaluated {
+        tasks.named('processDiagnosticsDebugGoogleServices').configure {
+            googleServicesJsonFiles.set([file('src/debug/google-services.json')])
+        }
+    }
+    gradle.taskGraph.whenReady { graph ->
+        def ordinaryPackage = graph.allTasks.find {
+            it.project == project && it.name ==~ /package(Debug|Release|Coverage|Benchmark)(Bundle)?/
+        }
+        if (ordinaryPackage != null) {
+            throw new GradleException('firebaseDiagnostics may only package diagnostics variants; remove the property for normal APK/AAB builds.')
+        }
+    }
+}
 // Explicit task dependency avoids Gradle ordering ambiguity and other variant build IDs.
-tasks.matching { it.name == 'generateCrashlyticsSymbolFileRelease' || it.name == 'generateCrashlyticsSymbolFileDiagnostics' }.configureEach {
-    dependsOn(name == 'generateCrashlyticsSymbolFileRelease' ? 'mergeReleaseNativeLibs' : 'mergeDiagnosticsNativeLibs')
+tasks.matching { it.name in ['generateCrashlyticsSymbolFileRelease', 'generateCrashlyticsSymbolFileDiagnostics', 'generateCrashlyticsSymbolFileDiagnosticsDebug'] }.configureEach {
+    dependsOn(name.replace('generateCrashlyticsSymbolFile', 'merge') + 'NativeLibs')
+}
+
+// JVM tests execute the Kotlin JNI forwarding boundary using a test-only host library.
+// Real ncnn inference remains covered separately on the physical device and in native tests.
+def nativeJvmFixtureDirectory = layout.buildDirectory.dir("nativeJvmFixture")
+def hostIsMac = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("mac")
+def nativeJvmFixtureLibrary = nativeJvmFixtureDirectory.map { it.file(hostIsMac ? "libupscale.dylib" : "libupscale.so") }
+tasks.register("compileNativeJvmFixture", Exec) {
+    inputs.file(rootProject.file("../tests/native/android_jvm_fixture.cpp"))
+    outputs.file(nativeJvmFixtureLibrary)
+    doFirst { nativeJvmFixtureDirectory.get().asFile.mkdirs() }
+    def javaIncludes = new File(System.getProperty("java.home"), "include")
+    commandLine("c++", "-std=c++17", "-fPIC", hostIsMac ? "-dynamiclib" : "-shared",
+        "-I${javaIncludes}", "-I${new File(javaIncludes, hostIsMac ? 'darwin' : 'linux')}",
+        rootProject.file("../tests/native/android_jvm_fixture.cpp"), "-o", nativeJvmFixtureLibrary.get().asFile)
+}
+tasks.matching { it.name == "testCoverageUnitTest" }.configureEach {
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }
+    dependsOn("compileNativeJvmFixture")
+    systemProperty("java.library.path", nativeJvmFixtureDirectory.get().asFile.absolutePath)
+    // Robolectric sandboxes use distinct classloaders; JNI libraries are process-owned.
+    // Give each test class its own JVM rather than suppressing the production load boundary.
+    forkEvery = 1
+}
+
+// React Native's callback class loads fbjni during class initialization; callback execution is mocked.
+def nativeJvmLoaderLibrary = nativeJvmFixtureDirectory.map { it.file(hostIsMac ? "libfbjni.dylib" : "libfbjni.so") }
+tasks.register("compileNativeJvmLoaderFixture", Exec) {
+    inputs.file(rootProject.file("../tests/native/android_jvm_loader_fixture.cpp"))
+    outputs.file(nativeJvmLoaderLibrary)
+    doFirst { nativeJvmFixtureDirectory.get().asFile.mkdirs() }
+    commandLine("c++", "-std=c++17", "-fPIC", hostIsMac ? "-dynamiclib" : "-shared",
+        rootProject.file("../tests/native/android_jvm_loader_fixture.cpp"), "-o", nativeJvmLoaderLibrary.get().asFile)
+}
+tasks.matching { it.name == "testCoverageUnitTest" }.configureEach {
+    dependsOn("compileNativeJvmLoaderFixture")
 }
 
 // CI uses disposable configuration even when real local client files exist.
