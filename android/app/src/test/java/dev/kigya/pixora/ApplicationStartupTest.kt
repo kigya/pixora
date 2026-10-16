@@ -33,7 +33,7 @@ class ApplicationStartupTest {
         fetched.set(false)
     }
 
-    @Test fun legacyConsentIsRemovedBeforeFirebaseAndRemoteConfigurationStillFetches() = startup(0, "ready")
+    @Test fun freshDefaultsEnableCollectionBeforeFirebaseAndRemoteConfigurationStillFetches() = startup(0, "ready")
     @Test fun explicitConsentReplacesStaleSdkPreferencesBeforeFirebase() = startup(2, "ready")
     @Test fun failedReconciliationSkipsFirebaseAndStillLoadsOfflineApplication() = startup(2, "disk-failure")
     @Test fun missingFirebaseConfigurationStillLoadsOfflineApplication() = startup(2, "null")
@@ -82,9 +82,11 @@ class ApplicationStartupTest {
                                     assertFalse(measurement.getBoolean("measurement_enabled_from_api", true))
                                     assertTrue(crashPrefs.getBoolean("firebase_crashlytics_collection_enabled", false))
                                 } else {
-                                    assertFalse(measurement.contains("measurement_enabled"))
-                                    assertFalse(measurement.contains("measurement_enabled_from_api"))
-                                    assertFalse(crashPrefs.contains("firebase_crashlytics_collection_enabled"))
+                                    assertTrue(measurement.getBoolean("measurement_enabled", false))
+                                    assertTrue(measurement.getBoolean("measurement_enabled_from_api", false))
+                                    assertTrue(crashPrefs.getBoolean("firebase_crashlytics_collection_enabled", false))
+                                    assertEquals(version, consent.getInt("consentVersion", -1))
+                                    assertFalse(consent.getBoolean("noticeSeen", false))
                                 }
                                 when (outcome) {
                                     "throws" -> throw IllegalStateException("controlled configuration failure")

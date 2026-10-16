@@ -231,7 +231,7 @@
   "profilesUnavailable": "Bearbetningslägena är tillfälligt otillgängliga. Du kan fortfarande spara det senaste resultatet.",
   "profileChanged": "Det valda läget är inte tillgängligt. Ett annat läge har valts.",
   "telemetryTitle": "Hjälp oss förbättra Pixora",
-  "telemetryIntro": "Foton bearbetas på telefonen. Appen skickar information om användning och fel så att vi kan förbättra den.",
+  "telemetryIntro": "Dina foton stannar på din telefon. Användningsanalys och felrapporter är aktiverade som standard för att hjälpa oss förbättra appen. Du kan stänga av dem separat i Inställningar.",
   "analyticsTitle": "Användningsanalys",
   "analyticsBody": "Visar vilka funktioner som används. Foton och feedback ingår inte.",
   "crashesTitle": "Felrapporter",

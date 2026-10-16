@@ -29,15 +29,17 @@ object Telemetry {
                 .putBoolean("measurement_enabled_from_api", allowed)
                 .commit()
         } else {
+            // New installs and legacy installs without an explicit 0.8 choice use the approved
+            // enabled-by-default behavior. Do not mark the notice acknowledged here.
             analyticsSdk.edit()
-                .remove("measurement_enabled")
-                .remove("measurement_enabled_from_api")
+                .putBoolean("measurement_enabled", true)
+                .putBoolean("measurement_enabled_from_api", true)
                 .commit()
         }
         val crashesSaved = if (version == consentVersion) {
             crashlyticsSdk.edit().putBoolean("firebase_crashlytics_collection_enabled", prefs().getBoolean("crashes", false)).commit()
         } else {
-            crashlyticsSdk.edit().remove("firebase_crashlytics_collection_enabled").commit()
+            crashlyticsSdk.edit().putBoolean("firebase_crashlytics_collection_enabled", true).commit()
         }
         return analyticsSaved && crashesSaved
     }
@@ -56,7 +58,8 @@ object Telemetry {
     }
     fun settings() = JSONObject().put("analytics", enabled("analytics")).put("crashes", enabled("crashes")).put("noticeSeen", prefs().getBoolean("noticeSeen", false)).put("consentVersion", prefs().getInt("consentVersion", 0))
     private fun prefs() = context.getSharedPreferences("telemetry", 0)
-    private fun enabled(key: String) = prefs().getInt("consentVersion", 0) == consentVersion && prefs().getBoolean(key, false)
+    private fun enabled(key: String): Boolean =
+        if (prefs().getInt("consentVersion", 0) == consentVersion) prefs().getBoolean(key, false) else true
     private fun analyticsAllowed() = enabled("analytics") && !analyticsSuppressedForProcess
     private fun crashesAllowed() = enabled("crashes") && !crashesSuppressedForProcess
     fun update(analytics: Boolean, crashes: Boolean, noticeSeen: Boolean): JSONObject {

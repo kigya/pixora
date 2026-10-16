@@ -231,7 +231,7 @@
   "profilesUnavailable": "处理模式暂不可用。您仍可保存上次的结果。",
   "profileChanged": "所选模式不可用，已选择其他模式。",
   "telemetryTitle": "帮助改进 Pixora",
-  "telemetryIntro": "照片在手机上处理。应用发送使用情况和错误信息，以帮助我们改进。",
+  "telemetryIntro": "照片会保留在你的手机上。使用情况分析和错误报告默认开启，以帮助我们改进应用。你可以在设置中分别关闭这两项。",
   "analyticsTitle": "使用分析",
   "analyticsBody": "了解哪些功能被使用。不包含照片和反馈内容。",
   "crashesTitle": "错误报告",

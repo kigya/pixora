@@ -67,7 +67,7 @@ export function SettingsScreen({
           >
             <Icon name="back" />
           </Pressable>
-          <Text style={s.heading}>
+          <Text style={[s.heading, { flex: 1, textAlign: 'center' }]}>
             {info === 'legal'
               ? t.licenses
               : info === 'privacy'

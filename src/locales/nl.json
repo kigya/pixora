@@ -231,7 +231,7 @@
   "profilesUnavailable": "De verwerkingsmodi zijn tijdelijk niet beschikbaar. Je kunt het laatste resultaat nog opslaan.",
   "profileChanged": "De gekozen modus is niet beschikbaar. Er is een andere modus gekozen.",
   "telemetryTitle": "Help Pixora verbeteren",
-  "telemetryIntro": "Foto's worden op je telefoon verwerkt. De app stuurt gebruiks- en foutgegevens zodat we de app kunnen verbeteren.",
+  "telemetryIntro": "Je foto’s blijven op je telefoon. Gebruiksanalyses en foutrapporten staan standaard aan om de app te verbeteren. Je kunt ze afzonderlijk uitschakelen in Instellingen.",
   "analyticsTitle": "Gebruiksanalyse",
   "analyticsBody": "Laat zien welke functies worden gebruikt. Zonder foto's en feedbackinhoud.",
   "crashesTitle": "Foutrapporten",

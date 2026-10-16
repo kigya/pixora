@@ -231,7 +231,7 @@
   "profilesUnavailable": "Die Modi sind vorübergehend nicht verfügbar. Das letzte Ergebnis lässt sich weiterhin speichern.",
   "profileChanged": "Der gewählte Modus ist nicht verfügbar. Ein anderer Modus wurde ausgewählt.",
   "telemetryTitle": "Pixora verbessern",
-  "telemetryIntro": "Fotos werden auf Ihrem Telefon verarbeitet. Die App sendet Nutzungs- und Fehlerdaten, damit wir sie verbessern können.",
+  "telemetryIntro": "Ihre Fotos bleiben auf Ihrem Telefon. Nutzungsanalysen und Fehlerberichte sind standardmäßig aktiviert, damit wir die App verbessern können. Sie können beide Optionen in den Einstellungen unabhängig voneinander ausschalten.",
   "analyticsTitle": "Nutzungsanalyse",
   "analyticsBody": "Welche Funktionen verwendet werden. Ohne Fotos und Feedback-Inhalte.",
   "crashesTitle": "Fehlerberichte",

@@ -47,42 +47,48 @@ class TelemetryTest {
         configured.clear()
         Telemetry.init(wrapped)
         assertTrue(configured.isEmpty())
-        assertFalse(analytics.contains("measurement_enabled"))
+        assertTrue(analytics.getBoolean("measurement_enabled", false))
+        assertTrue(analytics.getBoolean("measurement_enabled_from_api", false))
     }
 
-    @Test fun collectionSettingsAreIndependentAndDisabledByDefaultInCoverage() {
-        assertEquals(false to false,configured.single())
+    @Test fun collectionSettingsAreIndependentAndEnabledByDefaultUntilChoiceIsSaved() {
+        assertEquals(true to true,configured.single())
         val initial=Telemetry.settings();assertFalse(initial.getBoolean("noticeSeen"))
-        assertFalse(initial.getBoolean("analytics"));assertFalse(initial.getBoolean("crashes"))
+        assertTrue(initial.getBoolean("analytics"));assertTrue(initial.getBoolean("crashes"))
+        assertEquals(0,initial.getInt("consentVersion"))
         Telemetry.update(true,false,true);assertEquals(true to false,configured.last())
         Telemetry.update(false,true,true);assertEquals(false to true,configured.last())
         assertTrue(Telemetry.settings().getBoolean("noticeSeen"));assertEquals(Telemetry.consentVersion,Telemetry.settings().getInt("consentVersion"))
         Telemetry.event("ui_action");assertTrue(received.isEmpty())
     }
-    @Test fun legacyEnabledFlagsAndNoticeAreNotConsentAndInitializeOff() {
+    @Test fun legacyFlagsAndSeenNoticeAreNotConsentAndUnresolvedChoicesDefaultOn() {
         context.getSharedPreferences("telemetry",0).edit()
-            .putBoolean("analytics",true).putBoolean("crashes",true)
+            .putBoolean("analytics",false).putBoolean("crashes",false)
             .putBoolean("noticeSeen",true).putInt("consentVersion",1).commit()
         configured.clear()
         Telemetry.init(context,sink)
-        assertEquals(listOf(false to false),configured)
+        assertEquals(listOf(true to true),configured)
         val migrated=Telemetry.settings()
-        assertFalse(migrated.getBoolean("analytics"));assertFalse(migrated.getBoolean("crashes"))
+        assertTrue(migrated.getBoolean("analytics"));assertTrue(migrated.getBoolean("crashes"))
         assertTrue(migrated.getBoolean("noticeSeen"));assertEquals(1,migrated.getInt("consentVersion"))
         Telemetry.event("ui_action")
-        assertTrue(received.isEmpty())
+        assertEquals("ui_action",received.single().first)
     }
-    @Test fun preFirebaseMigrationClearsOnlyKnownLegacySdkCollectionOverrides() {
-        context.getSharedPreferences("telemetry",0).edit().putInt("consentVersion",1).commit()
+    @Test fun preFirebaseMigrationAppliesDefaultsAndPreservesUnrelatedSdkPreferences() {
+        context.getSharedPreferences("telemetry",0).edit()
+            .putInt("consentVersion",1).putBoolean("analytics",false).putBoolean("crashes",false)
+            .putBoolean("noticeSeen",true).commit()
         val analytics=context.getSharedPreferences("com.google.android.gms.measurement.prefs",0)
-        analytics.edit().putBoolean("measurement_enabled",true).putBoolean("measurement_enabled_from_api",true).putString("unrelated", "keep").commit()
+        analytics.edit().putBoolean("measurement_enabled",false).putBoolean("measurement_enabled_from_api",false).putString("unrelated", "keep").commit()
         val crashlytics=context.getSharedPreferences("com.google.firebase.crashlytics",0)
-        crashlytics.edit().putBoolean("firebase_crashlytics_collection_enabled",true).putString("unrelated", "keep").commit()
+        crashlytics.edit().putBoolean("firebase_crashlytics_collection_enabled",false).putString("unrelated", "keep").commit()
         Telemetry.prepare(context)
-        assertFalse(analytics.contains("measurement_enabled"));assertFalse(analytics.contains("measurement_enabled_from_api"));assertEquals("keep",analytics.getString("unrelated",null))
-        assertFalse(crashlytics.contains("firebase_crashlytics_collection_enabled"));assertEquals("keep",crashlytics.getString("unrelated",null))
+        assertTrue(analytics.getBoolean("measurement_enabled",false));assertTrue(analytics.getBoolean("measurement_enabled_from_api",false));assertEquals("keep",analytics.getString("unrelated",null))
+        assertTrue(crashlytics.getBoolean("firebase_crashlytics_collection_enabled",false));assertEquals("keep",crashlytics.getString("unrelated",null))
         Telemetry.init(context,sink)
-        assertEquals(false to false,configured.last())
+        assertEquals(true to true,configured.last())
+        assertTrue(Telemetry.settings().getBoolean("noticeSeen"))
+        assertEquals(1,Telemetry.settings().getInt("consentVersion"))
     }
     @Test fun preFirebaseMigrationReconcilesCurrentConsentOverStaleSdkOverrides() {
         context.getSharedPreferences("telemetry",0).edit()
@@ -168,7 +174,7 @@ class TelemetryTest {
         }
         Telemetry.init(wrapped,sink)
         try{Telemetry.update(true,true,true);fail("Expected failed preference write")}catch(_:IllegalStateException){}
-        assertFalse(Telemetry.settings().getBoolean("analytics"))
+        assertTrue(Telemetry.settings().getBoolean("analytics"))
         Telemetry.init(context,sink);Telemetry.update(true,false,true)
         val invalid=object:JSONObject(){override fun opt(key:String?):Any?=if(key=="duration_ms") Double.NaN else super.opt(key)}
         invalid.put("duration_ms",0);Telemetry.event("ui_action",invalid)

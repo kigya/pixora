@@ -376,7 +376,9 @@ class ModuleUnitTest {
         })
         ProfileAvailability.init(ctx)
         assertTrue((call(module::getProfileAvailability) as ReadableMap).getBoolean("standard"))
-        assertFalse((call(module::getTelemetrySettings) as ReadableMap).getBoolean("analytics"))
+        val initialTelemetry=call(module::getTelemetrySettings) as ReadableMap
+        assertTrue(initialTelemetry.getBoolean("analytics"));assertTrue(initialTelemetry.getBoolean("crashes"))
+        assertFalse(initialTelemetry.getBoolean("noticeSeen"));assertEquals(0,initialTelemetry.getInt("consentVersion"))
         val enabled=call{module.updateTelemetrySettings(true,false,true,it)} as ReadableMap
         assertTrue(enabled.getBoolean("analytics"));assertFalse(enabled.getBoolean("crashes"));assertTrue(enabled.getBoolean("noticeSeen"));assertEquals(Telemetry.consentVersion,enabled.getInt("consentVersion"))
         module.logTelemetryEvent("ui_action","{\"action\":\"help\"}")

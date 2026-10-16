@@ -231,7 +231,7 @@
   "profilesUnavailable": "Modurile de procesare nu sunt disponibile momentan. Poți salva ultimul rezultat.",
   "profileChanged": "Modul selectat nu este disponibil. A fost ales alt mod.",
   "telemetryTitle": "Ajută la îmbunătățirea Pixora",
-  "telemetryIntro": "Fotografiile sunt procesate pe telefon. Aplicația trimite informații despre utilizare și erori pentru a ne ajuta să o îmbunătățim.",
+  "telemetryIntro": "Fotografiile tale rămân pe telefon. Analiza utilizării și rapoartele de erori sunt activate în mod implicit pentru a ne ajuta să îmbunătățim aplicația. Poți dezactiva fiecare opțiune separat din Setări.",
   "analyticsTitle": "Analiza utilizării",
   "analyticsBody": "Arată ce funcții sunt folosite. Nu include fotografii sau feedback.",
   "crashesTitle": "Rapoarte de erori",
