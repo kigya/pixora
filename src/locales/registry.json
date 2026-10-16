@@ -36,8 +36,8 @@
     "direction": "rtl"
   },
   {
-    "id": "pt",
-    "name": "Português",
+    "id": "pt-BR",
+    "name": "Português (Brasil)",
     "flag": "br",
     "direction": "ltr"
   },
@@ -178,5 +178,32 @@
     "name": "मराठी",
     "flag": "in",
     "direction": "ltr"
+  },
+  {
+    "id": "pa",
+    "name": "ਪੰਜਾਬੀ",
+    "flag": "pk",
+    "direction": "ltr",
+    "translationStatus": "unreviewed"
+  },
+  {
+    "id": "jv",
+    "name": "Basa Jawa",
+    "flag": "id",
+    "direction": "ltr",
+    "translationStatus": "unreviewed"
+  },
+  {
+    "id": "gu",
+    "name": "ગુજરાતી",
+    "flag": "in",
+    "direction": "ltr",
+    "translationStatus": "unreviewed"
+  },
+  {
+    "id": "he",
+    "name": "עברית",
+    "direction": "rtl",
+    "translationStatus": "unreviewed"
   }
 ]

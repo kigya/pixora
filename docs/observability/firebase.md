@@ -1,5 +1,7 @@
-# Firebase и читаемые диагностики
+# Firebase и согласие 0.8.0
 
-Статус: проект не создан, SDK не интегрированы.
+Remote Config остаётся независимым от диагностических согласий: локальные defaults и offline cache применяются независимо, а fetch не включает Analytics или Crashlytics.
 
-Указать независимый project/app IDs, бесплатный план, versions/native config, consent defaults, Analytics ingestion, Crashlytics debug/release test и читаемые Java/Kotlin/iOS/JS стеки, символы/dSYM/source maps, Remote Config доказательства. Android обфускация отключена. Нельзя публиковать credentials или считать сборку доказательством полученного события/краша.
+Analytics и Crashlytics по умолчанию OFF на нативном старте. Текущая версия выбора — 2; старое `noticeSeen` не является согласием. Настройки хранят отдельные значения `analytics` и `crashes`, а нативная граница разрешает сбор только при версии 2 и включённом соответствующем значении. Каждое выключение применяется отдельно. Android удаляет автоматический `FirebaseInitProvider` и до `FirebaseApp.initializeApp` согласует локальный выбор с SDK-переключателями `measurement_enabled` и `firebase_crashlytics_collection_enabled`; при старой версии оба удаляются, что возвращает их к выключенному значению манифеста. Остальные настройки SDK не очищаются. Компонент Crashlytics инициализируется SDK вместе с FirebaseApp, но его collection gate установлен до этого шага; выключенный режим также удаляет неотправленные отчёты. Реальную upgrade APK проверку всё ещё нужно выполнить. R8 и resource shrinking выключены для читаемых стеков.
+
+Сбор/доставка Analytics, consent upgrade/revoke и Crashlytics QA на физических релизах ещё не подтверждены. Публичные Firebase client IDs/config не являются административными секретами; не публиковать service-account credentials, signing material или приватные устройства.

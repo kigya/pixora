@@ -152,10 +152,10 @@
   "cacheLimitNote": "限制在应用重启时生效。当前图片在此之前仍可用。处理时可能临时占用更多空间。已保存照片和 AI 模型不计入。",
   "issues": "有问题需要帮助？",
   "email": "您的邮箱",
-  "emailNote": "我们会回复至此地址。",
+  "emailNote": "选填；无需回复时可留空。",
   "message": "您的留言",
   "send": "发送反馈",
-  "feedbackPrivacy": "仅发送邮箱、留言、可选评分和应用版本。图片保留在设备上。",
+  "feedbackPrivacy": "邮箱为选填项。系统会发送留言和应用版本；图片保留在设备上。",
   "feedbackSuccess": "反馈已发送，谢谢！",
   "feedbackUnavailable": "反馈暂不可用，需要连接支持服务。",
   "feedbackError": "发送失败。您的文字仍在此处，请重试。",
@@ -235,5 +235,7 @@
   "analyticsTitle": "使用分析",
   "analyticsBody": "了解哪些功能被使用。不包含照片和反馈内容。",
   "crashesTitle": "错误报告",
-  "crashesBody": "帮助发现崩溃。不包含照片和反馈内容。"
+  "crashesBody": "帮助发现崩溃。不包含照片和反馈内容。",
+  "notificationIntroTitleIos": "iOS 通知",
+  "notificationIosBody": "在 iOS 上，离开应用后处理可能会短暂继续。耗时较长的任务可能会中断；请返回应用重新开始。处理完成时可能会收到通知。"
 }

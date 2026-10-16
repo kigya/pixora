@@ -6,6 +6,7 @@ import {
   Text,
   TextInput,
   Pressable,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,7 +17,6 @@ import { useOperation } from '../application/useOperation';
 import { useTheme } from '../ui/theme';
 import { useLocale } from '../ui/locale';
 import { Button, Icon, createStyles } from '../ui/components';
-import { Stars } from '../ui/feedback';
 import { validEmail, validMessage } from '../domain/presentation';
 import { usePane } from '../ui/layout';
 import { track, useTrackedScreen } from '../application/telemetry';
@@ -36,8 +36,7 @@ export function FeedbackScreen({
   useEffect(() => {
     track('feedback_opened', {
       ...route.params?.context,
-      source: route.params?.rating ? 'review' : 'settings',
-      rating: route.params?.rating ?? 0,
+      source: 'settings',
     });
   }, [route.params]);
   const { colors } = useTheme();
@@ -46,7 +45,6 @@ export function FeedbackScreen({
   const s = createStyles(colors, rtl);
   const [email, setEmail] = useState(''),
     [message, setMessage] = useState(''),
-    [rating, setRating] = useState(route.params?.rating ?? 0),
     [configured, setConfigured] = useState<boolean | null>(null),
     [submitted, setSubmitted] = useState(false),
     [validation, setValidation] = useState('');
@@ -134,15 +132,6 @@ export function FeedbackScreen({
           style={[inputStyle, { minHeight: 160, textAlignVertical: 'top' }]}
           editable={!operation}
         />
-        <Text style={s.caption}>{t.ratingOptional}</Text>
-        <Stars
-          disabled={!!operation}
-          value={rating}
-          onChange={value => {
-            setRating(value);
-            edit();
-          }}
-        />
         {configured === null ? (
           <ActivityIndicator color={colors.accent} />
         ) : !configured ? (
@@ -164,14 +153,19 @@ export function FeedbackScreen({
           </Text>
         )}
         <Button
+          title={t.issues}
+          secondary
+          onPress={() => {
+            const subject = encodeURIComponent('Pixora support');
+            const body = encodeURIComponent(`${message.trim()}${email.trim() ? `\n\nReply address: ${email.trim()}` : ''}`);
+            Linking.openURL(`mailto:kirillborichevskiy@gmail.com?subject=${subject}&body=${body}`).catch(() => {});
+          }}
+        />
+        <Button
           title={t.send}
           disabled={!configured || !!operation || submitted}
           onPress={() => {
-            if (route.params?.rating && rating === 0) {
-              setValidation(t.ratingRequired);
-              return;
-            }
-            if (!validEmail(email)) {
+            if (email.trim() && !validEmail(email)) {
               setValidation(t.invalidEmail);
               return;
             }
@@ -184,20 +178,18 @@ export function FeedbackScreen({
                 await Native.sendFeedback(
                   email.trim(),
                   message.trim(),
-                  rating,
+                  0,
                   id,
                 );
               } catch (failure) {
                 track('feedback_send_finished', {
                   ...route.params?.context,
-                  rating,
                   status: 'error',
                 });
                 throw failure;
               }
               track('feedback_send_finished', {
                 ...route.params?.context,
-                rating,
                 status: 'success',
               });
               setSubmitted(true);

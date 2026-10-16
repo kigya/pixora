@@ -34,12 +34,14 @@ beforeEach(() => {
     analytics: false,
     crashes: false,
     noticeSeen: true,
+    consentVersion: 0,
   });
   Native.updateTelemetrySettings.mockImplementation(
     async (analytics, crashes, noticeSeen) => ({
       analytics,
       crashes,
       noticeSeen,
+      consentVersion: 2,
     }),
   );
 });
@@ -120,7 +122,8 @@ test('first launch notice is dismissible and shows persistence failure without h
   Native.getTelemetrySettings.mockResolvedValue({
     analytics: true,
     crashes: true,
-    noticeSeen: false,
+    noticeSeen: true,
+    consentVersion: 0,
   });
   const user = userEvent.setup();
   await render(
@@ -129,8 +132,10 @@ test('first launch notice is dismissible and shows persistence failure without h
     </AppProvider>,
   );
   const dismiss = await screen.findByRole('button', {
-    name: strings.en.understood,
+    name: strings.en.continue,
   });
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', false);
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', false);
   Native.updateTelemetrySettings.mockRejectedValueOnce(new Error('disk'));
   await user.press(dismiss);
   expect(
@@ -138,8 +143,8 @@ test('first launch notice is dismissible and shows persistence failure without h
   ).toBeOnTheScreen();
   await user.press(dismiss);
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
-    true,
-    true,
+    false,
+    false,
     true,
   );
   expect(screen.queryByText(strings.en.telemetryIntro)).not.toBeOnTheScreen();
@@ -529,44 +534,13 @@ test('remote configuration replaces a disabled selection, preserves import and b
   }));
 });
 
-test('review opens test Play after explicit confirmation and dismissal logs only an unconfirmed review', async () => {
-  const { ReviewDialog } = require('../src/ui/feedback');
-  const { Linking } = require('react-native');
-  const link = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
-  const user = userEvent.setup();
-  const close = jest.fn();
-  await render(
-    <AppProvider>
-      <ReviewDialog
-        visible
-        onClose={close}
-        onFeedback={() => {}}
-        context={{ profile_id: 'art', attempt_token: 'immutable-job' }}
-      />
-    </AppProvider>,
-  );
-  await user.press(screen.getByRole('button', { name: strings.en.notNow }));
-  expect(events()).toContainEqual([
-    'review_dismissed',
-    { profile_id: 'art', attempt_token: 'immutable-job', action: 'dismiss' },
-  ]);
-  await user.press(screen.getByRole('radio', { name: '5 / 5' }));
-  await user.press(screen.getByRole('button', { name: strings.en.continue }));
-  await user.press(screen.getByRole('button', { name: strings.en.open }));
-  expect(link).toHaveBeenCalledTimes(1);
-  expect(events()).toContainEqual([
-    'play_redirect_finished',
-    { profile_id: 'art', attempt_token: 'immutable-job', status: 'success' },
-  ]);
-});
-
-test('required private rating cannot be removed before feedback submission', async () => {
+test('feedback does not ask for or transmit a personal rating', async () => {
   const { FeedbackScreen } = require('../src/screens/Feedback');
   Native.getFeedbackStatus.mockResolvedValue(true);
   const user = userEvent.setup();
   const props = {
     navigation: { navigate: jest.fn(), goBack: jest.fn() },
-    route: { params: { rating: 4 } },
+    route: { params: undefined },
   } as any;
   await render(
     <AppProvider>
@@ -574,8 +548,8 @@ test('required private rating cannot be removed before feedback submission', asy
     </AppProvider>,
   );
   await screen.findByRole('button', { name: strings.en.send });
-  await user.press(screen.getByRole('radio', { name: '4 / 5' }));
+  expect(screen.queryByRole('radio')).toBeNull();
+  await user.type(screen.getByLabelText(strings.en.message), 'A helpful note');
   await user.press(screen.getByRole('button', { name: strings.en.send }));
-  expect(screen.getByText(strings.en.ratingRequired)).toBeOnTheScreen();
-  expect(Native.sendFeedback).not.toHaveBeenCalled();
+  expect(Native.sendFeedback).toHaveBeenCalledWith('', 'A helpful note', 0, expect.any(String));
 });

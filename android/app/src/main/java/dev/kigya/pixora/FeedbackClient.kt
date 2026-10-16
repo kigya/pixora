@@ -9,8 +9,9 @@ class FeedbackClient(private val endpoint:String,private val connect:(String)->H
     fun configured():Boolean = validEndpoint(endpoint)
     fun send(email:String,message:String,rating:Int,id:String):Boolean {
         if(!configured())throw AppFailure("FEEDBACK_UNAVAILABLE")
-        if(email.length>254 || !Regex("^[^\\s@<>\\r\\n]+@[^\\s@<>\\r\\n]+\\.[^\\s@<>\\r\\n]+$").matches(email.trim()) || message.trim().length !in 5..4000 || rating !in 0..5 || !Regex("^[a-f0-9-]{36}$").matches(id))throw AppFailure("FEEDBACK_INVALID")
-        val payload=JSONObject().put("email",email.trim()).put("message",message.trim()).put("rating",rating).put("id",id).put("version",BuildConfig.VERSION_NAME).toString().toByteArray(Charsets.UTF_8)
+        val replyAddress=email.trim()
+        if((replyAddress.isNotEmpty() && (replyAddress.length>254 || !Regex("^[^\\s@<>\\r\\n]+@[^\\s@<>\\r\\n]+\\.[^\\s@<>\\r\\n]+$").matches(replyAddress))) || message.trim().length !in 5..4000 || rating !in 0..5 || !Regex("^[a-f0-9-]{36}$").matches(id))throw AppFailure("FEEDBACK_INVALID")
+        val payload=JSONObject().put("email",replyAddress).put("message",message.trim()).put("rating",rating).put("id",id).put("version",BuildConfig.VERSION_NAME).toString().toByteArray(Charsets.UTF_8)
         val first=connect(endpoint)
         try {
             first.connectTimeout=15000;first.readTimeout=20000;first.instanceFollowRedirects=false

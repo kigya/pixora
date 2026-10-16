@@ -16,6 +16,7 @@ beforeEach(() => {
     analytics: false,
     crashes: false,
     noticeSeen: true,
+    consentVersion: 0,
   });
 });
 afterEach(() => jest.restoreAllMocks());
@@ -109,6 +110,7 @@ test('notice records measured height once for the collapse animation', async () 
     analytics: false,
     crashes: false,
     noticeSeen: false,
+    consentVersion: 0,
   });
   await render(
     <AppProvider>

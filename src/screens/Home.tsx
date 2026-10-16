@@ -37,7 +37,6 @@ import { ImagePreview } from '../ui/imagePreview';
 import { ProcessingPicker } from '../ui/processingPicker';
 import { useNotificationIntro } from '../ui/notificationIntro';
 import { TelemetryNotice } from '../ui/telemetryControls';
-import { ReviewDialog } from '../ui/feedback';
 import { needsAspectWarning } from '../domain/presentation';
 import { track, jobContext, useTrackedScreen } from '../application/telemetry';
 import { beginUpscale } from '../application/beginUpscale';
@@ -50,10 +49,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const confirm = useConfirm();
   const pane = usePane();
   const previewHeight = Math.max(120, Math.min(320, pane.height * 0.4));
-  const [review, setReview] = useState(false);
-  const [reviewContext, setReviewContext] = useState<
-    ReturnType<typeof jobContext>
-  >({});
   const [profileChanged, setProfileChanged] = useState(false);
   const notificationIntro = useNotificationIntro();
   const {
@@ -193,8 +188,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
       await refresh();
       setMessage('exportSuccess');
       if (await Native.claimReviewPrompt(v.jobId)) {
-        setReviewContext(jobContext(v));
-        setReview(true);
+        if (await Native.requestReview())
+          track('review_prompt_requested', jobContext(v));
       }
     });
   const share = () =>
@@ -609,14 +604,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
           </Text>
         )}
       </ScrollView>
-      <ReviewDialog
-        context={reviewContext}
-        visible={review}
-        onClose={() => setReview(false)}
-        onFeedback={rating =>
-          navigation.navigate('Feedback', { rating, context: reviewContext })
-        }
-      />
     </SafeAreaView>
   );
 }

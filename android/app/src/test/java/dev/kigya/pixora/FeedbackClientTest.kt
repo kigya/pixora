@@ -37,6 +37,9 @@ class FeedbackClientTest {
         fail("FEEDBACK_INVALID"){client.send("a@b.com","hello",0,"bad")}
         assertTrue(client.send(" me@example.com "," hello ",4,id));assertTrue(c.closed)
         val payload=org.json.JSONObject(c.output.toString("UTF-8"));assertEquals("me@example.com",payload.getString("email"));assertEquals(4,payload.getInt("rating"));assertEquals(5,payload.length());assertFalse(payload.has("image"))
+        val noReply=Connection(body="{\"ok\":true,\"id\":\"$id\"}")
+        assertTrue(FeedbackClient(endpoint){noReply}.send(" "," hello ",0,id))
+        assertEquals("",org.json.JSONObject(noReply.output.toString("UTF-8")).getString("email"))
     }
     @Test fun redirectsUseGetAndNeverSendEmailToAnotherHost() {
         val first=Connection(302,location="https://script.googleusercontent.com/macros/echo?user_content_key=abc")

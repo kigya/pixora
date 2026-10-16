@@ -85,6 +85,7 @@ export type Settings = {
   notificationIntroSeen: boolean;
   notificationDismissedSession: string;
   systemLanguage: string;
+  languageChosen: boolean;
 };
 export type Capabilities = {
   modes: ReadonlyArray<string>;
@@ -119,6 +120,7 @@ export type TelemetrySettings = {
   analytics: boolean;
   crashes: boolean;
   noticeSeen: boolean;
+  consentVersion: number;
 };
 export interface Spec extends TurboModule {
   getProfileAvailability(): Promise<ProfileAvailability>;
@@ -176,6 +178,7 @@ export interface Spec extends TurboModule {
   markNotificationHint(): Promise<Settings>;
   markNotificationIntroSeen(): Promise<Settings>;
   claimReviewPrompt(jobId: string): Promise<boolean>;
+  requestReview(): Promise<boolean>;
   getFeedbackStatus(): Promise<boolean>;
   sendFeedback(
     email: string,

@@ -27,7 +27,7 @@ object SessionStore {
     fun init(ctx: Context) = synchronized(lock) {
         if (::context.isInitialized) return@synchronized
         context = ctx.applicationContext
-        journal = AtomicFile(File(context.filesDir, "session.json"))
+        journal = AtomicFile(File(ctx.filesDir, "session.json"))
         value = try { JSONObject(withClosed(journal.openRead()) { it.reader(Charsets.UTF_8).readText() }) } catch (_: Exception) { empty(0) }
         if (value.optInt("schemaVersion") !in 1..2) value = empty(value.optLong("sequence"))
         value.put("schemaVersion",2)
@@ -90,7 +90,13 @@ object SessionStore {
     }
     fun settings(ctx: Context): JSONObject {
         val p = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        return JSONObject().put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", p.getString("language", "system"))
-            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("systemLanguage", ctx.resources.configuration.locales[0].toLanguageTag()).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
+        val storedLanguage = p.getString("language", "system") ?: "system"
+        val language = if (storedLanguage == "pt") "pt-BR" else storedLanguage
+        if (language != storedLanguage) p.edit().putString("language", language).commit()
+        val appInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+        val upgradedInstall = appInfo.lastUpdateTime > appInfo.firstInstallTime
+        val languageChosen = p.contains("language") || p.all.isNotEmpty() || File(context.filesDir, "session.json").exists() || upgradedInstall
+        return JSONObject().put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", language)
+            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("systemLanguage", android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
     }
 }

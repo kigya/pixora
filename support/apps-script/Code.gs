@@ -10,7 +10,7 @@ function validateFeedback(input) {
   var rating = Number(input.rating);
   var id = String(input.id || '');
   var version = String(input.version || '');
-  if (email.length > 254 || !/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(email) || message.length < 5 || message.length > 4000 || !Number.isInteger(rating) || rating < 0 || rating > 5 || !/^[a-f0-9-]{36}$/.test(id) || !/^\d+\.\d+\.\d+$/.test(version)) throw new Error('INVALID');
+  if (email.length > 254 || (email && !/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(email)) || message.length < 5 || message.length > 4000 || !Number.isInteger(rating) || rating < 0 || rating > 5 || !/^[a-f0-9-]{36}$/.test(id) || !/^\d+\.\d+\.\d+$/.test(version)) throw new Error('INVALID');
   return {email:email,message:message,rating:rating,id:id,version:version};
 }
 function doPost(event) {
@@ -23,7 +23,7 @@ function doPost(event) {
     var cache = CacheService.getScriptCache();
     if (cache.get('sent:' + data.id)) response = {ok:true,id:data.id};
     else {
-      var hash = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, data.email.toLowerCase()).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('');
+      var hash = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, (data.email || 'anonymous').toLowerCase()).map(function(b){return ('0'+((b+256)%256).toString(16)).slice(-2);}).join('');
       if (cache.get('email:' + hash)) throw new Error('RATE_LIMIT');
       var props = PropertiesService.getScriptProperties();
       var today = Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd');
@@ -31,7 +31,9 @@ function doPost(event) {
       // Stay below consumer quota; no paid plan or auto-upgrade is used.
       if (count >= 50 || MailApp.getRemainingDailyQuota() < 1) throw new Error('QUOTA');
       props.setProperties({day:today,count:String(count+1)});
-      MailApp.sendEmail({to:RECIPIENT,replyTo:data.email,subject:'Pixora '+data.version+' — feedback'+(data.rating ? ' ('+data.rating+'/5)' : ''),body:'Reply email: '+data.email+'\nRating: '+(data.rating || 'not supplied')+'\nVersion: '+data.version+'\n\n'+data.message});
+      var mail = {to:RECIPIENT,subject:'Pixora '+data.version+' — feedback'+(data.rating ? ' ('+data.rating+'/5)' : ''),body:'Reply email: '+(data.email || 'not provided')+'\nRating: '+(data.rating || 'not supplied')+'\nVersion: '+data.version+'\n\n'+data.message};
+      if (data.email) mail.replyTo = data.email;
+      MailApp.sendEmail(mail);
       cache.put('sent:'+data.id,'1',21600);
       cache.put('email:'+hash,'1',600);
       response={ok:true,id:data.id};

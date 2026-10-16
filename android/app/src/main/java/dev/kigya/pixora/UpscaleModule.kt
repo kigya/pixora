@@ -16,6 +16,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.facebook.react.modules.core.PermissionAwareActivity
 import com.facebook.react.modules.core.PermissionListener
 import org.json.JSONObject
@@ -174,14 +175,20 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     override fun getSettings(p:Promise)=async(p){map(SessionStore.settings(ctx))}
     override fun updateSettings(language:String,format:String,theme:String,p:Promise)=async(p){
         if(theme !in setOf("system","light","dark"))throw AppFailure("INFERENCE_FAILED")
-        if(language !in Localizer.supported(ctx) + "system" || format !in setOf("png","jpeg","webp"))throw AppFailure("INFERENCE_FAILED")
+        val selectedLanguage = if(language == "pt") "pt-BR" else language
+        if(selectedLanguage !in Localizer.supported(ctx) + "system" || format !in setOf("png","jpeg","webp"))throw AppFailure("INFERENCE_FAILED")
         val preferences = ctx.getSharedPreferences("settings",Context.MODE_PRIVATE)
         val previous = SessionStore.settings(ctx)
-        check(preferences.edit().putString("language",language).putString("format",format).putString("theme",theme).commit()) { "SETTINGS_WRITE_FAILED" }
-        for ((key, value) in mapOf("language" to language, "format" to format, "theme" to theme)) {
+        check(preferences.edit().putString("language",selectedLanguage).putString("format",format).putString("theme",theme).commit()) { "SETTINGS_WRITE_FAILED" }
+        for ((key, value) in mapOf("language" to selectedLanguage, "format" to format, "theme" to theme)) {
             if (previous.optString(key) != value) Telemetry.event("settings_changed", JSONObject().put("setting",key).put("value",value))
         }
-        main.post { androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(ThemePolicy.nightMode(theme)) }
+        main.post {
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(ThemePolicy.nightMode(theme))
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                androidx.core.os.LocaleListCompat.forLanguageTags(if (selectedLanguage == "system") "" else selectedLanguage),
+            )
+        }
         map(SessionStore.settings(ctx))
     }
     override fun requestNotifications(p:Promise) {
@@ -221,8 +228,27 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         synchronized(SessionStore.lock) {
             val prefs=ctx.getSharedPreferences("settings",0)
             val eligible=SessionStore.snapshot().optString("jobId")==jobId && SessionStore.snapshot().optString("state")=="SUCCEEDED" && prefs.getInt("savedJobs",0)>=3 && prefs.getInt("reviewPrompts",0)<2 && System.currentTimeMillis()-prefs.getLong("reviewShownAt",0)>=30L*86400000
-            if(eligible)prefs.edit().putInt("reviewPrompts",prefs.getInt("reviewPrompts",0)+1).putLong("reviewShownAt",System.currentTimeMillis()).commit()
-            eligible
+            if (!eligible) return@synchronized false
+            prefs.edit()
+                .putInt("reviewPrompts",prefs.getInt("reviewPrompts",0)+1)
+                .putLong("reviewShownAt",System.currentTimeMillis())
+                .commit()
+        }
+    }
+    override fun requestReview(p:Promise) {
+        main.post {
+            val activity = ctx.currentActivity
+            if (activity == null) { p.resolve(false); return@post }
+            try {
+                val manager = ReviewManagerFactory.create(ctx)
+                manager.requestReviewFlow().addOnCompleteListener(activity) { request ->
+                    if (!request.isSuccessful) { p.resolve(false); return@addOnCompleteListener }
+                    manager.launchReviewFlow(activity, request.result).addOnCompleteListener(activity) { result ->
+                        // Play does not reveal whether its neutral system dialog was shown or submitted.
+                        p.resolve(result.isSuccessful)
+                    }
+                }
+            } catch (_: Exception) { p.resolve(false) }
         }
     }
     override fun getFeedbackStatus(p:Promise)=async(p){feedback.configured()}
