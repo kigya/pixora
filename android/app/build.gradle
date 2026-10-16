@@ -82,6 +82,7 @@ def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 def signingProperties = new Properties()
 def signingFile = rootProject.file("signing.properties")
 if (signingFile.exists()) signingFile.withInputStream { signingProperties.load(it) }
+def hasLocalSigning = signingFile.exists() && !project.hasProperty("ci")
 
 def feedbackProperties = new Properties()
 def feedbackFile = rootProject.file("feedback.properties")
@@ -102,14 +103,14 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild { cmake { arguments "-DFEEDBACK_GENERATED_DIR=${layout.buildDirectory.dir('generated/feedback').get().asFile}", "-DANDROID_STL=c++_shared", "-DUPSCALE_COVERAGE=${project.hasProperty('coverage') ? 'ON' : 'OFF'}" } }
         buildConfigField "boolean", "FAST_MODEL_ENABLED", (project.findProperty("fastModeEnabled") ?: "true")
-        versionCode 9
-        versionName "0.7.2"
+        versionCode 10
+        versionName "0.8.0"
     }
     externalNativeBuild { cmake { path "src/main/cpp/CMakeLists.txt"; version "3.22.1" } }
     androidResources { noCompress += ["bin", "param"] }
     signingConfigs {
         release {
-            if (signingFile.exists()) {
+            if (hasLocalSigning) {
                 storeFile rootProject.file(signingProperties["storeFile"])
                 storePassword signingProperties["storePassword"]
                 keyAlias signingProperties["keyAlias"]
@@ -133,19 +134,23 @@ android {
             shrinkResources true
             buildConfigField "boolean", "TELEMETRY_DEFAULT", "true"
             firebaseCrashlytics {
-                nativeSymbolUploadEnabled true
+                mappingFileUploadEnabled !project.hasProperty("ci")
+                nativeSymbolUploadEnabled !project.hasProperty("ci")
                 unstrippedNativeLibsDir file("build/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib")
             }
             ndk { debugSymbolLevel "FULL" }
             enableAndroidTestCoverage project.hasProperty("coverage")
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.release
+            // CI validates release compilation without access to production credentials.
+            if (project.hasProperty("localTestSigning")) signingConfig signingConfigs.debug
+            else if (hasLocalSigning) signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
         coverage {
             initWith release
+            signingConfig signingConfigs.debug
             debuggable false
             externalNativeBuild { cmake { arguments "-DCMAKE_BUILD_TYPE=RelWithDebInfo" } }
             minifyEnabled false
@@ -225,7 +230,8 @@ tasks.named("preBuild").configure { dependsOn("syncLocalization") }
 // are excluded; all application Kotlin classes remain in the report.
 tasks.register("nativeJvmCoverage", JacocoReport) {
     dependsOn("testCoverageUnitTest")
-    executionData(files(layout.buildDirectory.file("native-071.ec"), layout.buildDirectory.file("native-071-retest.ec"), layout.buildDirectory.file("jacoco/testCoverageUnitTest.exec")))
+    executionData(files(layout.buildDirectory.file("jacoco/testCoverageUnitTest.exec")))
+    executionData(fileTree(layout.buildDirectory.dir("outputs/code_coverage/coverageAndroidTest/connected")) { include "**/*.ec" })
     sourceDirectories.from(files("src/main/java"))
     classDirectories.from(fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/coverage")) {
         include "dev/kigya/pixora/**"
