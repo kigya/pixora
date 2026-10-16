@@ -105,7 +105,7 @@ jobs:
       - name: Kotlin tests and native JVM coverage
         working-directory: android
         run: ./gradlew :app:testCoverageUnitTest :app:nativeJvmCoverage -Pcoverage -Pci --console=plain
-      - run: python3 scripts/check-native-coverage.py --kotlin android/app/build/reports/jacoco/nativeJvmCoverage/nativeJvmCoverage.xml
+      - run: python3 scripts/check-native-coverage.py --kotlin android/app/build/reports/jacoco/nativeJvmCoverage/nativeJvmCoverage.xml --kotlin-source-dir android/app/src/main/java
       - name: Release-mode build without production credentials
         working-directory: android
         run: ./gradlew :app:assembleRelease :app:bundleRelease -Pci --console=plain
@@ -150,9 +150,20 @@ jobs:
       - run: npm ci
       - run: bash scripts/test-native-core.sh
       - run: bash scripts/test-recommendation-core.sh
+      - run: bash scripts/test-recommendation-jni.sh
       - run: bash scripts/build-ios.sh
       - run: bash scripts/test-ios.sh
-      - run: python3 scripts/check-native-coverage.py --llvm coverage/native-core/coverage.json --llvm coverage/recommendation/coverage.json --llvm coverage/ios/coverage.json
+      - name: Enforce the owned native denominator
+        run: >-
+          python3 scripts/check-native-coverage.py
+          --llvm coverage/native-core/coverage.json
+          --llvm coverage/recommendation/coverage.json
+          --llvm coverage/recommendation-jni/coverage.json
+          --llvm coverage/ios/coverage.json
+          --source-dir native/engine --source-dir native/recommendation
+          --source-dir ios/Native --source-dir ios/Pixora
+          --require-source android/app/src/main/cpp/engine/upscale.cpp
+          --require-source android/app/src/main/cpp/engine/recommendation_jni.cpp
       - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
