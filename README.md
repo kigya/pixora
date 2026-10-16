@@ -4,7 +4,7 @@ Pixora enlarges small photos and illustrations on the device. The existing Andro
 
 ## Development status
 
-This repository imports the existing **0.7.2 Android baseline**. Version **0.8.0 is in progress**: content-based recommendations applied by a button, clearer preparation sizes, an offline iOS CPU port, independent telemetry settings, neutral review requests and 34 active languages. The owner reviewed the Android build and requested final UI changes; a release-mode build awaits their confirmation. Full release acceptance is still open.
+This repository imports the existing **0.7.2 Android baseline**. Version **0.8.0 is in progress**: content-based recommendations applied by a button, clearer preparation sizes, an offline iOS CPU port, independent telemetry settings, neutral review requests and 34 active languages. The owner reviewed the Android build and requested final UI changes; the requested changes are implemented. Local automatic coverage/security checks and Android/iOS release builds passed; the updated splash build is available locally, with Samsung installation and further device UI checks deferred by the owner. Full release acceptance is still open.
 
 [Current requirements](docs/PRD.md) · [0.8.0 requirements](docs/product/prd.md) · [Project status](docs/project-status.md) · [Feature registry](docs/product/features.md)
 

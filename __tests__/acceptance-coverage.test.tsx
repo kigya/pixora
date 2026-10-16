@@ -97,13 +97,7 @@ test('telemetry controls accept independent off choices as well as opt-ins', asy
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(false, false, true);
 });
 
-test('telemetry notice is informational and Continue preserves enabled defaults', async () => {
-  Native.getTelemetrySettings.mockResolvedValueOnce({
-    analytics: true,
-    crashes: true,
-    noticeSeen: false,
-    consentVersion: 0,
-  });
+test('fresh-install telemetry notice is informational and preserves default-on choices', async () => {
   await render(<AppProvider><TelemetryNotice /></AppProvider>);
   expect(screen.getByText(t.telemetryIntro)).toBeOnTheScreen();
   expect(screen.queryByRole('switch')).toBeNull();

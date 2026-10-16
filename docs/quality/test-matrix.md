@@ -1,6 +1,6 @@
 # Матрица проверок 0.8.0
 
-Последнее указание16.10.2026: пользователь сообщил об успешной самостоятельной проверке и остановил дальнейшие тесты приложения. Последние UI/defaults/shared-engine правки не тестировались; предыдущие PASS относятся к прежним исходникам. Выполняется только normal release сборка/установка для ручного подтверждения.
+Действующее указание16.10.2026 (ADR-814): автоматические проверки и исправления разрешены; Samsung UI и установка обновления отложены. Свежие автоматические результаты фиксируются отдельно от исторических физических проверок.
 
 Матрица связывает критерии PRD с исполняемыми проверками. Наличие теста не означает PASS: итоговые результаты и ревизии фиксируются в coverage.md, build-report.md и device-report.md.
 
@@ -29,7 +29,7 @@
 
 ## TEST-804 — согласия, feedback и review (FEAT-804)
 
-- `TelemetryTest`, `ApplicationStartupTest`, `FirebaseBoundaryTest`: default-off, legacy notice≠consent, независимые флаги, обе Measurement overrides до eager Firebase init, отказ хранилища, разрешённые поля, RC независимо от opt-in.
+- `TelemetryTest`, `ApplicationStartupTest`, `FirebaseBoundaryTest`: default-ON с информационным notice, сохранение явных независимых opt-outs, обе Measurement overrides до eager Firebase init, отказ хранилища, разрешённые поля, RC независимо от opt-in.
 - `ModuleUnitTest`: review только после результата/сохранений и cooldown, отказ durable write не вызывает prompt; нет проверки рейтинга перед store.
 - `FeedbackClientTest`, `support/apps-script/feedback.test.cjs`: email optional, rating/message/UUID/размеры, platform enum с legacy default Android, отказ конфигурации/сети, редиректы, server dedup/quota, version/platform в письме.
 - Реальная доставка Analytics/Crashlytics/feedback требует отдельного доказательства; unit mock, HTTP200 и сборка не подтверждают получение. Реальная тестовая отправка feedback — только после явного согласия пользователя.
@@ -45,3 +45,11 @@
 Task PRs с независимым review → release/0.8.0; после локальной приёмки один squash в main. CI запускается только по push main. Проверить тот же SHA, все jobs и CodeQL alerts; сохранить ссылки. Строгие измеренные 100% для JS statements/functions/lines/branches и собственного Kotlin/C++/ObjC++ lines/branches, проверка присутствия всех собственных исходников. Security: secrets, workflow, dependency advisories, mobile static scan и независимое review.
 
 Секреты, private serial, сырой logcat, пользовательские изображения и локальные подписи не входят в публичные доказательства. Финальная подпись/store/GitHub Release выполняются отдельным release workflow.
+
+## TEST-807 — исправления ручного ревью и startup
+
+- `recommendations.test.tsx`: Apply скрывает карточку для текущего фото, замена фото разрешает новое предложение.
+- `pixora07.test.tsx`: информационное уведомление, немедленная позиция switch, последовательные native writes, stale failure и rollback последней ошибки.
+- `navigation.test.tsx`: сигнал finishStartup после готовности навигации, включая initial loading error.
+- `ActivityLifecycleTest`: обе последовательности readiness/deadline, граница1499/1500ms, destroy/recreate. `ModuleUnitTest`: main-looper callback, null/unrelated/MainActivity.
+- `ios/Tests/PixoraStartupTests.mm`: readiness/deadline, Reduce Motion и startup telemetry. XCTest на симуляторе не подтверждает физическое устройство.

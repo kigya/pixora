@@ -1,21 +1,34 @@
 # Pixora 0.8.0 — статус
 
-Дата: 16.10.2026. Этап: реализация и интеграция 0.8.0.
+Дата:16.10.2026. Этап: автоматическая приёмка перед итоговым GitHub merge.
 
-База приложения импортирована через PR #1 в release/0.8.0. Рекомендации и пояснение подготовки фото прошли независимое ревью и включены через PR #2; Android debug с ними собран. Изолированная проверка рекомендаций: 163 Jest tests, 100% всех четырёх метрик JS/TS; C++ classifier 110/110 строк и 64/64 ветвей. Это не итоговая приёмка 0.8.0 и не доказательство точности классификации.
+## Действующие требования пользователя
 
-Через PR #3–7 включены main-only CI, JNI safety, 34 языка, миграции независимых согласий, нейтральный review, optional feedback email и platform metadata. PR #8 содержит Android coverage и физические Maestro flows; исправление QA debug C++ ABI отправлено в этот же PR. Свежий Jest: 166/166 в 14 suites, все четыре метрики собственных JS/TS файлов 100%; Kotlin b39: 106/106, 1039/1039 строк и 1096/1096 ветвей. iOS агент завершает строгую native coverage и финальную unsigned generic-device Release; интеграция в root ещё pending.
+Рекомендация появляется после импорта и применяется только кнопкой; Apply скрывает карточку для текущего фото. Подготовка большой копии объясняет ограничение1024px по длинной стороне, точные рабочие/выходные размеры и неизменность оригинала; Fast отдельно ограничивает AI-вход512px. Feedback использует центрированную панель как Privacy/Licenses, без дублирующей Having Issues. Analytics/Error Reports включены по умолчанию с информационным уведомлением, независимые сохранённые отключения приоритетны; switches обновляются сразу с последовательной записью. Splash ждёт initial loading/navigation и минимум1500ms, анимация бренда1500ms. Общие LESSON-0001/0002 сохранены только в локальной базе Personal.
 
-Samsung SM-S916B / Android 16 / API36: реальный Lite/Fast GPU inference 4561ms, экспорт PNG/JPEG/WebP и native Pixora08 3/3 прошли. Обе debug Maestro flows прошли: recommendation/preparation/manual Standard/Fast4x/PNG и Settings/Urdu/Hebrew/restart/theme/feedback без отправки. Получены ровно два отдельно разрешённых тестовых feedback письма; Reply-To проверен с адресом и без него. Analytics DebugView, native upgrade consent и revoke подтверждены. Crashlytics получил контролируемые JVM и NDK fatal с читаемыми Kotlin/C++ строками; финальная диагностика debug и JS source map ещё выполняется. Приватные raw logs, inbox, ID и serial не публикуются.
+После самостоятельной проверки пользователь подтвердил остальные изменения («все остальное ок»). Последнее уточнение ADR-814 разрешает автоматические проверки, сборки, CI и исправления; новую установку и повторные UI-проверки Samsung пока не выполнять. Прежняя остановка всех тестов в ADR-812 заменена этим уточнением. Никакие физические PASS не добавляются без выполнения.
 
-Остаются интеграция iOS/shared engine, итоговые root coverage/security/review/build checks, повтор debug/release Samsung приёмки на финальных APK, полная Firebase QA и CI текущего main. Main пока содержит только технический bootstrap. Один финальный main squash выполняется после локальной приёмки. Финальная подпись, GitHub Release и stores вне этого этапа.
+## Интеграция
 
-## Последнее указание пользователя
+Публичный репозиторий kigya/pixora. PR1–12 merged в release/0.8.0, включая iOS/shared engine и splash1500. Main пока bootstrap7ad1c20. Итоговый PR13 остаётся draft до стабильных автоматических проверок. Текущая task-ветка test/08-automatic-acceptance содержит новые проверки/исправления; её PR в release создаётся после независимого review. Затем один итоговый squash в main и проверка CI на фактическом SHA. CI только main push.
 
-После самостоятельной проверки пользователь сообщил «все ок» и запросил UI/defaults правки ADR-808–811. Дальнейшее тестирование остановлено (ADR-812). Следующее действие: интегрировать готовый iOS/shared engine, собрать normal release-mode APK без диагностики, установить на Samsung и запросить ручное подтверждение. Новые правки не проверялись; полный release handoff/main merge пока ожидает эту приёмку.
+## Свежие автоматические результаты
 
-Release установка для пользователя выполнена: b44 normal assembleRelease/bundleRelease SUCCESS, APK0.8.0/code10 установлен на USB Samsung (Success), данные сохранены. APK SHA-25640fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1. После последних правок приложение не тестировалось. Текущий следующий шаг: пользователь вручную подтверждает результат, затем согласуется завершение финального GitHub main-flow с неполными строгими gates. Main пока bootstrap; task PR8–10 merged в release/0.8.0.
+- Node22: Jest14suites/168tests PASS, statements869/869, branches632/632, functions275/275, lines807/807 —100%. TypeScript PASS; lint0errors/88warnings.
+- Root C++: engine207/207lines236/236branches, classifier110/110lines64/64branches, JNI48/48lines32/32branches; source-presence PASS. Тестовыеfixtures не выдаются за реальный inference.
+- Контрольные суммы bundled моделей и схемы/placeholder/flag hashes34локализаций PASS.
+- Secret/workflow/dependency/mobile-source scans прошли с указанными в security.md индивидуальными dispositions; backend9/9tests PASS, новых реальных писем не отправлялось.
+- Kotlin b51:111/111tests PASS,1062/1062lines1106/1106branches —100%, source-presence PASS. Новые test-hang/clock-offset исправлены; partial failed runs не выдаются за PASS.
+- iOS:52/52simulator XCTest PASS,607/607lines794/794branches —100%. Clock после attachment исправлен и прошёл re-review. Unsigned generic-device Release PASS (arm64,min15.1,dev.kigya.pixora0.8.0/10,code signing disabled). Полный aggregate coverage/source-presence gate PASS; thresholds не снижены.
 
-## Повторное ручное ревью: splash
+## Сборка и физическая граница
 
-Пользователь подтвердил остальные изменения («все остальное ок, продолжай далее») и запросил splash минимум1500ms либо до завершения загрузки, если она дольше. LESSON-0002 сохранён в общей локальной базе. Реализован typed finishStartup от NavigationContainer.onReady после initial refresh: Android удерживает первый кадр под системным splash без блокировки потоков; iOS закрывает native branded overlay по тому же условию. Animator длится1500ms. Повторные runtime-тесты не запускались. USB Samsung при свежем discovery не найден, пользователю отправлен запрос подключения для обновления release APK.
+Android b52 normal release APK/AAB SUCCESS, без QA/coverage, R8off, локальная тестовая подпись. APK `artifacts/Pixora-0.8.0-automatic-acceptance.apk`, SHA-256 `67f77d759358edcaa9c36e3f4f8ed8398b1df8a8a46295b15601e5b29ac1343f`. По указанию пользователя НЕ установлен. Подробности build-report.md.
+
+Ранее Samsung SM-S916B/Android16 прошёл описанные debug instrumentation/Maestro сценарии с реальным AI и PNG/JPEG/WebP. Normal release b44 установлен для ручного review; пользователь подтвердил остальные функции. Эти результаты не подтверждают последующий splash1500 и текущую полную физическую матрицу. Свежие physical gates отложены пользователем.
+
+Ранее подтверждены ровно2 отдельно разрешённых feedback письма и optional Reply-To, Android Analytics DebugView и читаемые JVM/NDK Crashlytics QA reports. iOS ingestion пока не подтверждён (unsigned simulator Keychain-34018); debug/JS crash QA не завершена. Эти ограничения не скрываются за unit/build PASS.
+
+## Следующее действие
+
+Локальные strict coverage/security и Android/iOS Release PASS; независимое re-review без оставшихся source blockers. Провести task PR и итоговый GitHub PR/CI. Сохранить текущие факты и отложенные физические/service gates в pipeline/handoff. До нового указания не устанавливать приложение на Samsung и не запускать там UI. Финальная подпись, GitHub Release, stores и billing вне Build App.

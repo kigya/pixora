@@ -1,34 +1,27 @@
-# Покрытие собственного кода 0.8.0
+# Покрытие собственного кода0.8.0
 
-После ручного ревью пользователь остановил дальнейшие тесты (ADR-812). Следующие цифры относятся к состоянию до последних UI/defaults и root shared-engine изменений; они не являются текущим coverage PASS.
+Действующее указание ADR-814: автоматические проверки разрешены; новая установка и UI на Samsung отложены. Ниже свежие измерения текущих исходников, а не перенесённые PASS0.7/раннего0.8.
 
-## Ранее измеренные результаты
+## JavaScript/TypeScript — PASS
 
-Интегрированный Jest/RNTL14: финальный повтор —166/166 tests,14/14 suites PASS. `coverage-summary.json`: statements842/842, branches633/633, functions279/279, lines780/780 —100% каждой метрики. Type-only declarations с нулём исполняемых statements не добавляют вымышленный знаменатель. Пороги и источники не снижались.
+Node22.23.2, Jest/RNTL14:14/14suites,168/168tests. Statements869/869, branches632/632, functions275/275, lines807/807 —100% каждой метрики. Инструментируются все owned src, включая неимпортированные файлы; type-only declarations не получают вымышленных исполняемых строк. TypeScript PASS; ESLint0errors/88warnings. Тесты покрывают Apply-dismiss, notice Continue, быстрые переключения с serial writes, stale failure/latest rollback и finishStartup после navigation ready/initial failure.
 
-Kotlin JaCoCo: b39 —106/106 PASS; 1039/1039 lines,1096/1096 branches. Строгий line/branch gate и source-presence gate пройдены. В знаменателе все `android/app/src/main/java/**/*.kt`; исключены только generated BuildConfig/R, без исключений собственных файлов. JNI test-only host library проверяет передачу параметров и владение ресурсами на границе; она не подменяет физический inference.
+## Kotlin — PASS
 
-Физическая Samsung debug-проверка 0.8: `Pixora08Test` —3/3 instrumentation tests PASS. Два Maestro debug flow PASS: рекомендация → подготовка → upscale/save и настройки → RTL/theme → feedback privacy. Это подтверждает только описанные debug-сценарии; публикацию и финальную приёмку не подтверждает. Подробные логи и снимки остаются в приватном `.p-build-app/local/evidence/samsung/`.
+b50:110/110tests PASS;1062/1062lines,1107/1110branches. Строгий gate отклонил неполное покрытие. Для реального first opt-out добавлен uncached Crashlytics sink case. Lifecycle cleanup хранит единую closure, владеющую зарегистрированной парой View/listener, вместо двух независимо nullable полей с недостижимыми комбинациями. Независимое review подтвердило ownership и отсутствие исключения источников. Итоговый полный b51:111/111tests PASS,1062/1062lines1106/1106branches —100%. Полный source-presence gate и scripts/check-coverage.py для всех слоёв PASS. Уменьшение числа ветвей1110→1106 относительно частично покрытого состояния отражает упрощение lifetime ownership в production, без исключения файлов или изменения порогов.
 
-Изолированные C++ тесты рекомендации ранее показали classifier110/110 lines,64/64 branches и JNI bridge48/48 lines,32/32 branches. Это тестовые fixtures и JNI boundary tests, не оценка точности на пользовательской выборке. После интеграции общего `native/engine` и Android shim текущий native-core harness/coverage ещё нужно заново выполнить в корневом checkout; этот интегрированный native gate пока pending.
+Все `android/app/src/main/java/**/*.kt` входят в source-presence gate; исключены только generated BuildConfig/R. Host JNI fixture проверяет boundary и владение ресурсами, не выдаётся за настоящий inference.
 
-iOS: сохранённый LLVM worktree snapshot —513/514 строк,760/764 ветвей; строгие100% не достигнуты. В последнем завершённом42-case прогоне один OS-boundary case имел ошибки, затем исправленный case отдельно прошёл. Полный43-case повтор прерван до результата. Последние default-ON/share-cleanup изменения и root интеграция не тестировались. Подробнее agent-reports/ios-port.md.
+## C++ и Objective-C++ — PASS
 
-## Текущие блокеры приёмки
+Root native-core207/207lines236/236branches; classifier110/110lines64/64branches; recommendationJNI48/48lines32/32branches. Все owned native/engine, native/recommendation, Android JNIshim/recommendation_jni присутствуют в reports. Исправленный harness канонизирует пути и удаляет старый report до запуска. ncnn/JNI fixtures отделены от реального AI.
 
-- Перезапустить и сохранить строгую C++ coverage/source-presence проверку после root-интеграции shared engine, recommendation classifier/JNI и Android shim.
-- Получить итоговые iOS build, XCTest и собственные lines/branches coverage для всех принадлежащих проекту источников; vendor/Pods не входят в знаменатель.
-- Классификатор остаётся эвристической гипотезой: искусственные тестовые изображения проверяют защитные свойства, но репрезентативная лицензированная и вручную размеченная выборка false-positive качества не подтверждена.
-- Итоговая приёмка 0.8 остаётся открытой, несмотря на прошедшие JS, Kotlin и перечисленные Samsung debug-проверки.
+Свежий iOS simulator XCTest52/52 PASS. Owned iOS607/607lines794/794branches198/198functions. Включены все четыре executable implementation files, включая AppDelegate; исключений трудных UI/native файлов нет. Tests выполняют реальные bundled модели/все8presets, codecs, seams, отмену/фон/recovery и OS expiration, defaults/opt-outs, share cleanup, startup readiness/deadline/Reduce Motion. Clock1500ms начинается после attachment overlay; отдельный тест отклоняет прежний порядок. Предыдущий51-case run имел607/607lines793/794branches и не был принят как100%; добавлен корректный EMPTY journal recovery case.
 
-## Повторение и граница доказательств
+Изолированное iOS workspace содержит тот же source snapshot: source-manifest и raw coverage сохранены в ignored artifacts/ios. Нормализация меняет только source paths worktree→root после exact SHA-256 сравнения; counters/files/denominators не менялись. Strict aggregate source-presence gate для C++/ObjC++ PASS.
 
-- JS: `npm test -- --runInBand --coverage`, затем `python3 scripts/check-js-coverage.py`.
-- Kotlin: Gradle `:app:testCoverageUnitTest :app:nativeJvmCoverage -Pcoverage -Pci`; затем strict Kotlin/source-presence check.
-- C++: scripts/test-native-core.sh, test-recommendation-core.sh, test-recommendation-jni.sh.
-- iOS: scripts/test-ios.sh экспортирует coverage/ios/coverage.json.
-- `npm run coverage:check` объединяет те же строгие gates, что CI: все четыре JS метрики, Kotlin line/branch и все native LLVM reports с присутствием owned источников. Отсутствующий/нулевой/неполный отчёт — failure.
+## Повторение и ограничения
 
-Отчёты coverage/ и .p-build-app/local/evidence приватные и игнорируются. Итоговые числители, знаменатели и commit нужно обновить после последней стабильной полной проверки. Unit coverage не является E2E coverage и не доказывает отсутствие ошибок. Итоговый native gate пока не пройден.
+`npm test -- --runInBand --coverage`, `python3 scripts/check-js-coverage.py`; Gradle `:app:testCoverageUnitTest :app:nativeJvmCoverage -Pcoverage -Pci`; scripts/test-native-core.sh, test-recommendation-core.sh, test-recommendation-jni.sh; scripts/test-ios.sh. `npm run coverage:check` объединяет текущие отчёты и проверяет присутствие всех owned источников. Нулевые/отсутствующие/неполные denominators —failure. Пороги и owned-source exclusions не ослаблены.
 
-Следующая приёмка: пользователь вручную проверяет установленный normal release APK. Непройденные строгие gates не объявлены passed и thresholds не изменены.
+Coverage/ и raw device/source evidence игнорируются Git. Unit coverage не является E2E, не оценивает качество рекомендаций на репрезентативном корпусе и не подтверждает физический Samsung/iPhone. Ранее описанные Samsung debug instrumentation/Maestro PASS относятся к своему исходному состоянию; финальная physical matrix отложена пользователем.

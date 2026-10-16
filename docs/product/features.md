@@ -1,12 +1,12 @@
-# Реестр функций 0.8.0
+# Реестр функций0.8.0
 
-Источник: [workflow PRD](prd.md) и [основной PRD](../PRD.md).
+Authority: [workflow PRD](prd.md), [основной PRD](../PRD.md), прямые решения ADR-801–814. Источники пользовательских требований и границы гипотез сохранены в PRD; research не добавляет функций автоматически.
 
-- FEAT-801: implemented; independent review and isolated unit/native checks passed; integrated Android/iOS and Samsung acceptance pending. See quality/recommendations-review.md.
-- FEAT-802: implemented; dimensions, explanation and confirmation covered by isolated UI checks; integrated build and Samsung acceptance pending.
-- FEAT-803: implemented in iOS task branch; unsigned Release and real-model XCTest passed; integration and strict coverage pending.
-- FEAT-804: implemented via PR4/7; consent, neutral review, optional-email/platform backend and unit tests reviewed; installed-app delivery/Firebase QA pending.
-- FEAT-805: implemented via PR4;34-locale schema and first-language unit checks passed; Samsung English/default-off smoke passed, fullRTL/large-text QA pending.
-- FEAT-806: task PR1–7 merged into release/0.8.0; main-only workflow implemented; final acceptance/one main merge/current-main CI pending.
+- FEAT-801 — implemented. Локальное предложение после импорта, ручной Apply, скрытие для текущего фото и сохранение ручных mode/scale. JS/native boundary checks PASS; Samsung debug JNI/Maestro и ручное review относятся к указанным в device-report исходникам. Рекомендация остаётся эвристической гипотезой без репрезентативной размеченной выборки качества.
+- FEAT-802 — implemented. Рабочие/исходные/выходные размеры и текст памяти/времени/потери деталей/неизменного оригинала;1024px по длинной стороне, отдельный Fast512. Unit/native и описанный Samsung debug сценарий PASS. Обновлённая физическая matrix отложена.
+- FEAT-803 — implemented. Offline iOS CPU ncnn/shared engine, все8presets/5models, codecs, seams, bounded background/cancel/recovery. Текущий simulator XCTest52/52,607/607lines794/794branches; generic-device Release результат в build-report. Это не физическая iPhone/Store приёмка.
+- FEAT-804 — implemented. Default-ON notice по последнему явному решению пользователя, независимые сохранённые opt-outs и responsive serial switches; neutral review, optional feedback email/platform. JS/Kotlin/iOS/backend tests PASS. Ровно2 отдельно разрешённых письма доставлены с проверенным Reply-To; Android Analytics/JVM+NDK QA reports подтверждены. Полная Firebase matrix и iOS ingestion не завершены.
+- FEAT-805 — implemented.34active locales и pt compatibility, native sync, первый выбор, RTL registry и единые Feedback/Privacy/Licenses headers. Schema/placeholder/flag hashes и автоматические locale/layout tests PASS; физический Urdu/Hebrew/settings journey описан в device-report. Вычитки носителями и полной физической matrix всех локалей нет.
+- FEAT-806 — implemented workflow. Task PRs → release/0.8.0 → один итоговый squash [PR13](https://github.com/kigya/pixora/pull/13) в main. CI только main push; текущий результат [GitHub Actions](https://github.com/kigya/pixora/actions/workflows/main.yml), точный SHA/receipt фиксируется pipeline. Строгие coverage gates всех owned языков, source presence, security и Android/iOS release builds обязательны; production signing/stores/GitHub Release отдельным workflow.
 
-Ручное ревью 16.10.2026 изменило FEAT-801/804: карточка скрывается после применения, Analytics/Error Reports включены по умолчанию с уведомлением (явные сохранённые отключения остаются). Навигация Feedback приведена к Privacy/Licenses; добавлен Android12+ animated splash. Пользователь остановил дальнейшие тесты и принимает финальный release APK вручную. Все результаты выше относятся к состоянию до этих правок и не являются их проверкой.
+TEST-807 покрывает ручные уточнения и splash max(loading,1500ms), clock от attachment iOS, Android readiness/deadline и cleanup. LESSON-0001/0002 сохранены только в локальной общей базе Personal. ADR-814 разрешает автоматические проверки и исправления, без новой установки/UI на Samsung. Физические PASS не подменяются unit/build PASS; формальная release readiness остаётся ограниченной явно отложенными gates.

@@ -1,25 +1,30 @@
-# Сборки 0.8.0
+# Сборки0.8.0
 
-Последнее указание16.10.2026: пользователь сообщил об успешной самостоятельной проверке и остановил дальнейшие тесты приложения. Последние UI/defaults/shared-engine правки не тестировались; предыдущие PASS относятся к прежним исходникам. Выполняется только normal release сборка/установка для ручного подтверждения.
+Действующее указание ADR-814: автоматические проверки и исправления разрешены. Новая установка и UI на Samsung отложены. Сборка/подпись не являются runtime приёмкой или публикацией.
 
-Текущий технический результат, ещё не финальная приёмка:
+## Финальный Android release-mode — PASS
 
-- Android debug APK dev.kigya.pixora.debug/code10 построен из интегрированного release-base с acceptance changes (Gradle b16 достиг packageDebug; общий запуск упал на затем исправленном React context в instrumentation). APK установлен на физический Samsung и прошёл первый реальный UI/inference/export сценарий. Финальная чистая assembleDebug после всех merge обязательна.
-- Android coverage app + test APK: Gradle b19 `:app:assembleCoverage :app:assembleCoverageAndroidTest -Pcoverage -Pci` SUCCESS. Coverage-артефакт не является release QA.
-- Полный Kotlin JVM набор: b39 `:app:testCoverageUnitTest :app:nativeJvmCoverage -Pcoverage -Pci` SUCCESS,106/106. Строгий Kotlin gate1039/1039lines и1096/1096branches пройден, source presence всех owned Kotlin проверено.
-- iOS: unsigned generic-device Release собран Xcode26.6/iOS26.5 SDK; восемь simulator XCTest с настоящими моделями прошли. iOS branch ещё не merged, расширенные тесты/RTTI fix/Ruby upgrade требуют повторной интегрированной сборки.
-- Android release APK/AAB после0.8 интеграции пока pending. Public CI использует -Pci без production credentials и uploads; локальный -PlocalTestSigning предназначен только для Samsung release-mode QA. Финальная подпись отдельным release workflow.
+Gradle MCP b52: `:app:assembleRelease :app:bundleRelease -Pci -PlocalTestSigning`, SUCCESS2m15s. Обычный release, R8/resource shrinking off, без firebaseDiagnostics/coverage. Локальная тестовая подпись для проверки, не финальная store signing. aapt: dev.kigya.pixora0.8.0/code10,min29,target36. Пакет debug отдельный .debug.
 
-Pinned Node22/JDK21, RN0.87.1. Все Gradle запуски в рабочем процессе выполняются через Gradle MCP; команды выше описывают task arguments для повторения. Общие gate scripts в репозитории совпадают с CI. Финальные build paths/SHA-256/commit и ссылки на текущий main CI будут записаны после последнего стабильного прогона. Исторические0.6/0.7 замеры не являются доказательством0.8.
+- APK `artifacts/Pixora-0.8.0-automatic-acceptance.apk`:181001837bytes, SHA-256 `67f77d759358edcaa9c36e3f4f8ed8398b1df8a8a46295b15601e5b29ac1343f`.
+- AAB `artifacts/Pixora-0.8.0-automatic-acceptance.aab`:193596864bytes, SHA-256 `50ff8e941123337cf578fdb5d7f581c3251127337a2e8456d5d570790a1f685d`.
 
-Node22: чистый `npm ci` повторён с опубликованным RN Community CLI20.2.0 (все три CLI-пакета согласованы в manifest/lock). Прежний20.3.0 не доступен в официальном npm registry (tarball404), поэтому pin исправлен без изменения RN0.87.1/React19.2.3. TypeScript PASS; ESLint0errors/88warnings; повторный Jest166/166 PASS,100% всех четырёх owned JS metrics. Первый повтор после чистой установки получил один5sec timeout при параллельной нагрузке, повтор без изменения тестов прошёл.
+НЕ установлены по указанию пользователя. Изменения перед этой сборкой: Android cleanup closure для зарегистрированной View/listener пары и полные автоматические проверки. b51 Kotlin111/111 и strict aggregate coverage/source-presence PASS. Raw logs/metadata —ignored local evidence. Все Gradle операции выполнялись через Gradle MCP.
 
-Диагностические QA варианты: b36 assembleDiagnosticsDebug SUCCESS (b34 отдельно собрал assembleDiagnostics; общий b34 остановился на неверной debug Firebase registration path, исправлено). Diagnostics имеет debuggable=false и release runtime, DiagnosticsDebug наследует debug. b38 generate/uploadCrashlyticsSymbolFileDiagnostics и DiagnosticsDebug SUCCESS для соответствующих native libraries. Это подтверждает загрузку символов, а не получение crash report. Обычные APK/AAB с -PfirebaseDiagnostics блокируются отдельным guard; финальные normal release builds выполняются без этого свойства.
+## Финальный iOS generic-device Release — PASS
 
-Негативная проверка guard: b40 `assembleRelease -PfirebaseDiagnostics -Pci --dry-run` намеренно отклонён до исполнения задач с сообщением «firebaseDiagnostics may only package diagnostics variants». Поэтому QA JS entrypoint не может попасть в обычный APK/AAB при ошибочном совмещении свойств.
+`IOS_DERIVED_DATA_PATH=artifacts/ios/DeviceDerivedData bash scripts/build-ios.sh`: exit0. Xcode26.6/iOS26.5 SDK; LC_BUILD_VERSION platformIOS, arm64,min15.1. dev.kigya.pixora0.8.0(10). Артефакты `artifacts/ios/DeviceRelease/Pixora.app` и Pixora.app.dSYM. Binary SHA-256 `3f3afec8d838e25ac93a1eb6bd4d54cc7eae7afc9926a0cff1910438b42bc628`. codesign подтверждает полное отсутствие подписи; test-hook/fishhook/__llvm_profile symbols отсутствуют.
 
-Диагностическая сборка b43 завершилась SUCCESS (13m49s), APK и symbols обоих вариантов построены после исправления CMake ABI. Последующие runtime-проверки остановлены по указанию пользователя. Эти диагностические APK не являются финальной устанавливаемой сборкой. Normal release APK/AAB b44 строятся без firebaseDiagnostics/coverage.
+Сборка выполнена после стабильного52/52XCTest и607/607lines794/794branches. ROOT source manifest повторно сверён по bytes после Release. Raw log, metadata и coverage mapping сохранены в ignored artifacts/ios; agent-reports/ios-port.md содержит пределы. Unsigned generic-device build не доказывает физический iPhone/Store install или Firebase ingestion.
 
-Normal release b44 SUCCESS: assembleRelease + bundleRelease, 1m39s, 0tests. Исходное приложение соответствует integration8bdb816 (PR9+PR10); последующие изменения только tooling/docs. APK artifacts/Pixora-0.8.0-samsung-review.apk, SHA-25640fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1,181001228bytes. AAB artifacts/Pixora-0.8.0-samsung-review.aab, SHA-256d500946e984e75a36e009735b97a15568dc3df715fe4a5c9e720ee8405861698,193594012bytes. Package dev.kigya.pixora,0.8.0/code10,min29,target36. Локальная тестовая подпись; это не финальный store artifact. Runtime проверки этих последних правок не выполнялись.
+## Toolchain и воспроизводимость
 
-Упакованная иконка запуска: aapt resources сопоставил drawable/ic_splash_animated с res/30.xml и animator/splash_logo_pulse с res/fB.xml. xmltree подтверждает animated-vector target logo и три objectAnimator scaleX/scaleY/rotation по600ms. Это инспекция APK-ресурсов, а не runtime-проверка анимации на устройстве.
+Bare RN0.87.1/React19.2.3, Node22.23.2/JDK21, lockfiles. CLI20.2.0 опубликован в npm; недоступный20.3.0 был исправлен до финальных проверок. Bundled модели и hashes подтверждены. iOS pinned dependencies/locks: scripts/setup-ios.py, ios/Podfile.lock, scripts/ios-project/Package.resolved. CI использует -Pci без production credentials; final signing/GitHub Release/stores отдельным workflow.
+
+Gradle MCP process не находил bare node в b45/b46. Локальные абсолютные command-path overrides5dependency scripts и init script исправили окружение без изменения версий/логики; после всех Gradle запусков файлы восстановлены до исходных SHA-256. Global files не создавались. CI получает Node через setup-node и не зависит от этих локальных overrides.
+
+## История и граница физического доказательства
+
+b44 normal release был установлен для ручного review; пользователь принял остальные функции. APK SHA-256 `40fe94c818944ab1ff0151ffa05aea890f157a62a13d014d77e3ba6a7f7828f1`. После требования splash1500 b47 normal release собран без установки: APK SHA `84cd89de20fcec578b4212d7729b54a4142b18d2b052e6d40d619396b44a23af`. Текущий b52 включает lifecycle cleanup и не получает старые физические PASS по наследству.
+
+QA-only diagnostic variants ранее собраны b43, symbols uploaded; normal variants защищены guard от firebaseDiagnostics (намеренный b40 отказ). Предыдущие diagnostics/coverage APK не подменяют текущий normal release. Исторические0.6/0.7benchmarks не доказывают производительность0.8. Все актуальные физические ограничения описаны в device-report.md.

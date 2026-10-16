@@ -3,6 +3,7 @@
 #import <PixoraNative/PixoraUpscale.h>
 #import "../Native/PixoraImages.h"
 #import "../Native/PixoraFeedback.h"
+#import <objc/runtime.h>
 #include "engine.h"
 #include <atomic>
 #include <stdexcept>
@@ -23,6 +24,8 @@
 @implementation FailingPreferences
 - (BOOL)synchronize{return NO;}
 @end
+static IMP ShareDirectoryListing;static NSString* ShareRaceFolder;static NSString* ShareRaceFile;static BOOL ShareRaceTriggered;
+static NSArray* ListShares(id manager,SEL cmd,NSURL* directory,NSArray* keys,NSDirectoryEnumerationOptions options,NSError** error){NSArray* entries=((NSArray*(*)(id,SEL,NSURL*,NSArray*,NSDirectoryEnumerationOptions,NSError**))ShareDirectoryListing)(manager,cmd,directory,keys,options,error);if([directory.path isEqual:ShareRaceFolder])for(NSURL* file in entries)if([file.path isEqual:ShareRaceFile]){[file removeAllCachedResourceValues];[manager removeItemAtURL:file error:nil];ShareRaceTriggered=YES;}return entries;}
 @interface PixoraNativeTests : XCTestCase
 @end
 @implementation PixoraNativeTests {
@@ -56,6 +59,7 @@
 - (void)testColdSessionRestoreAndStorageFailure {
  NSURL* journal=[_folder URLByAppendingPathComponent:@"session.json"];
  for(id invalid in @[@[],@{},@{@"schemaVersion":@1},@{@"schemaVersion":@2,@"state":@4},@{@"schemaVersion":@2,@"state":@"READY",@"exports":@4},@{@"schemaVersion":@2,@"state":@"READY",@"exports":@[],@"image":@4}]){[[NSJSONSerialization dataWithJSONObject:invalid options:0 error:nil] writeToURL:journal atomically:YES];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");}
+ [[NSJSONSerialization dataWithJSONObject:[_module empty] options:0 error:nil]writeToURL:journal atomically:YES];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");XCTAssertEqualObjects([self state][@"image"],NSNull.null);
  NSDictionary* image=[_module import:[self fixture:8 height:6]];NSString* identifier=image[@"id"];
  for(NSString* state in @[@"READY",@"RUNNING",@"SUCCEEDED"]){NSMutableDictionary* session=[_module valueForKey:@"session"];session[@"state"]=state;[session removeObjectForKey:@"resultPath"];[_module persist];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],[state isEqual:@"READY"]?@"READY":@"INTERRUPTED");}
  XCTAssertEqualObjects([self state][@"image"][@"id"],identifier);
@@ -86,7 +90,8 @@
 }
 - (void)testConsentIsIndependentAndSettingsPersist {
  NSDictionary* settings=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getSettings:a reject:b];} error:nil];XCTAssertFalse([settings[@"languageChosen"] boolValue]);
- NSDictionary* initial=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getTelemetrySettings:a reject:b];} error:nil];XCTAssertFalse([initial[@"analytics"] boolValue]);XCTAssertFalse([initial[@"crashes"] boolValue]);XCTAssertEqual([initial[@"consentVersion"] intValue],0);
+ NSDictionary* initial=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getTelemetrySettings:a reject:b];} error:nil];XCTAssertTrue([initial[@"analytics"] boolValue]);XCTAssertTrue([initial[@"crashes"] boolValue]);XCTAssertEqual([initial[@"consentVersion"] intValue],0);
+ NSUserDefaults* unresolved=[_module valueForKey:@"prefs"];[unresolved setInteger:1 forKey:@"consentVersion"];[unresolved setBool:NO forKey:@"analyticsConsent"];[unresolved setBool:NO forKey:@"crashConsent"];[unresolved setBool:YES forKey:@"noticeSeen"];initial=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getTelemetrySettings:a reject:b];} error:nil];XCTAssertTrue([initial[@"analytics"]boolValue]);XCTAssertTrue([initial[@"crashes"]boolValue]);XCTAssertEqual([initial[@"consentVersion"]intValue],1);
  for(int mask=0;mask<4;mask++){NSDictionary* value=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module updateTelemetrySettings:(mask&1)!=0 crashes:(mask&2)!=0 noticeSeen:YES resolve:a reject:b];} error:nil];XCTAssertEqual([value[@"analytics"] boolValue],(mask&1)!=0);XCTAssertEqual([value[@"crashes"] boolValue],(mask&2)!=0);XCTAssertEqual([value[@"consentVersion"] intValue],2);}
  [_module logTelemetryEvent:@"not_allowed" parameters:@"{}"];[_module logTelemetryEvent:@"ui_action" parameters:@"{\"action\":\"test\",\"filename\":\"private.png\",\"value\":\"text with spaces\"}"];
  for(NSString* language in @[@"ru",@"ar",@"he",@"system"]){NSDictionary* value=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module updateSettings:language format:@"webp" theme:@"dark" resolve:a reject:b];} error:nil];XCTAssertEqualObjects(value[@"language"],language);XCTAssertTrue([value[@"languageChosen"] boolValue]);XCTAssertEqualObjects(value[@"format"],@"webp");}
@@ -109,6 +114,17 @@
   if(![state[@"state"] isEqual:@"SUCCEEDED"])return;
   for(NSString* format in @[@"png",@"jpeg",@"webp"]){NSDictionary* file=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module exportResult:state[@"jobId"] format:format resolve:a reject:b];} error:nil];XCTAssertGreaterThan([file[@"size"] longLongValue],0);NSDictionary* duplicate=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module exportResult:state[@"jobId"] format:format resolve:a reject:b];} error:nil];XCTAssertEqualObjects(file[@"id"],duplicate[@"id"]);[NSFileManager.defaultManager removeItemAtURL:[NSURL URLWithString:file[@"uri"]] error:nil];}
  }
+}
+- (void)testShareFilesExpireAfter24HoursAtLaunchAndExplicitCleanupClearsTheRest {
+ NSURL* shares=[_folder URLByAppendingPathComponent:@"share" isDirectory:YES];[NSFileManager.defaultManager createDirectoryAtURL:shares withIntermediateDirectories:YES attributes:nil error:nil];
+ NSURL* old=[shares URLByAppendingPathComponent:@"expired.png"],*recent=[shares URLByAppendingPathComponent:@"recent.png"],*future=[shares URLByAppendingPathComponent:@"future.png"],*raced=[shares URLByAppendingPathComponent:@"provider-race.png"];
+ for(NSURL* file in @[old,recent,future,raced])XCTAssertTrue([[NSData dataWithBytes:"image" length:5]writeToURL:file atomically:YES]);
+ XCTAssertTrue([NSFileManager.defaultManager setAttributes:@{NSFileModificationDate:[NSDate dateWithTimeIntervalSinceNow:-86401]} ofItemAtPath:old.path error:nil]);
+ XCTAssertTrue([NSFileManager.defaultManager setAttributes:@{NSFileModificationDate:[NSDate dateWithTimeIntervalSinceNow:3600]} ofItemAtPath:future.path error:nil]);
+ ShareRaceFolder=shares.path;ShareRaceFile=raced.path;ShareRaceTriggered=NO;ShareDirectoryListing=method_setImplementation(class_getInstanceMethod(NSFileManager.class,@selector(contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:)),(IMP)ListShares);
+ @try {[_module restoreSession];}@finally {method_setImplementation(class_getInstanceMethod(NSFileManager.class,@selector(contentsOfDirectoryAtURL:includingPropertiesForKeys:options:error:)),ShareDirectoryListing);ShareRaceFolder=nil;ShareRaceFile=nil;}
+ XCTAssertTrue(ShareRaceTriggered);XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:old.path]);XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:recent.path]);XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:future.path]);
+ NSNumber* removed=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module clearTemporaryFiles:a reject:b];} error:nil];XCTAssertGreaterThanOrEqual(removed.longLongValue,10);XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:shares.path]);
 }
 - (void)testRealModelTileSeamsAndAlpha {
  pixora::Image input=pixora::decode([self fixture:72 height:9],1024);std::vector<uint8_t> whole((size_t)72*9*16*4),tiled(whole.size());std::atomic<bool> cancelled{false};upscale::Callbacks hooks;
