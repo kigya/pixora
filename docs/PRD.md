@@ -190,3 +190,5 @@ Requirement changes: [workflow PRD](product/prd.md) and [decisions](engineering/
 ### Manual-review clarification — 2026-10-16
 
 The owner confirmed manual review and requested hiding suggestions after Apply, consistent centered Feedback/Privacy/Licenses headers, removal of the duplicate Having Issues button, animated startup branding and stable switches. Analytics/Crashlytics now default ON with a notice, preserving independent saved opt-outs; this supersedes the conflicting 0.8 default-OFF rule. Further app tests were paused by owner instruction; a release-mode Samsung build/install and manual confirmation are required. Historical results do not verify these latest changes.
+
+Manual-review clarification on 2026-10-16: splash stays until initial data/navigation is ready and for at least 1500 ms, using max(loading, 1.5 s) without adding the two times. Brand animation also lasts 1500 ms. This is an explicit owner requirement and shared private lesson. The owner accepted other installed-release changes and requested continuation of the GitHub workflow. A repeated runtime app check was not requested.

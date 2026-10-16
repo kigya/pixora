@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, StatusBar, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  StatusBar,
+  View,
+} from 'react-native';
 import {
   NavigationContainer,
   DarkTheme,
@@ -13,6 +18,7 @@ import { SettingsScreen } from '../screens/Settings';
 import { LanguageOnboarding } from '../screens/LanguageOnboarding';
 import { useApp } from '../application/AppProvider';
 import type { Routes } from './routes';
+import Native from '../specs/NativeUpscale';
 const Stack = createNativeStackNavigator<Routes>();
 
 export function AppNavigation() {
@@ -27,11 +33,24 @@ export function AppNavigation() {
     );
     return () => listener.remove();
   }, []);
-  if (loading) return <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator color={colors.accent} /></View>;
+  if (loading)
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.bg,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
   return (
     <>
       <StatusBar barStyle={dark ? 'light-content' : 'dark-content'} />
       <NavigationContainer
+        onReady={() => Native.finishStartup()}
         theme={{
           ...(dark ? DarkTheme : DefaultTheme),
           colors: {
@@ -45,14 +64,19 @@ export function AppNavigation() {
       >
         <Stack.Navigator
           key={settings.languageChosen ? 'main' : 'language'}
-          initialRouteName={settings.languageChosen ? 'Home' : 'LanguageOnboarding'}
+          initialRouteName={
+            settings.languageChosen ? 'Home' : 'LanguageOnboarding'
+          }
           screenOptions={{
             headerShown: false,
             animation: reduceMotion ? 'none' : 'fade',
             contentStyle: { backgroundColor: colors.bg },
           }}
         >
-          <Stack.Screen name="LanguageOnboarding" component={LanguageOnboarding} />
+          <Stack.Screen
+            name="LanguageOnboarding"
+            component={LanguageOnboarding}
+          />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />
