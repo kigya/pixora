@@ -17,3 +17,5 @@ FEAT-801 hypothesis: edge/texture/grid features can suggest a useful mode. Valid
 Owner clarification after manual review on 2026-10-16: Apply hides suggestions for the current image; Feedback uses centered headers matching Privacy/Licenses and no duplicate Having Issues button. Android 12+ system startup animates the logo. Further testing was explicitly paused; the next acceptance point is owner review of the installed release-mode build. See ADR-808–812.
 
 Manual-review clarification on 2026-10-16: splash stays until initial data/navigation is ready and for at least 1500 ms, using max(loading, 1.5 s) without adding the two times. Brand animation also lasts 1500 ms. This is an explicit owner requirement and shared private lesson. The owner accepted other installed-release changes and requested continuation of the GitHub workflow. A repeated runtime app check was not requested.
+
+Acceptance clarification (ADR-814): automatic checks/fixes are authorized; repeated Samsung UI/update installation is explicitly deferred. Splash lasts max(initial loading, 1500 ms); missing fresh physical validation must remain explicit.

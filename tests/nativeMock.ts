@@ -64,9 +64,9 @@ const native = {
     }),
   ),
   getTelemetrySettings: jest.fn(async () => ({
-    analytics: false,
-    crashes: false,
-    noticeSeen: true,
+    analytics: true,
+    crashes: true,
+    noticeSeen: false,
     consentVersion: 0,
   })),
   updateTelemetrySettings: jest.fn(async (analytics, crashes, noticeSeen) => ({

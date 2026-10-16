@@ -9,3 +9,5 @@ Samsung 0.8.0 confirmed Analytics DebugView (screen_view/screen_engagement/sessi
 ## Subsequent decision after manual review
 
 On 2026-10-16 the owner explicitly replaced opt-in/default-OFF with default-ON and an informational notice. Independent saved version-2 choices apply before Firebase initialization; absent a choice, both values are enabled. The notice is informational; dismissing it retains current values. Previously saved false values remain false. The default-OFF/upgrade checks above describe the previous state, not evidence of current semantics. Further runtime testing was then paused by the owner pending manual release-APK acceptance.
+
+ADR-814 clarification: automatic checks of new defaults are authorized and running; new Samsung installation/UI checks are deferred. iOS Firebase event receipt is separately unconfirmed: the earlier unsigned simulator hit Keychain -34018, which unit/build PASS must not conceal.

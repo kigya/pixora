@@ -17,3 +17,5 @@
 - ADR-812: the owner explicitly paused further automatic and manual application tests. Changes, a release-mode build with a test signature and a Samsung installation proceed, followed by owner review. Earlier checks apply to earlier source states; new code does not inherit their PASS/100% claims. Main merge and full handoff readiness remain unconfirmed until manual acceptance and agreement on remaining required checks.
 
 - ADR-813: after further manual review, splash remains visible until JS NavigationContainer.onReady following initial settings/session refresh, and for at least 1500 ms; the animator separately runs for 1500 ms. UI/JS threads remain responsive. The shared splash lesson is stored only in the private local database. The owner accepted the other fixes and continuation of the workflow.
+
+- ADR-814: the owner subsequently authorized automatic verification and fixes without Samsung UI interaction. Do not install the new release yet. The earlier test pause is lifted only for automatic strict coverage/security/build/CI checks. Physical UI/install checks must not receive a fabricated PASS.

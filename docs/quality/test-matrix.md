@@ -1,6 +1,6 @@
 # Verification matrix 0.8.0
 
-Latest instruction on 2026-10-16: the owner reported successful manual review and paused further app tests. Latest UI/defaults/shared-engine changes are untested; earlier PASS results apply to earlier sources. Only a normal release build/installation proceeds for manual confirmation.
+Current 2026-10-16 instruction (ADR-814): automatic checks/fixes are authorized; Samsung UI and update installation are deferred. Fresh automatic results remain separate from historical physical checks.
 
 The matrix links PRD criteria to executable checks. Test presence is not PASS; final outcomes and revisions are recorded in private coverage/build/device evidence.
 
@@ -29,7 +29,7 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 
 ## TEST-804 — consent, feedback and review (FEAT-804)
 
-- `TelemetryTest`, `ApplicationStartupTest`, `FirebaseBoundaryTest`: default-off, legacy notice ≠ consent, independent flags, both Measurement overrides before eager Firebase init, storage failure, allowed fields and RC independence from opt-in.
+- `TelemetryTest`, `ApplicationStartupTest`, `FirebaseBoundaryTest`: default-ON informational notice, preservation of explicit independent opt-outs, both Measurement overrides before eager Firebase init, storage failure, allowed fields and RC independence from opt-in.
 - `ModuleUnitTest`: review only after result/saves and cooldown; a failed durable write prevents prompting; no rating gate before the store.
 - `FeedbackClientTest`, `support/apps-script/feedback.test.cjs`: optional email, rating/message/UUID/size limits, platform enum with Android legacy default, configuration/network failures, redirects, server deduplication/quota and version/platform in email.
 - Actual Analytics/Crashlytics/feedback delivery requires separate evidence; a unit mock, HTTP 200 or successful build does not prove receipt. A real feedback test requires explicit owner authorization.
@@ -45,3 +45,11 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 Task PRs with independent review → release/0.8.0; one squash into main after local acceptance. CI runs only on main pushes. Check the same SHA, every job and CodeQL alerts, retaining links. Require measured 100% JS statements/functions/lines/branches and owned Kotlin/C++/ObjC++ lines/branches, plus presence of every owned source. Security covers secrets, workflows, dependency advisories, mobile static scans and independent review.
 
 Secrets, private serials, raw logcat, user images and local signing material never enter public evidence. Final signing/store/GitHub Release publication uses a separate release workflow.
+
+## TEST-807 — manual-review fixes and startup
+
+- `recommendations.test.tsx`: Apply hides the current photo's card; replacing the photo permits a new suggestion.
+- `pixora07.test.tsx`: informational notice, immediate switch position, serialized native writes, stale failure and rollback of the latest error.
+- `navigation.test.tsx`: finishStartup after navigation readiness, including an initial loading error.
+- `ActivityLifecycleTest`: both readiness/deadline orders, 1499/1500 ms boundary, destroy/recreate. `ModuleUnitTest`: main-looper callback and null/unrelated/MainActivity cases.
+- `ios/Tests/PixoraStartupTests.mm`: readiness/deadline, Reduce Motion and startup telemetry. Simulator XCTest does not establish physical-device behavior.

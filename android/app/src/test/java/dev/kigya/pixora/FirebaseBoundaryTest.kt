@@ -46,6 +46,20 @@ class FirebaseBoundaryTest {
             }
         }
     }
+    @Test fun aFreshSinkCanApplyAnExplicitCrashOptOutBeforeCachingTheSdkClient() {
+        val crashes=mock(FirebaseCrashlytics::class.java)
+        mockStatic(FirebaseCrashlytics::class.java).use { crashStatic ->
+            crashStatic.`when`<FirebaseCrashlytics>{FirebaseCrashlytics.getInstance()}.thenReturn(crashes)
+            val sink=FirebaseTelemetrySink(RuntimeEnvironment.getApplication())
+
+            // A persisted opt-out may be applied before this process ever enabled Crashlytics.
+            sink.configure(analytics=false,crashes=false)
+
+            verify(crashes).setCrashlyticsCollectionEnabled(false)
+            verify(crashes).deleteUnsentReports()
+            verify(crashes,never()).setCrashlyticsCollectionEnabled(true)
+        }
+    }
     @Test fun remoteFetchUsesEightDefaultsAndCorrectSettingsAndReturnsEveryFlag() {
         val config=mock(FirebaseRemoteConfig::class.java)
         mockStatic(FirebaseRemoteConfig::class.java).use { sdk ->
