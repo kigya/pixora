@@ -11,21 +11,34 @@ internal interface TelemetrySink {
     fun log(name: String, parameters: Bundle)
 }
 internal class FirebaseTelemetrySink(private val context: Context) : TelemetrySink {
+    private var analyticsClient: FirebaseAnalytics? = null
+    private var crashlyticsClient: FirebaseCrashlytics? = null
     override fun configure(analytics: Boolean, crashes: Boolean) {
-        FirebaseAnalytics.getInstance(context).apply {
-            setConsent(mapOf(
-                FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
-                FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
-                FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED,
-            ))
-            setAnalyticsCollectionEnabled(analytics)
+        if (analytics) {
+            analyticsClient = FirebaseAnalytics.getInstance(context).apply {
+                setConsent(mapOf(
+                    FirebaseAnalytics.ConsentType.AD_STORAGE to FirebaseAnalytics.ConsentStatus.DENIED,
+                    FirebaseAnalytics.ConsentType.AD_USER_DATA to FirebaseAnalytics.ConsentStatus.DENIED,
+                    FirebaseAnalytics.ConsentType.AD_PERSONALIZATION to FirebaseAnalytics.ConsentStatus.DENIED,
+                ))
+                setAnalyticsCollectionEnabled(true)
+            }
+        } else {
+            analyticsClient?.setAnalyticsCollectionEnabled(false)
         }
-        FirebaseCrashlytics.getInstance().apply {
-            setCrashlyticsCollectionEnabled(crashes)
-            if (!crashes) deleteUnsentReports()
+        if (crashes) {
+            crashlyticsClient = FirebaseCrashlytics.getInstance().apply {
+                setCrashlyticsCollectionEnabled(true)
+            }
+        } else {
+            (crashlyticsClient ?: FirebaseCrashlytics.getInstance()).apply {
+                setCrashlyticsCollectionEnabled(false)
+                deleteUnsentReports()
+                crashlyticsClient = null
+            }
         }
     }
     override fun log(name: String, parameters: Bundle) {
-        FirebaseAnalytics.getInstance(context).logEvent(name, parameters)
+        analyticsClient?.logEvent(name, parameters)
     }
 }

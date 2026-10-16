@@ -46,9 +46,11 @@ export function workSize(width: number, height: number) {
   };
 }
 export function languageFor(setting: string, system: string): LocaleCode {
+  if (setting === 'pt') return 'pt-BR';
   if (registry.some(item => item.id === setting)) return setting as LocaleCode;
   const base = system.toLowerCase().replace('_', '-').split('-')[0];
   if (base === 'zh') return 'zh-Hans';
+  if (base === 'pt') return 'pt-BR';
   return registry.some(item => item.id === base) ? (base as LocaleCode) : 'en';
 }
 export function storageReserve(width: number, height: number, scale: number) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import {
   render,
   screen,
@@ -10,7 +11,6 @@ import { AppProvider } from '../src/application/AppProvider';
 import { FeedbackScreen, feedbackId } from '../src/screens/Feedback';
 import { Home } from '../src/screens/Home';
 import { SettingsScreen } from '../src/screens/Settings';
-import { ReviewDialog } from '../src/ui/feedback';
 import { ProcessingPicker } from '../src/ui/processingPicker';
 import { ImagePreview } from '../src/ui/imagePreview';
 import { StorageSlider } from '../src/ui/storageSlider';
@@ -72,20 +72,17 @@ test('feedback unavailable is clear and cannot pretend to send', async () => {
   await userEvent.press(screen.getByRole('button', { name: t.back }));
   expect(navigation.goBack).toHaveBeenCalled();
 });
-test('feedback validates reply email and message; failures retain text and retry id', async () => {
+test('feedback email is optional; failures retain text and retry id', async () => {
   Native.getFeedbackStatus.mockResolvedValue(true);
   await render(
     <AppProvider>
-      <FeedbackScreen {...{ ...props, route: { params: { rating: 4 } } }} />
+      <FeedbackScreen {...props} />
     </AppProvider>,
   );
   const send = await screen.findByRole('button', {
     name: t.send,
     disabled: false,
   });
-  await userEvent.press(send);
-  expect(screen.getByText(t.invalidEmail)).toBeOnTheScreen();
-  await userEvent.type(screen.getByLabelText(t.email), 'person@example.com');
   await userEvent.press(send);
   expect(screen.getByText(t.invalidMessage)).toBeOnTheScreen();
   await userEvent.type(screen.getByLabelText(t.message), 'A useful question');
@@ -97,14 +94,13 @@ test('feedback validates reply email and message; failures retain text and retry
   await userEvent.press(send);
   expect(await screen.findByText(t.feedbackSuccess)).toBeOnTheScreen();
   expect(Native.sendFeedback).toHaveBeenLastCalledWith(
-    'person@example.com',
+    '',
     'A useful question',
-    4,
+    0,
     id,
   );
   expect(send).toBeDisabled();
-  await userEvent.press(screen.getByRole('radio', { name: '5 / 5' }));
-  expect(send).toBeEnabled();
+  expect(screen.queryByRole('radio')).toBeNull();
 });
 test('feedback config failure is a local unavailable state', async () => {
   Native.getFeedbackStatus.mockRejectedValueOnce(new Error('unavailable'));
@@ -180,6 +176,23 @@ test('settings indicates granted permission and links support; WebP has readable
   await userEvent.press(screen.getByRole('button', { name: t.issues }));
   expect(navigation.navigate).toHaveBeenCalledWith('Feedback');
 });
+test('iOS notification settings explain interruption instead of Android service controls', async () => {
+  const original = Object.getOwnPropertyDescriptor(Platform, 'OS');
+  Object.defineProperty(Platform, 'OS', { configurable: true, value: 'ios' });
+  try {
+    await render(
+      <AppProvider>
+        <SettingsScreen {...props} />
+      </AppProvider>,
+    );
+    expect(
+      await screen.findByText(t.notificationIosBody),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(t.notificationBody)).toBeNull();
+  } finally {
+    if (original) Object.defineProperty(Platform, 'OS', original);
+  }
+});
 test('extreme ratio confirmation can stop a job; WebP save reaches native format', async () => {
   seed({ state: 'READY', image: { ...image, width: 1200, height: 100 } });
   await render(
@@ -191,20 +204,6 @@ test('extreme ratio confirmation can stop a job; WebP save reaches native format
   expect(screen.getByText(t.aspectTitle)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.cancel }));
   expect(Native.startJobWithMode).not.toHaveBeenCalled();
-});
-test('review dialog routes a low rating to private feedback', async () => {
-  const onFeedback = jest.fn(),
-    onClose = jest.fn();
-  await render(
-    <AppProvider>
-      <ReviewDialog visible onClose={onClose} onFeedback={onFeedback} />
-    </AppProvider>,
-  );
-  await userEvent.press(screen.getByRole('radio', { name: '1 / 5' }));
-  expect(screen.getByRole('button', { name: t.continue })).toBeEnabled();
-  await userEvent.press(screen.getByRole('button', { name: t.continue }));
-  expect(onFeedback).toHaveBeenCalledWith(1);
-  expect(onClose).toHaveBeenCalled();
 });
 test.each([false, true])(
   'closing feedback before config resolves is safe %s',
@@ -230,7 +229,7 @@ test.each([false, true])(
     });
   },
 );
-test('Arabic feedback and rating controls keep an LTR reply address', async () => {
+test('Arabic feedback keeps an LTR optional reply address and has no rating control', async () => {
   seed({}, { language: 'ar' });
   Native.getFeedbackStatus.mockResolvedValue(true);
   await render(
@@ -242,7 +241,7 @@ test('Arabic feedback and rating controls keep an LTR reply address', async () =
     direction: 'ltr',
     textAlign: 'left',
   });
-  await userEvent.press(screen.getAllByRole('radio')[2]);
+  expect(screen.queryByRole('radio')).toBeNull();
 });
 test('pending feedback cannot submit twice', async () => {
   Native.getFeedbackStatus.mockResolvedValue(true);
@@ -329,7 +328,7 @@ test('settings help explains storage and changes retention setting', async () =>
   await userEvent.press(screen.getByRole('button', { name: t.cacheNo }));
   expect(Native.setCacheLimit).toHaveBeenCalledWith(0);
 });
-test('successful saved experience prompts with rating routing and forwards personal stars', async () => {
+test('successful export requests a neutral native review without a rating screen', async () => {
   seed({
     state: 'SUCCEEDED',
     image,
@@ -337,6 +336,7 @@ test('successful saved experience prompts with rating routing and forwards perso
     resultUri: 'file:///after.png',
   });
   Native.claimReviewPrompt.mockResolvedValue(true);
+  Native.requestReview.mockResolvedValue(true);
   await render(
     <AppProvider>
       <Home {...props} />
@@ -345,51 +345,11 @@ test('successful saved experience prompts with rating routing and forwards perso
   await userEvent.press(await screen.findByRole('radio', { name: 'WebP' }));
   expect(screen.getByText(t.webpNote)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.save }));
-  expect(await screen.findByText(t.rateTitle)).toBeOnTheScreen();
-  await userEvent.press(screen.getByRole('radio', { name: '4 / 5' }));
-  await userEvent.press(screen.getByRole('button', { name: t.continue }));
-  expect(navigation.navigate).toHaveBeenCalledWith('Feedback', expect.objectContaining({ rating: 4, context: expect.objectContaining({ attempt_token: 'j', profile_id: 'standard' }) }));
+  expect(await screen.findByText(t.exportSuccess)).toBeOnTheScreen();
+  expect(Native.requestReview).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText(t.rateTitle)).toBeNull();
+  expect(navigation.navigate).not.toHaveBeenCalledWith('Feedback', expect.anything());
   expect(Native.exportResult).toHaveBeenCalledWith('j', 'webp');
-});
-test.each([false, true])(
-  'Pixora Play navigation requires confirmation, cancellation=%s',
-  async cancel => {
-    const { Linking } = require('react-native');
-    const link = jest
-      .spyOn(Linking, 'openURL')
-      .mockRejectedValueOnce(new Error('no browser'));
-    const close = jest.fn();
-    await render(
-      <AppProvider>
-        <ReviewDialog visible onClose={close} onFeedback={() => {}} />
-      </AppProvider>,
-    );
-    await userEvent.press(screen.getByRole('radio', { name: '5 / 5' }));
-    await userEvent.press(screen.getByRole('button', { name: t.continue }));
-    expect(screen.getByText(t.playTest)).toBeOnTheScreen();
-    await userEvent.press(
-      screen.getByRole('button', { name: cancel ? t.cancel : t.open }),
-    );
-    if (cancel) expect(link).not.toHaveBeenCalled();
-    else expect(link).toHaveBeenCalledWith('https://play.google.com/store/apps/details?id=dev.kigya.pixora');
-    link.mockRestore();
-    await userEvent.press(screen.getByRole('button', { name: t.notNow }));
-    expect(close).toHaveBeenCalled();
-  },
-);
-
-test('personal rating can be removed by selecting the same star', async () => {
-  const onFeedback = jest.fn();
-  await render(
-    <AppProvider>
-      <ReviewDialog visible onClose={() => {}} onFeedback={onFeedback} />
-    </AppProvider>,
-  );
-  await userEvent.press(screen.getByRole('radio', { name: '2 / 5' }));
-  await userEvent.press(screen.getByRole('radio', { name: '2 / 5' }));
-  await userEvent.press(screen.getByRole('button', { name: t.continue }));
-  expect(onFeedback).not.toHaveBeenCalled();
-  expect(screen.getByRole('button', { name: t.continue })).toBeDisabled();
 });
 
 test('pixel profile does not show an AI modification warning', async () => {

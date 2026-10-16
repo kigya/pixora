@@ -1,6 +1,6 @@
 import React from 'react';
 import {render, screen, userEvent, act, fireEvent} from '@testing-library/react-native';
-import {AppState} from 'react-native';
+import {AppState, Platform} from 'react-native';
 import {AppProvider} from '../src/application/AppProvider';
 import {Home} from '../src/screens/Home';
 import {SettingsScreen} from '../src/screens/Settings';
@@ -10,7 +10,7 @@ import {errorText} from '../src/application/errors';
 import {LocaleContext} from '../src/ui/locale';
 import {Comparison, Icon, Button} from '../src/ui/components';
 import {BackgroundNotice, HelpLink, InformationProvider} from '../src/ui/information';
-import Native, {seed, emitSession, capabilities, settings, sessionListeners} from '../tests/nativeMock';
+import Native, {seed, emitSession, capabilities, sessionListeners} from '../tests/nativeMock';
 const t = strings.en;
 const image = {id:'image',mime:'image/png',size:128,width:64,height:48,workWidth:64,workHeight:48,hasAlpha:false,previewUri:'file:///before.png',needsPreparation:false};
 const exported = {id:'export',mime:'image/png',format:'png',uri:'content://result',width:128,height:96,size:123,createdAt:1};
@@ -43,7 +43,7 @@ test.each(['PREPARING','RUNNING','FINALIZING','CANCELLING'])('active state %s ex
 test.each([{backend:'GPU',error:'GPU_FAILED',elapsedMs:1000},{backend:'CPU',error:'',elapsedMs:301000},{backend:'CPU',error:'',elapsedMs:1000}])('processing explanation is specific %#', async item => {
  seed({state:'RUNNING',image,jobId:'job',phase:'unknown',progress:10,startedAt:Date.now(),...item});
  Native.getNotificationStatus.mockResolvedValue(true);await viewHome();
- expect(await screen.findByText(t.backgroundTitle)).toBeOnTheScreen();
+ expect(await screen.findByText(Platform.OS==='ios'?t.notificationIntroTitleIos:t.backgroundTitle)).toBeOnTheScreen();
  expect(screen.queryByRole('button',{name:t.enableNotifications})).not.toBeOnTheScreen();
 });
 test('active jobs do not repeat the permission prompt', async () => {
@@ -83,7 +83,7 @@ test('exported result opens and changing format permits a new export', async () 
 });
 test('transparent JPEG requires confirmation for export and share', async () => {
  seed({state:'SUCCEEDED',image:{...image,hasAlpha:true},jobId:'job',resultUri:'file:///after.png'});
- await viewHome();await userEvent.press(await screen.findByRole('radio',{name:'JPEG'}));
+ await viewHome();await userEvent.press(screen.getByRole('button',{name:t.notNow}));await userEvent.press(await screen.findByRole('radio',{name:'JPEG'}));
  await userEvent.press(screen.getByRole('button',{name:t.save}));await userEvent.press(screen.getByRole('button',{name:t.cancel}));expect(Native.exportResult).not.toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.share}));await userEvent.press(screen.getByRole('button',{name:t.confirmJpeg}));expect(Native.shareResult).toHaveBeenCalledWith('job','jpeg');
 });
@@ -127,9 +127,8 @@ test.each(['light','dark','system'])('settings edits %s theme and export default
 });
 test('settings selects every language and preserves session', async () => {
  seed({state:'READY',image});await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
- for(const [code,name] of [['ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439'],['zh-Hans','简体中文'],['es','Español'],['hi','हिन्दी'],['ar','العربية'],['pt','Português'],['fr','Français'],['de','Deutsch'],['ja','日本語'],['en','English']]) {
-   const current = settings.language === 'system'?strings.en.system:({en:'English',ru:'\u0420\u0443\u0441\u0441\u043a\u0438\u0439','zh-Hans':'简体中文',es:'Español',hi:'हिन्दी',ar:'العربية',pt:'Português',fr:'Français',de:'Deutsch',ja:'日本語'} as Record<string,string>)[settings.language];
-   await userEvent.press(screen.getByRole('button',{name:new RegExp(current)}));await userEvent.press(screen.getByRole('radio',{name}));
+ for(const [code,name] of [['ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439'],['zh-Hans','简体中文'],['es','Español'],['hi','हिन्दी'],['ar','العربية'],['pt-BR','Português (Brasil)'],['fr','Français'],['de','Deutsch'],['ja','日本語'],['en','English']]) {
+   await userEvent.press(screen.getByTestId('language-picker'));await userEvent.press(screen.getByRole('radio',{name}));
    expect(Native.updateSettings).toHaveBeenLastCalledWith(code,'png','light');
  }
 });
@@ -186,7 +185,7 @@ test('backgrounding the notification explanation cancels launch without persisti
  });
  await viewHome();
  await userEvent.press(await screen.findByRole('button',{name:t.upscale}));
- expect(screen.getByText(t.notificationIntroTitle)).toBeOnTheScreen();
+ expect(screen.getByText(Platform.OS==='ios'?t.notificationIntroTitleIos:t.notificationIntroTitle)).toBeOnTheScreen();
  await act(() => changes[0]?.('background'));
  expect(screen.queryByTestId('information-panel')).toBeNull();
  expect(Native.markNotificationIntroSeen).not.toHaveBeenCalled();

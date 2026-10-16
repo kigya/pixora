@@ -152,10 +152,10 @@
   "cacheLimitNote": "Das Limit gilt beim Neustart. Bis dahin bleibt das aktuelle Bild verfügbar. Die Verarbeitung kann vorübergehend mehr Speicher brauchen. Gespeicherte Fotos und AI-Modelle zählen nicht dazu.",
   "issues": "Frage oder Problem?",
   "email": "Deine E-Mail",
-  "emailNote": "Wir antworten an diese Adresse.",
+  "emailNote": "Freiwillig – leer lassen, wenn du keine Antwort möchtest.",
   "message": "Deine Nachricht",
   "send": "Feedback senden",
-  "feedbackPrivacy": "Nur E-Mail, Nachricht, optionale Bewertung und App-Version werden gesendet. Bilder bleiben auf deinem Gerät.",
+  "feedbackPrivacy": "Deine E-Mail-Adresse ist freiwillig. Gesendet werden deine Nachricht und die App-Version; Bilder bleiben auf deinem Gerät.",
   "feedbackSuccess": "Feedback gesendet. Danke!",
   "feedbackUnavailable": "Feedback ist noch nicht verfügbar. Der Supportdienst muss verbunden werden.",
   "feedbackError": "Feedback konnte nicht gesendet werden. Dein Text bleibt hier. Versuche es erneut.",
@@ -235,5 +235,7 @@
   "analyticsTitle": "Nutzungsanalyse",
   "analyticsBody": "Welche Funktionen verwendet werden. Ohne Fotos und Feedback-Inhalte.",
   "crashesTitle": "Fehlerberichte",
-  "crashesBody": "Helfen bei der Fehlersuche. Ohne Fotos und Feedback-Inhalte."
+  "crashesBody": "Helfen bei der Fehlersuche. Ohne Fotos und Feedback-Inhalte.",
+  "notificationIntroTitleIos": "Mitteilungen unter iOS",
+  "notificationIosBody": "Unter iOS kann die Verarbeitung nach dem Verlassen der App kurz weiterlaufen. Längere Aufgaben können unterbrochen werden; kehre zur App zurück, um sie neu zu starten. Eine Mitteilung kann dich über den Abschluss informieren."
 }

@@ -152,10 +152,10 @@
   "cacheLimitNote": "El límite se aplica al reiniciar la app. Hasta entonces, la imagen actual sigue disponible. El procesamiento puede usar más espacio temporalmente. No incluye fotos guardadas ni modelos AI.",
   "issues": "¿Tienes alguna pregunta o problema?",
   "email": "Tu correo",
-  "emailNote": "Responderemos a esta dirección.",
+  "emailNote": "Opcional: déjalo en blanco si no necesitas respuesta.",
   "message": "Tu mensaje",
   "send": "Enviar comentarios",
-  "feedbackPrivacy": "Solo se envían el correo, mensaje, valoración opcional y versión de la app. Las imágenes quedan en tu dispositivo.",
+  "feedbackPrivacy": "El correo es opcional. Se envían tu mensaje y la versión de la app; las imágenes permanecen en tu dispositivo.",
   "feedbackSuccess": "Comentarios enviados. ¡Gracias!",
   "feedbackUnavailable": "El envío aún no está disponible. Hay que conectar el servicio de soporte.",
   "feedbackError": "No se pudo enviar. Tu texto sigue aquí. Inténtalo de nuevo.",
@@ -235,5 +235,7 @@
   "analyticsTitle": "Análisis de uso",
   "analyticsBody": "Qué funciones se usan. No incluye fotos ni comentarios.",
   "crashesTitle": "Informes de errores",
-  "crashesBody": "Ayudan a detectar fallos. No incluyen fotos ni comentarios."
+  "crashesBody": "Ayudan a detectar fallos. No incluyen fotos ni comentarios.",
+  "notificationIntroTitleIos": "Notificaciones en iOS",
+  "notificationIosBody": "En iOS, el procesamiento puede continuar brevemente al salir de la app. Las tareas largas pueden interrumpirse; vuelve a la app para iniciarlas de nuevo. Una notificación puede avisarte cuando termine."
 }

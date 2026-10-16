@@ -30,6 +30,7 @@ export function seed(
     notificationIntroSeen: true,
     notificationDismissedSession: '',
     systemLanguage: 'en',
+    languageChosen: true,
     ...preferences,
   };
   capabilities = {
@@ -66,11 +67,13 @@ const native = {
     analytics: false,
     crashes: false,
     noticeSeen: true,
+    consentVersion: 0,
   })),
   updateTelemetrySettings: jest.fn(async (analytics, crashes, noticeSeen) => ({
     analytics,
     crashes,
     noticeSeen,
+    consentVersion: 2,
   })),
   logTelemetryEvent: jest.fn(),
   getCurrentSession: jest.fn(async () => session),
@@ -127,7 +130,7 @@ const native = {
   ),
   updateSettings: jest.fn(
     async (language: string, format: string, theme: string) =>
-      (settings = { ...settings, language, format, theme }),
+      (settings = { ...settings, language, format, theme, languageChosen: true }),
   ),
   requestNotifications: jest.fn(async () => true),
   openNotificationSettings: jest.fn(async () => true),
@@ -151,6 +154,7 @@ const native = {
       }),
   ),
   claimReviewPrompt: jest.fn(async () => false),
+  requestReview: jest.fn(async () => false),
   getFeedbackStatus: jest.fn(async () => false),
   sendFeedback: jest.fn(
     async (_email: string, _message: string, _rating: number, _id: string) =>

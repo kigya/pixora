@@ -20,7 +20,7 @@ object Localizer {
         val ids=supported(ctx)
         if(setting in ids)return setting
         val base=system.lowercase(Locale.ROOT).replace('_','-').substringBefore('-')
-        return if(base=="zh")"zh-Hans" else if(base in ids)base else "en"
+        return if(base=="zh")"zh-Hans" else if(base=="pt" && "pt-BR" in ids)"pt-BR" else if(base in ids)base else "en"
     }
     fun language(ctx:Context):String = resolve(ctx,(ctx.getSharedPreferences("settings",0).all["language"] as? String) ?: "system",ctx.resources.configuration.locales[0].toLanguageTag())
     fun text(ctx:Context,key:String):String {

@@ -1,6 +1,6 @@
 # Automated feedback integration
 
-The screen sends only email, message, optional personal rating, app version and a random request ID. No images, URIs, working files, logs or device identifiers. AI works offline; feedback uses the network only on explicit submission. The developer is the fixed recipient. Reply email is required.
+The screen sends only email, message, optional personal rating, app version and a random request ID. No images, URIs, working files, logs or device identifiers. AI works offline; feedback uses the network only on explicit submission. The developer is the fixed recipient. Reply email is optional; Reply-To requires a valid nonempty address. Submission is independent of Analytics/Crashlytics choice.
 
 ## Free Google Apps Script setup
 

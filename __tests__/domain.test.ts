@@ -29,7 +29,7 @@ test('storage budget covers 4x output and enforces minimum reserve', () => {
   expect(storageReserve(20, 20, 2)).toBe(268435456);
 });
 
-test('all ten languages resolve regional tags and old settings remain valid', () => {
+test('supported languages resolve regional system tags and manual preferences', () => {
   for (const [tag, code] of [
     ['en-US', 'en'],
     ['ru-RU', 'ru'],
@@ -38,7 +38,7 @@ test('all ten languages resolve regional tags and old settings remain valid', ()
     ['es-MX', 'es'],
     ['hi-IN', 'hi'],
     ['ar-SA', 'ar'],
-    ['pt-PT', 'pt'],
+    ['pt-PT', 'pt-BR'],
     ['fr-FR', 'fr'],
     ['de-DE', 'de'],
     ['ja-JP', 'ja'],
@@ -47,4 +47,8 @@ test('all ten languages resolve regional tags and old settings remain valid', ()
     expect(languageFor(code, 'it-IT')).toBe(code);
   }
   expect(languageFor('ru', 'en-US')).toBe('ru');
+});
+test('legacy Portuguese preference migrates to Brazilian Portuguese', () => {
+  expect(languageFor('pt', 'en-US')).toBe('pt-BR');
+  expect(languageFor('pt-BR', 'en-US')).toBe('pt-BR');
 });

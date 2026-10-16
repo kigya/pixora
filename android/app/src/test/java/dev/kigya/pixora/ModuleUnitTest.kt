@@ -157,7 +157,13 @@ class ModuleUnitTest {
         SessionStore.update{it.put("state","SUCCEEDED")};assertEquals(false,call{module.claimReviewPrompt("review",it)})
         prefs.edit().putInt("savedJobs",3).putInt("reviewPrompts",2).commit();assertEquals(false,call{module.claimReviewPrompt("review",it)})
         prefs.edit().putInt("reviewPrompts",0).putLong("reviewShownAt",System.currentTimeMillis()).commit();assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        prefs.edit().putLong("reviewShownAt",0).commit();assertEquals(true,call{module.claimReviewPrompt("review",it)});assertEquals(false,call{module.claimReviewPrompt("review",it)})
+        prefs.edit().putLong("reviewShownAt",0).commit()
+        react.rejectSettingsWrite=true
+        assertEquals(false,call{module.claimReviewPrompt("review",it)})
+        assertEquals(0,prefs.getInt("reviewPrompts",0))
+        react.rejectSettingsWrite=false
+        assertEquals(true,call{module.claimReviewPrompt("review",it)})
+        assertEquals(false,call{module.claimReviewPrompt("review",it)})
     }
     @Test fun capabilitiesSettingsAndValidation() {
         assertEquals("NativeUpscale",module.name)
@@ -341,7 +347,7 @@ class ModuleUnitTest {
         assertTrue((call(module::getProfileAvailability) as ReadableMap).getBoolean("standard"))
         assertFalse((call(module::getTelemetrySettings) as ReadableMap).getBoolean("analytics"))
         val enabled=call{module.updateTelemetrySettings(true,false,true,it)} as ReadableMap
-        assertTrue(enabled.getBoolean("analytics"));assertFalse(enabled.getBoolean("crashes"));assertTrue(enabled.getBoolean("noticeSeen"))
+        assertTrue(enabled.getBoolean("analytics"));assertFalse(enabled.getBoolean("crashes"));assertTrue(enabled.getBoolean("noticeSeen"));assertEquals(Telemetry.consentVersion,enabled.getInt("consentVersion"))
         module.logTelemetryEvent("ui_action","{\"action\":\"help\"}")
         module.logTelemetryEvent("ui_action","broken")
         assertEquals(listOf("ui_action"),received)

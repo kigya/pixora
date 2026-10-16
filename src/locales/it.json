@@ -152,10 +152,10 @@
   "cacheLimitNote": "Il limite si applica al riavvio dell’app. L’immagine corrente rimane disponibile fino ad allora. L’elaborazione può usare temporaneamente più spazio. Le immagini salvate e i modelli AI non sono inclusi.",
   "issues": "Hai problemi?",
   "email": "La tua email",
-  "emailNote": "Risponderemo a questo indirizzo.",
+  "emailNote": "Facoltativo: lascia vuoto se non desideri una risposta.",
   "message": "Il tuo messaggio",
   "send": "Invia un feedback",
-  "feedbackPrivacy": "Vengono inviati solo email, messaggio, eventuale valutazione e versione dell’app. Le immagini rimangono sul dispositivo.",
+  "feedbackPrivacy": "L’indirizzo email è facoltativo. Vengono inviati il messaggio e la versione dell’app; le immagini restano sul dispositivo.",
   "feedbackSuccess": "Feedback inviato. Grazie!",
   "feedbackUnavailable": "Il feedback non è ancora disponibile. Il servizio di assistenza deve essere collegato.",
   "feedbackError": "Impossibile inviare il feedback. Il testo è ancora qui. Riprova.",
@@ -179,14 +179,38 @@
   "aspectTitle": "Immagine molto allungata",
   "aspectBody": "L’immagine è insolitamente stretta. Il confronto dell’anteprima può essere difficile e l’AI può cambiare i piccoli dettagli. Puoi continuare.",
   "presets": {
-    "standard": { "title": "Standard", "note": "Per la maggior parte delle foto." },
-    "lite": { "title": "Leggero", "note": "Un modello piccolo per un’elaborazione più breve." },
-    "natural": { "title": "Naturale", "note": "Texture più morbide e bordi uniformi." },
-    "details": { "title": "Dettagli", "note": "Definisce delicatamente i contorni fini." },
-    "balanced": { "title": "Bilanciato", "note": "Bilancia i dettagli AI con l’immagine originale." },
-    "sharp": { "title": "Nitidezza", "note": "Rende i bordi più definiti." },
-    "art": { "title": "Illustrazioni", "note": "Per disegni e contorni netti." },
-    "pixel": { "title": "Pixel Art", "note": "Mantiene i pixel esatti. Senza AI." }
+    "standard": {
+      "title": "Standard",
+      "note": "Per la maggior parte delle foto."
+    },
+    "lite": {
+      "title": "Leggero",
+      "note": "Un modello piccolo per un’elaborazione più breve."
+    },
+    "natural": {
+      "title": "Naturale",
+      "note": "Texture più morbide e bordi uniformi."
+    },
+    "details": {
+      "title": "Dettagli",
+      "note": "Definisce delicatamente i contorni fini."
+    },
+    "balanced": {
+      "title": "Bilanciato",
+      "note": "Bilancia i dettagli AI con l’immagine originale."
+    },
+    "sharp": {
+      "title": "Nitidezza",
+      "note": "Rende i bordi più definiti."
+    },
+    "art": {
+      "title": "Illustrazioni",
+      "note": "Per disegni e contorni netti."
+    },
+    "pixel": {
+      "title": "Pixel Art",
+      "note": "Mantiene i pixel esatti. Senza AI."
+    }
   },
   "speedTitle": "Velocità di elaborazione",
   "speedQuality": "Qualità",
@@ -211,5 +235,7 @@
   "analyticsTitle": "Analisi dell’uso",
   "analyticsBody": "Quali funzioni vengono usate. Non include foto o contenuti del feedback.",
   "crashesTitle": "Rapporti sugli errori",
-  "crashesBody": "Aiutano a individuare i problemi. Non includono foto o contenuti del feedback."
+  "crashesBody": "Aiutano a individuare i problemi. Non includono foto o contenuti del feedback.",
+  "notificationIntroTitleIos": "Notifiche su iOS",
+  "notificationIosBody": "Su iOS, l’elaborazione può continuare brevemente dopo aver lasciato l’app. Le attività più lunghe possono interrompersi; torna nell’app per avviarle di nuovo. Una notifica può avvisarti al termine."
 }

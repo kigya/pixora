@@ -22,5 +22,7 @@
     <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
       <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
     </provider>
+    <!-- Initialize Firebase only after the app has read its durable consent choice. -->
+    <provider android:name="com.google.firebase.provider.FirebaseInitProvider" tools:node="remove" />
   </application>
 </manifest>
