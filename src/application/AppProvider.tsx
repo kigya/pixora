@@ -80,9 +80,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updatedAt: 0,
   });
   const [telemetry, setTelemetry] = useState<TelemetrySettings>({
-    analytics: false,
-    crashes: false,
-    noticeSeen: true,
+    analytics: true,
+    crashes: true,
+    noticeSeen: false,
     consentVersion: 0,
   });
   const systemTheme = useColorScheme();

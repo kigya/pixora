@@ -80,7 +80,7 @@ test('recommendation requests reject stale, mismatched, unavailable and missing 
   expect(gate.accepts(currentRequest, image.id, recommendation, available)).toBe(false);
 });
 
-test('home keeps the selected mode and scale until the recommendation is applied', async () => {
+test('home preserves manual choices until Apply and then hides the suggestion until a new image', async () => {
   seed({ state: 'READY', image, scale: 2, mode: 'quality' });
   Native.getImageRecommendation.mockResolvedValue(recommendation);
   await render(
@@ -107,6 +107,8 @@ test('home keeps the selected mode and scale until the recommendation is applied
     screen.getByRole('button', { name: `${copy.profileTitle}: ${copy.presets.art.title}` }),
   ).toBeOnTheScreen();
   expect(screen.getByRole('radio', { name: '4×' })).toBeSelected();
+  expect(screen.queryByText(copy.recommendationTitle)).not.toBeOnTheScreen();
+  expect(screen.queryByRole('button', { name: copy.recommendationApply })).toBeNull();
 });
 
 test('big-image preparation explains the working copy and keeps cancellation available', async () => {

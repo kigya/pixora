@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, Platform, Pressable, Text } from 'react-native';
+import { Platform, Pressable, Text, StyleSheet } from 'react-native';
 import {
   act,
   fireEvent,
@@ -60,23 +60,26 @@ test('first-run language selection exposes the pending native save state', async
   await act(async () => complete({ language: 'es', format: 'png', theme: 'light' }));
 });
 
-test('feedback validates an optional reply address and opens the mail app without requiring one', async () => {
-  const open = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no mail app'));
+test('feedback validates optional reply address, uses a centered header, and sends through the app service', async () => {
   await render(<AppProvider><FeedbackScreen {...feedbackProps} /></AppProvider>);
   await screen.findByRole('button', { name: t.send, disabled: false });
+  const heading = StyleSheet.flatten(screen.getByText(t.issues).props.style);
+  expect(heading.textAlign).toBe('center');
+  expect(screen.queryByRole('button', { name: t.issues })).toBeNull();
   await userEvent.type(screen.getByLabelText(t.email), 'invalid');
   await userEvent.type(screen.getByLabelText(t.message), 'Please help with this issue');
   await userEvent.press(screen.getByRole('button', { name: t.send }));
   expect(screen.getByText(t.invalidEmail)).toBeOnTheScreen();
   expect(Native.sendFeedback).not.toHaveBeenCalled();
   await userEvent.clear(screen.getByLabelText(t.email));
-  await userEvent.press(screen.getByRole('button', { name: t.issues }));
-  expect(open).toHaveBeenCalledWith(expect.stringContaining('subject=Pixora%20support'));
-  expect(open).toHaveBeenCalledWith(expect.not.stringContaining('Reply%20address'));
-  await userEvent.type(screen.getByLabelText(t.email), 'person@example.com');
-  await userEvent.press(screen.getByRole('button', { name: t.issues }));
-  expect(open).toHaveBeenLastCalledWith(expect.stringContaining('Reply%20address%3A%20person%40example.com'));
-  open.mockRestore();
+  await userEvent.press(screen.getByRole('button', { name: t.send }));
+  expect(Native.sendFeedback).toHaveBeenCalledWith(
+    '',
+    'Please help with this issue',
+    0,
+    expect.any(String),
+  );
+  expect(screen.queryByRole('button', { name: t.issues })).toBeNull();
 });
 
 test('telemetry controls accept independent off choices as well as opt-ins', async () => {
@@ -94,14 +97,20 @@ test('telemetry controls accept independent off choices as well as opt-ins', asy
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(false, false, true);
 });
 
-test('telemetry notice records each independent choice before closing', async () => {
+test('telemetry notice is informational and Continue preserves enabled defaults', async () => {
+  Native.getTelemetrySettings.mockResolvedValueOnce({
+    analytics: true,
+    crashes: true,
+    noticeSeen: false,
+    consentVersion: 0,
+  });
   await render(<AppProvider><TelemetryNotice /></AppProvider>);
-  const analytics = screen.getByRole('switch', { name: t.analyticsTitle });
-  const crashes = screen.getByRole('switch', { name: t.crashesTitle });
-  await fireEvent(analytics, 'valueChange', true);
-  await fireEvent(crashes, 'valueChange', true);
-  expect(screen.getByRole('switch', { name: t.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: t.crashesTitle })).toHaveProp('value', true);
+  expect(screen.getByText(t.telemetryIntro)).toBeOnTheScreen();
+  expect(screen.queryByRole('switch')).toBeNull();
+  expect(screen.queryByRole('button', { name: t.notNow })).toBeNull();
+  expect(Native.updateTelemetrySettings).not.toHaveBeenCalled();
+  await userEvent.press(screen.getByRole('button', { name: t.continue }));
+  expect(Native.updateTelemetrySettings).toHaveBeenCalledWith(true, true, true);
 });
 
 test('background notice selects iOS interruption guidance and Android service guidance', async () => {

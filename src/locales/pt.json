@@ -231,7 +231,7 @@
   "profilesUnavailable": "Os modos estão indisponíveis no momento. Você ainda pode salvar o último resultado.",
   "profileChanged": "O modo escolhido está indisponível. Outro modo foi selecionado.",
   "telemetryTitle": "Ajude a melhorar o Pixora",
-  "telemetryIntro": "As fotos são processadas no seu celular. O app envia informações de uso e erros para nos ajudar a melhorá-lo.",
+  "telemetryIntro": "As suas fotografias ficam no telemóvel. A análise de utilização e os relatórios de erros estão ativados por predefinição para nos ajudar a melhorar a aplicação. Pode desativar cada opção separadamente nas Definições.",
   "analyticsTitle": "Análise de uso",
   "analyticsBody": "Quais recursos são usados. Não inclui fotos nem mensagens de feedback.",
   "crashesTitle": "Relatórios de erros",

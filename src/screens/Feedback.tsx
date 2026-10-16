@@ -6,7 +6,6 @@ import {
   Text,
   TextInput,
   Pressable,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -100,7 +99,10 @@ export function FeedbackScreen({
           >
             <Icon name="back" />
           </Pressable>
-          <Text style={[s.heading, { flex: 1 }]}>{t.issues}</Text>
+          <Text style={[s.heading, { flex: 1, textAlign: 'center' }]}>
+            {t.issues}
+          </Text>
+          <View style={{ width: 48 }} />
         </View>
         <Text style={s.body}>{t.feedbackPrivacy}</Text>
         <Text style={s.label}>{t.email}</Text>
@@ -153,15 +155,6 @@ export function FeedbackScreen({
           </Text>
         )}
         <Button
-          title={t.issues}
-          secondary
-          onPress={() => {
-            const subject = encodeURIComponent('Pixora support');
-            const body = encodeURIComponent(`${message.trim()}${email.trim() ? `\n\nReply address: ${email.trim()}` : ''}`);
-            Linking.openURL(`mailto:kirillborichevskiy@gmail.com?subject=${subject}&body=${body}`).catch(() => {});
-          }}
-        />
-        <Button
           title={t.send}
           disabled={!configured || !!operation || submitted}
           onPress={() => {
@@ -175,12 +168,7 @@ export function FeedbackScreen({
             }
             run(async () => {
               try {
-                await Native.sendFeedback(
-                  email.trim(),
-                  message.trim(),
-                  0,
-                  id,
-                );
+                await Native.sendFeedback(email.trim(), message.trim(), 0, id);
               } catch (failure) {
                 track('feedback_send_finished', {
                   ...route.params?.context,

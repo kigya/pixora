@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Switch, Text, View } from 'react-native';
-import Native from '../specs/NativeUpscale';
+import Native, { type TelemetrySettings } from '../specs/NativeUpscale';
 import { useApp } from '../application/AppProvider';
 import { track } from '../application/telemetry';
 import { useLocale } from './locale';
@@ -23,7 +23,6 @@ export function TelemetryNotice() {
   const s = createStyles(colors, rtl);
   const { operation, error, run } = useOperation();
   const [closing, setClosing] = useState(false);
-  const [choices, setChoices] = useState({ analytics: false, crashes: false });
   const height = useSharedValue(-1);
   const measuredHeight = useSharedValue(0);
   const opacity = useSharedValue(1);
@@ -50,18 +49,6 @@ export function TelemetryNotice() {
           <Text style={[s.value, { flex: 1 }]}>{t.telemetryTitle}</Text>
         </View>
         <Text style={s.caption}>{t.telemetryIntro}</Text>
-        {(['analytics', 'crashes'] as const).map(key => (
-          <View key={key} style={[s.row, { flexWrap: 'nowrap' }]}>
-            <Text style={[s.body, { flex: 1 }]}>
-              {key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
-            </Text>
-            <Switch
-              accessibilityLabel={key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
-              value={choices[key]}
-              onValueChange={value => setChoices(current => ({ ...current, [key]: value }))}
-            />
-          </View>
-        ))}
         <Button
           secondary
           title={t.continue}
@@ -69,8 +56,8 @@ export function TelemetryNotice() {
           onPress={() =>
             run(async () => {
               const next = await Native.updateTelemetrySettings(
-                choices.analytics,
-                choices.crashes,
+                telemetry.analytics,
+                telemetry.crashes,
                 true,
               );
               setClosing(true);
@@ -95,12 +82,6 @@ export function TelemetryNotice() {
             })
           }
         />
-        <Button
-          secondary
-          title={t.notNow}
-          disabled={!!operation || closing}
-          onPress={() => run(async () => setTelemetry(await Native.updateTelemetrySettings(false, false, true)))}
-        />
         {!!error && <Text style={s.errorText}>{errorText(error, lang)}</Text>}
       </Animated.View>
     </Animated.View>
@@ -111,7 +92,54 @@ export function TelemetryControls() {
   const { colors } = useTheme();
   const { rtl } = useLocale();
   const s = createStyles(colors, rtl);
-  const { operation, error, run } = useOperation();
+  const [displayed, setDisplayed] = useState(telemetry);
+  const [error, setError] = useState<unknown>(null);
+  const desired = useRef(telemetry);
+  const confirmed = useRef(telemetry);
+  const revision = useRef(0);
+  const settled = useRef(0);
+  const writes = useRef(Promise.resolve());
+  useEffect(() => {
+    if (settled.current !== revision.current) return;
+    desired.current = telemetry;
+    confirmed.current = telemetry;
+    setDisplayed(telemetry);
+  }, [telemetry]);
+  const change = (key: 'analytics' | 'crashes', value: boolean) => {
+    if (!value) track('settings_changed', { setting: key, value: 'off' });
+    const next: TelemetrySettings = { ...desired.current, [key]: value };
+    desired.current = next;
+    const request = ++revision.current;
+    setError(null);
+    setDisplayed(next);
+    setTelemetry(next);
+    // Keep the native thumb responsive while persisting rapid changes in order.
+    writes.current = writes.current.then(async () => {
+      try {
+        const saved = await Native.updateTelemetrySettings(
+          next.analytics,
+          next.crashes,
+          next.noticeSeen,
+        );
+        confirmed.current = saved;
+        if (value) track('settings_changed', { setting: key, value: 'on' });
+        if (request === revision.current) {
+          settled.current = request;
+          desired.current = saved;
+          setDisplayed(saved);
+          setTelemetry(saved);
+        }
+      } catch (failure) {
+        if (request === revision.current) {
+          settled.current = request;
+          desired.current = confirmed.current;
+          setDisplayed(confirmed.current);
+          setTelemetry(confirmed.current);
+          setError(failure);
+        }
+      }
+    });
+  };
   return (
     <View style={s.card}>
       <Text style={s.label}>{t.telemetryTitle}</Text>
@@ -129,26 +157,9 @@ export function TelemetryControls() {
             accessibilityLabel={
               key === 'analytics' ? t.analyticsTitle : t.crashesTitle
             }
-            value={telemetry[key]}
-            disabled={!!operation}
+            value={displayed[key]}
             trackColor={{ true: colors.accent, false: colors.border }}
-            onValueChange={value =>
-              run(async () => {
-                // Record opt-out before collection stops; opt-in after it starts.
-                if (!value)
-                  track('settings_changed', { setting: key, value: 'off' });
-                const next = { ...telemetry, [key]: value };
-                setTelemetry(
-                  await Native.updateTelemetrySettings(
-                    next.analytics,
-                    next.crashes,
-                    next.noticeSeen,
-                  ),
-                );
-                if (value)
-                  track('settings_changed', { setting: key, value: 'on' });
-              })
-            }
+            onValueChange={value => change(key, value)}
           />
         </View>
       ))}
