@@ -33,7 +33,7 @@ class NativePipelineTest {
         val old=prefs.getString("language","system")
         try {
             assertEquals(org.json.JSONArray(readAssetText(ctx,"locales/registry.json")).length(),Localizer.supported(ctx).size)
-            val regions=mapOf("en-US" to "en","ru-RU" to "ru","zh-TW" to "zh-Hans","es-MX" to "es","hi-IN" to "hi","ar-SA" to "ar","pt-PT" to "pt","fr-FR" to "fr","de-DE" to "de","ja-JP" to "ja")
+            val regions=mapOf("en-US" to "en","ru-RU" to "ru","zh-TW" to "zh-Hans","es-MX" to "es","hi-IN" to "hi","ar-SA" to "ar","pt-PT" to "pt-BR","fr-FR" to "fr","de-DE" to "de","ja-JP" to "ja")
             for((tag,code) in regions) {
                 assertEquals(code,Localizer.resolve(ctx,"system",tag))
                 prefs.edit().putString("language",code).commit()

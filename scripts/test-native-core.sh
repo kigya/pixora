@@ -2,22 +2,22 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p coverage/native-core
-xcrun clang++ -std=c++17 -O0 -g -fprofile-instr-generate -fcoverage-mapping \
-  -Iandroid/app/src/main/cpp/engine tests/native/pixels_test.cpp \
-  android/app/src/main/cpp/engine/pixels.cpp -o coverage/native-core/tests
+SHARED_ENGINE_DIR="${SHARED_ENGINE_DIR:-native/engine}"
+ANDROID_ENGINE_DIR="${ANDROID_ENGINE_DIR:-android/app/src/main/cpp/engine}"
+SHARED_SOURCES=("$SHARED_ENGINE_DIR/engine.cpp" "$SHARED_ENGINE_DIR/pixels.cpp")
+SHARED_HEADERS=("$SHARED_ENGINE_DIR/engine.h" "$SHARED_ENGINE_DIR/pixels.h")
+ANDROID_SHIM="$ANDROID_ENGINE_DIR/upscale.cpp"
+SHIM_DEFINE=(-DUPSCALE_ANDROID_SHIM=\"$ANDROID_SHIM\")
+xcrun clang++ -std=c++17 -O0 -g -DNCNN_VULKAN=1 -fprofile-instr-generate -fcoverage-mapping \
+  -Itests/native/fakes -I"$SHARED_ENGINE_DIR" tests/native/pixels_test.cpp \
+  "$SHARED_ENGINE_DIR/pixels.cpp" -o coverage/native-core/tests
 LLVM_PROFILE_FILE=coverage/native-core/core.profraw coverage/native-core/tests
-xcrun llvm-profdata merge -sparse coverage/native-core/core.profraw -o coverage/native-core/core.profdata
-xcrun llvm-cov export coverage/native-core/tests -instr-profile=coverage/native-core/core.profdata \
-  android/app/src/main/cpp/engine/pixels.cpp android/app/src/main/cpp/engine/pixels.h > coverage/native-core/coverage.json
-xcrun llvm-cov report coverage/native-core/tests -instr-profile=coverage/native-core/core.profdata \
-  android/app/src/main/cpp/engine/pixels.cpp android/app/src/main/cpp/engine/pixels.h
-
-xcrun clang++ -std=c++17 -O0 -g -fprofile-instr-generate -fcoverage-mapping \
-  -Itests/native/fakes -Iandroid/app/src/main/cpp/engine tests/native/adapter_test.cpp \
-  android/app/src/main/cpp/engine/pixels.cpp -o coverage/native-core/adapter-tests
+xcrun clang++ -std=c++17 -O0 -g -DNCNN_VULKAN=1 -fprofile-instr-generate -fcoverage-mapping \
+  -Itests/native/fakes -I"$SHARED_ENGINE_DIR" -I"$ANDROID_ENGINE_DIR" "${SHIM_DEFINE[@]}" \
+  tests/native/adapter_test.cpp "${SHARED_SOURCES[@]}" -o coverage/native-core/adapter-tests
 LLVM_PROFILE_FILE=coverage/native-core/adapter.profraw coverage/native-core/adapter-tests
 xcrun llvm-profdata merge -sparse coverage/native-core/core.profraw coverage/native-core/adapter.profraw -o coverage/native-core/combined.profdata
-xcrun llvm-cov export coverage/native-core/tests -object=coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
-  android/app/src/main/cpp/engine/pixels.cpp android/app/src/main/cpp/engine/pixels.h android/app/src/main/cpp/engine/upscale.cpp > coverage/native-core/coverage.json
-xcrun llvm-cov report coverage/native-core/tests -object=coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
-  android/app/src/main/cpp/engine/pixels.cpp android/app/src/main/cpp/engine/pixels.h android/app/src/main/cpp/engine/upscale.cpp
+xcrun llvm-cov export coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
+  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM" > coverage/native-core/coverage.json
+xcrun llvm-cov report coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
+  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM"

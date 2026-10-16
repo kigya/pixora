@@ -93,36 +93,106 @@ class LocalizationUiTest {
     @Test fun languagePickerHelpAndThemes() {
         val prefs=ctx.getSharedPreferences("settings",0)
         val oldLanguage=prefs.getString("language","system");val oldTheme=prefs.getString("theme","system")
+        val registry=org.json.JSONArray(ctx.assets.open("locales/registry.json").bufferedReader().use{it.readText()})
+        val registeredCodes=(0 until registry.length()).map{registry.getJSONObject(it).getString("id")}
+        val requestedCodes=InstrumentationRegistry.getArguments().getString("languages")?.split(",") ?: registeredCodes
+        // Preserve explicit test-matrix selection while migrating its legacy Portuguese alias.
+        val codes=requestedCodes.map{if(it=="pt")"pt-BR" else it}
+        assertTrue("Configured locale IDs must exist in the shipped registry",codes.all{it in registeredCodes})
+        fun dictionary(code:String)=JSONObject(ctx.assets.open("locales/$code.json").bufferedReader().use{it.readText()})
+        fun appCompatTag(language:String?)=when(language) {null,"system"->"";"pt"->"pt-BR";else->language}
+
         SessionStore.init(ctx);SessionStore.discard()
         prefs.edit().putString("language","en").putString("theme","light").commit()
-        val activity=instrumentation.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        val codes=InstrumentationRegistry.getArguments().getString("languages")?.split(",") ?: listOf("en","ru","zh-Hans","es","hi","ar","pt","fr","de","ja")
-        fun dictionary(code:String)=JSONObject(ctx.assets.open("locales/$code.json").bufferedReader().use{it.readText()})
+        instrumentation.runOnMainSync {
+            androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                androidx.core.os.LocaleListCompat.forLanguageTags("en"),
+            )
+        }
+        instrumentation.startActivitySync(Intent(ctx,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+
+        fun resumedActivity():MainActivity? {
+            var result:MainActivity?=null
+            instrumentation.runOnMainSync {
+                result=androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().lastOrNull()
+            }
+            return result
+        }
+        fun awaitHomeOrSettings(t:JSONObject):Boolean {
+            val deadline=System.currentTimeMillis()+20000
+            while(System.currentTimeMillis()<deadline) {
+                if(match(t.getString("choose"))!=null)return true
+                if(match(t.getString("language"))!=null)return false
+                Thread.sleep(100)
+            }
+            throw AssertionError("Locale change did not restore Home or Settings")
+        }
+        fun awaitHome(t:JSONObject) {
+            assertTrue("Expected Home after locale/theme recreation",awaitHomeOrSettings(t))
+            assertNotNull("A resumed MainActivity should own the restored Home screen",resumedActivity())
+        }
+        fun openSettings(t:JSONObject) {
+            top();tap(t.getString("settings"));waitText(t.getString("language"))
+        }
         var current=dictionary("en")
+        var activeCode="en"
         try {
-            seek(current.getString("choose"))
+            awaitHome(current)
             for(theme in listOf("light","dark")) {
-                top();tap(current.getString("settings"));waitText(current.getString("language"));tap(current.getString(theme),true);top();tap(current.getString("back"))
+                openSettings(current)
+                tap(current.getString(theme),true)
+                if(!awaitHomeOrSettings(current)) {
+                    top();tap(current.getString("back"))
+                }
+                awaitHome(current)
                 for(code in codes) {
-                    top();tap(current.getString("settings"));waitText(current.getString("language"))
+                    openSettings(current)
                     val row=nodes(automation.rootInActiveWindow).firstOrNull{it.viewIdResourceName?.endsWith("language-picker")==true}
                     assertNotNull("Language row",row);click(row!!);Thread.sleep(500)
-                    val registry=org.json.JSONArray(ctx.assets.open("locales/registry.json").bufferedReader().use{it.readText()})
                     val name=(0 until registry.length()).map{registry.getJSONObject(it)}.first{it.getString("id")==code}.getString("name")
+                    val previousActivity=resumedActivity()
                     tap(name,true)
-                    current=dictionary(code);top();waitText(current.getString("settings"));tap(current.getString("back"))
+                    current=dictionary(code)
+                    val restoredHome=awaitHomeOrSettings(current)
+                    assertEquals("Native settings persist the selected locale",code,prefs.getString("language",null))
+                    if(code!=activeCode) {
+                        assertTrue("Changing locale must restore Home after AppCompat recreation",restoredHome)
+                        assertNotNull("Settings must be hosted by a resumed MainActivity before locale selection",previousActivity)
+                        assertNotNull("The recreated MainActivity must be resumed",resumedActivity())
+                        assertNotSame("Locale changes recreate MainActivity",previousActivity,resumedActivity())
+                    } else if(!restoredHome) {
+                        // Selecting the current locale closes the picker without recreation.
+                        top();tap(current.getString("back"))
+                    }
+                    awaitHome(current)
+                    activeCode=code
+
                     top();seek(current.getString("hero"));tap(current.getString("how"),true)
                     waitText(current.getString("howTitle"))
                     tap(current.getString("understood"),true)
-                    top();seek(current.getString("choose"))
-                    assertEquals("Navigation bar contrast must follow the selected theme",theme=="light",androidx.core.view.WindowInsetsControllerCompat(activity.window,activity.window.decorView).isAppearanceLightNavigationBars)
+                    awaitHome(current)
+                    val liveActivity=resumedActivity()
+                    assertNotNull(liveActivity)
+                    assertEquals("Navigation bar contrast must follow the selected theme",theme=="light",androidx.core.view.WindowInsetsControllerCompat(liveActivity!!.window,liveActivity.window.decorView).isAppearanceLightNavigationBars)
                     val shot=automation.takeScreenshot();java.io.File(ctx.getExternalFilesDir(null),"validation-03-$theme-$code-home.png").outputStream().use{shot.compress(android.graphics.Bitmap.CompressFormat.PNG,100,it)};shot.recycle()
                     println("UI locale=$code theme=$theme OK")
                 }
             }
         } finally {
             prefs.edit().putString("language",oldLanguage).putString("theme",oldTheme).commit()
-            instrumentation.runOnMainSync{activity.finish()}
+            instrumentation.runOnMainSync {
+                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                    androidx.core.os.LocaleListCompat.forLanguageTags(appCompatTag(oldLanguage)),
+                )
+            }
+            Thread.sleep(500)
+            instrumentation.runOnMainSync {
+                androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                    .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED)
+                    .filterIsInstance<MainActivity>().forEach{it.finish()}
+            }
         }
     }
     @Test fun supportProfilesPreviewAndRetention() {
