@@ -1,0 +1,9 @@
+# Exact reviewed findings only: Firebase public client configuration and APK SHA-256 in historical PRD.
+2d25601ff85481f213c0c25adc365a2b19c2d8a5:android/app/google-services.json:gcp-api-key:18
+2d25601ff85481f213c0c25adc365a2b19c2d8a5:android/app/src/debug/google-services.json:gcp-api-key:18
+2d25601ff85481f213c0c25adc365a2b19c2d8a5:android/app/src/release/google-services.json:gcp-api-key:18
+2d25601ff85481f213c0c25adc365a2b19c2d8a5:docs/PRD.md:generic-api-key:161
+2e90909a5d03d16dd5187cf17d725880541b211f:android/app/google-services.json:gcp-api-key:18
+2e90909a5d03d16dd5187cf17d725880541b211f:android/app/src/debug/google-services.json:gcp-api-key:18
+2e90909a5d03d16dd5187cf17d725880541b211f:android/app/src/release/google-services.json:gcp-api-key:18
+2e90909a5d03d16dd5187cf17d725880541b211f:docs/PRD.md:generic-api-key:161
