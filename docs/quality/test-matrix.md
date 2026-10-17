@@ -36,7 +36,7 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 
 ## TEST-805 — languages and responsive layout (FEAT-805)
 
-- `scripts/verify-locales.py`: 34 schemas/placeholders/flag hashes; `StoreAndLocalizationTest` and component tests: pt→pt-BR, first selection, persistence and native locale sync.
+- `scripts/verify-locales.py`: 34 schemas/placeholders/flag hashes; `StoreAndLocalizationTest` and component tests: pt→pt-BR, system default, Settings override, persistence and native locale sync. The navigation test covers fresh-install Home with `languageChosen=false` and a system locale; this 0.8.4 change has not been run at the owner's request.
 - `WindowLayoutTest`, `ActivityLifecycleTest`, layout/dialog tests: safe area, fold/resize, Activity restoration, light/dark/system, scrolling and large text.
 - Samsung: language after restart, Russian/English, Hebrew RTL, large system font and restoration of the original font size. Translation schemas do not replace native-speaker review.
 

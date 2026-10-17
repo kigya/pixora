@@ -77,7 +77,7 @@ Android targets ARM64 phones and tablets running Android 10 or later. iOS target
 
 The interface supports light, dark and system themes, **34 active languages**, right-to-left layouts and scalable text. Translations have not been professionally reviewed.
 
-Version 0.8.3 is available as source. This repository currently offers no signed release or store download. The iOS port has simulator-test and unsigned Release-build evidence; physical iPhone/iPad acceptance remains open. Updated Android physical-device acceptance is also deferred.
+Version 0.8.4 is available as source. This repository currently offers no signed release or store download. The iOS port has simulator-test and unsigned Release-build evidence; physical iPhone/iPad acceptance remains open. Updated Android physical-device acceptance is also deferred.
 
 ## Build from source
 

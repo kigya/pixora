@@ -11,7 +11,7 @@
 
 ## Routes and key states
 
-`AppNavigation` waits for settings loading, then chooses the initial route from `languageChosen`: language selection on a fresh install, otherwise Home. Main routes: `LanguageOnboarding`, `Home`, `Settings`, `Feedback`.
+`AppNavigation` waits for settings loading, then opens Home on every launch. The first-install language is `system`; a saved manual choice remains available through Settings. Main routes: `Home`, `Settings`, `Feedback`.
 
 Main flow: choose an original, configure mode/scale, confirm large-copy preparation when needed, process, compare and export. The original is never overwritten. Mode recommendation is a local suggestion requiring explicit user action; it never changes the selection automatically.
 
@@ -31,7 +31,7 @@ These states describe the implemented UI, not physical verification of every tra
 
 `src/ui/layout.tsx` computes available space from safe areas and native window/hinge data. Narrow windows use one column; two columns require width ≥720 dp and font scale <1.5. Large text remains scrollable. RTL changes row/navigation direction while dimensions and numbers stay LTR.
 
-Initial language selection is a first route, not a mandatory tutorial. Returning to system language uses the current system locale; manual selection applies immediately. The registry contains 34 locales and legacy `pt` migration to `pt-BR`. Arabic, Persian, Urdu and Hebrew are RTL. Translation status/limitations are recorded in the [locale registry](../product/locales.json) and private verification evidence.
+There is no first-launch language selection route. Returning to system language in Settings uses the current system locale; manual selection applies immediately. The registry contains 34 locales and legacy `pt` migration to `pt-BR`. Arabic, Persian, Urdu and Hebrew are RTL. Translation status/limitations are recorded in the [locale registry](../product/locales.json) and private verification evidence.
 
 Picker, help, dialogs and actions must work without mandatory dragging and have accessible names. Comparison has Before/After/Compare buttons. 200% fonts, TalkBack/VoiceOver, real hinges and a complete tablet matrix require separate acceptance; responsive code alone does not prove them.
 

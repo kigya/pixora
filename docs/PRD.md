@@ -30,7 +30,7 @@ This document is the primary requirements/current-behavior authority. Market res
 
 ### Main flow
 
-Home shows the title, settings, a brief invitation to select an image for enlargement/detail improvement, an image card, one benefits block and help. The purple AI upscaling label is removed. No mandatory onboarding. Choose image opens the system Photo Picker/document picker for one file. Canceling is not an error; failed import preserves the previous session. Replacing an unsaved result requires confirmation.
+Home is the first screen after startup, including on a fresh install. The language defaults to the device's system language; no language-selection onboarding appears. A previously selected language remains saved and can be changed in Settings. Home shows the title, settings, a brief invitation to select an image for enlargement/detail improvement, an image card, one benefits block and help. The purple AI upscaling label is removed. Choose image opens the system Photo Picker/document picker for one file. Canceling is not an error; failed import preserves the previous session. Replacing an unsaved result requires confirmation.
 
 Preparation shows a centered aspect-preserving preview without square black bars, eight presets with supplied Before/After pairs, original/expected dimensions, 2×/4× (default 2×), replacement and start actions. Examples are labeled and not represented as bundled-model output. Selecting scale does not start work. A large original is reduced only after a relevant confirmation with exact dimensions. Scale applies to the prepared image; the original file is unchanged.
 

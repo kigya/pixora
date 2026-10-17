@@ -20,9 +20,21 @@ jest.mock('@react-navigation/native',()=>{
   DarkTheme:{colors:{}},DefaultTheme:{colors:{}}
  };
 });
-jest.mock('@react-navigation/native-stack',()=>({createNativeStackNavigator:()=>({Navigator:require('react-native').View,Screen:({name,component:Component}:any)=>name==='Home'?<Component navigation={{navigate:()=>{}}}/>:null})}));
+jest.mock('@react-navigation/native-stack',()=>{
+ const ReactRuntime=require('react');
+ return {createNativeStackNavigator:()=>({
+  Navigator:({children,initialRouteName}:any)=>ReactRuntime.Children.toArray(children).find((child:any)=>child.props.name===initialRouteName)??null,
+  Screen:({component:Component}:any)=><Component navigation={{navigate:()=>{}}}/>,
+ })};
+});
 beforeEach(()=>{jest.clearAllMocks();seed();});
 test('root mounts providers and finishes native startup after navigation is ready',async()=>{await render(<App/>);expect(await screen.findByRole('button',{name:'Choose image'})).toBeOnTheScreen();expect(Native.finishStartup).toHaveBeenCalledTimes(1)});
+test('fresh install starts on Home with the system language',async()=>{
+ seed({}, {language:'system',systemLanguage:'ru-RU',languageChosen:false});
+ await render(<App/>);
+ expect(await screen.findByRole('button',{name:strings.ru.choose})).toBeOnTheScreen();
+ expect(Native.updateSettings).not.toHaveBeenCalled();
+});
 test.each([false,true])('navigation honors theme and reduced motion %s',async dark=>{
  jest.spyOn(AccessibilityInfo,'isReduceMotionEnabled').mockResolvedValue(dark);
  await render(<AppProvider><ThemeContext.Provider value={{dark,colors:dark?darkColors:lightColors}}><AppNavigation/></ThemeContext.Provider></AppProvider>);
