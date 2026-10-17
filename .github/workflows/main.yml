@@ -121,12 +121,60 @@ jobs:
           mkdir -p coverage
           mobsfscan --type android --json -o coverage/mobile-android.json android/app/src/main/java android/app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
       - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
-  ios-native:
+  native-cpp-codeql:
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+      - uses: github/codeql-action/init@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
+        with:
+          languages: cpp
+          build-mode: manual
+      - run: bash scripts/test-native-core.sh
+      - run: bash scripts/test-recommendation-core.sh
+      - run: bash scripts/test-recommendation-jni.sh
+      - name: Compile remaining JNI and Android C++ translation units for extraction
+        run: |
+          mkdir -p .p-build-app/local/native-codeql
+          for source in \
+            android/app/src/main/cpp/engine/pixels.cpp \
+            android/app/src/diagnostics/cpp/crash.cpp \
+            tests/native/android_jvm_fixture.cpp \
+            tests/native/android_jvm_loader_fixture.cpp; do
+            object=".p-build-app/local/native-codeql/$(basename "${source%.cpp}").o"
+            xcrun clang++ -std=c++17 -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
+              -c "$source" -o "$object"
+          done
+      - name: Enforce the owned C++ denominator
+        run: >-
+          python3 scripts/check-native-coverage.py
+          --llvm coverage/native-core/coverage.json
+          --llvm coverage/recommendation/coverage.json
+          --llvm coverage/recommendation-jni/coverage.json
+          --source-dir native/engine --source-dir native/recommendation
+          --require-source android/app/src/main/cpp/engine/upscale.cpp
+          --require-source android/app/src/main/cpp/engine/recommendation_jni.cpp
+      # CodeQL supports C/C++; Objective-C++ iOS sources remain in the iOS mobile source scan.
+      - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
+  ios-device-release:
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: read
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
@@ -137,28 +185,44 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
         with:
           ruby-version: '3.3.12'
-      - uses: github/codeql-action/init@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
-        with:
-          languages: cpp
-          build-mode: manual
+          bundler-cache: true
       - run: npm ci
-      - run: bash scripts/test-native-core.sh
-      - run: bash scripts/test-recommendation-core.sh
-      - run: bash scripts/test-recommendation-jni.sh
-      - run: bash scripts/build-ios.sh
-      - run: bash scripts/test-ios.sh
-      - name: Enforce the owned native denominator
+      - name: Build unsigned generic-device iOS Release
+        run: bash scripts/build-ios.sh
+  ios-simulator-tests:
+    runs-on: macos-26
+    timeout-minutes: 90
+    permissions:
+      contents: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: '3.3.12'
+          bundler-cache: true
+      - run: npm ci
+      - name: Run simulator XCTest and produce strict iOS coverage
+        run: bash scripts/test-ios.sh
+      - name: Enforce the owned iOS source denominator
         run: >-
           python3 scripts/check-native-coverage.py
-          --llvm coverage/native-core/coverage.json
-          --llvm coverage/recommendation/coverage.json
-          --llvm coverage/recommendation-jni/coverage.json
           --llvm coverage/ios/coverage.json
-          --source-dir native/engine --source-dir native/recommendation
           --source-dir ios/Native --source-dir ios/Pixora
-          --require-source android/app/src/main/cpp/engine/upscale.cpp
-          --require-source android/app/src/main/cpp/engine/recommendation_jni.cpp
-      - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
+          --require-source ios/Pixora/AppDelegate.mm
