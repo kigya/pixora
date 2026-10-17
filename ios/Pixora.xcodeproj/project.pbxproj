@@ -418,7 +418,6 @@
 				ENABLE_BITCODE = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = "$(PIXORA_APP_INFO_PLIST)";
-				PIXORA_APP_INFO_PLIST = Pixora/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -430,6 +429,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PIXORA_APP_INFO_PLIST = Pixora/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kigya.pixora.debug;
 				PRODUCT_NAME = Pixora;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -450,7 +450,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = "$(PIXORA_APP_INFO_PLIST)";
-				PIXORA_APP_INFO_PLIST = Pixora/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -462,6 +461,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				PIXORA_APP_INFO_PLIST = Pixora/Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.kigya.pixora;
 				PRODUCT_NAME = Pixora;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -632,7 +632,7 @@
 					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				PODFILE_DIR = "$(SRCROOT)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../../../node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				USE_HERMES = YES;
@@ -722,7 +722,7 @@
 					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				PODFILE_DIR = "$(SRCROOT)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../../../../node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = YES;
 				VALIDATE_PRODUCT = YES;
