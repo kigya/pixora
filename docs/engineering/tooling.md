@@ -41,6 +41,12 @@ The notification-availability fault fixture uses pinned, unmodified [fishhook te
 
 iOS CI also encodes an explicitly fictitious feedback endpoint so validation tests exercise the configured path without private settings. These tests reject invalid input before HTTP execution; transport tests use their own mock protocol. Ordinary builds retain local feedback configuration and the unavailable-service fallback.
 
+## Continuous integration
+
+Main pushes run JavaScript/security, Android, C++ CodeQL, unsigned iOS device Release, and iOS simulator XCTest as separate jobs. The C++ job traces the first-party native harness builds and compiles the remaining Android/JNI translation units. Its strict coverage gate requires every owned C++ source. The simulator job separately requires every owned iOS implementation source and 100% line and branch coverage. Neither gate permits empty reports.
+
+CodeQL does not support Objective-C or Objective-C++; the iOS implementation receives the existing mobile source scan. The iOS Release and simulator builds run outside C++ tracing so third-party Pods do not consume the native analysis budget. The C++ job is bounded at 45 minutes, with 90 minutes each for the independent iOS builds. A failed or timed-out main run blocks handoff and requires a corrective version through the same PR flow.
+
 ## Contribution and publication
 
 Write documentation, comments, test names, commit messages and PR descriptions in English. Preserve the supported app translations. Task PRs target `release/<version>`; each version has one final squash into `main`. CI runs only on main pushes.
