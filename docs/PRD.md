@@ -196,3 +196,14 @@ Manual-review clarification on 2026-10-16: splash stays until initial data/navig
 Current acceptance clarification, 2026-10-16 (ADR-814): automatic tests, builds, CI and fixes are authorized without repeated Samsung UI checks. Do not install the updated release yet. This supersedes the earlier blanket test pause; historical physical evidence retains its limitations.
 
 Technical continuation 0.8.1 (ADR-815): preserve failed 0.8.0 main CI, then fix lockfile/JDK-action reproducibility and aligned version/code 11. No new product features; 0.8 requirements and Samsung limits from ADR-814 remain.
+
+
+## Approved recommendation revision — 2026-10-17
+
+The owner approved a more informative, offline recommendation without new model weights or dependencies. Photo suggestions now use Standard instead of the old fixed Lite choice. Smooth photographic content can suggest Natural, consistent illustration Art, strong two-axis native pixel grids Pixel Art, and mixed/uncertain content Balanced. Detail and Sharp remain manual choices; Lite remains manual and an availability fallback. Recommendations always use Quality and require explicit Apply; scale and manual choices are preserved until that press.
+
+The shared Android/iOS C++ policy analyzes a working-equivalent image up to 1024 px, an overview up to 256 px and up to five native-scale 128 px patches. Color/luminance distributions, flat areas, edges, texture, noise, alpha and patch agreement contribute to the decision. Pixel-grid phase is checked on both axes; 8/16 px compression-like grids remain ambiguous. This is an uncalibrated heuristic, not a guarantee of optimal processing, exact text reconstruction or a measured accuracy percentage. Fully transparent hidden RGB supplies no evidence.
+
+Disabled recommendations fall back in order Standard → Balanced → Natural → Lite, with an explicit alternative explanation. If no suitable profile is enabled the card is hidden. Generic analysis failure suggests Balanced through the same availability policy. Pixels stay native and no classification/recommendation event is added to telemetry.
+
+The owner requested no checks for this change. Updated tests remain unexecuted; binary size, performance and recommendation quality are unmeasured. USB installation and GitHub delivery require the owner's later request. Existing test/build/device receipts do not verify this revision.

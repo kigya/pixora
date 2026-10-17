@@ -153,19 +153,29 @@ class Pixora08Test {
             failure("SOURCE_UNAVAILABLE") { module.getImageRecommendation("another-image", it) }
             val result = call { module.getImageRecommendation(id, it) } as ReadableMap
             assertEquals(id, result.getString("imageId"))
-            assertEquals("lite", result.getString("profileId"))
+            assertTrue(result.getString("profileId") in setOf("standard", "natural", "balanced"))
             assertEquals("quality", result.getString("speed"))
-            assertTrue(result.getString("reasonId") in setOf("generic", "photo"))
+            assertTrue(result.getString("reasonId") in setOf("generic", "photo", "smooth", "mixed"))
 
             synchronized(availabilityLock) {
                 oldAvailability = availabilityField.get(ProfileAvailability) as JSONObject
                 availabilityField.set(
                     ProfileAvailability,
-                    JSONObject(oldAvailability.toString()).put("lite", false),
+                    JSONObject(oldAvailability.toString()).apply {
+                        ProcessingProfiles.presets.forEach { put(it, false) }
+                        put("lite", true)
+                    },
                 )
             }
-            assertNull("Unavailable Lite profile must not be suggested",
-                call { module.getImageRecommendation(id, it) })
+            val fallback = call { module.getImageRecommendation(id, it) } as ReadableMap
+            assertEquals("lite", fallback.getString("profileId"))
+            assertEquals("unavailable", fallback.getString("reasonId"))
+            synchronized(availabilityLock) {
+                availabilityField.set(ProfileAvailability, JSONObject().apply {
+                    ProcessingProfiles.presets.forEach { put(it, false) }
+                })
+            }
+            assertNull("No suitable profile is available", call { module.getImageRecommendation(id, it) })
         } finally {
             synchronized(availabilityLock) {
                 oldAvailability?.let { availabilityField.set(ProfileAvailability, it) }
@@ -182,14 +192,15 @@ class Pixora08Test {
             Int::class.javaPrimitiveType,
             Int::class.javaPrimitiveType,
             IntArray::class.java,
+            Int::class.javaPrimitiveType,
         ).apply { isAccessible = true }
         val width = 96
         val height = 80
         val opaque = pixelGrid(width, height, 255)
         val transparent = pixelGrid(width, height, 0)
         val receiver = if (Modifier.isStatic(method.modifiers)) null else RecommendationEngine
-        assertEquals("pixel", method.invoke(receiver, width, height, opaque))
-        assertEquals("generic", method.invoke(receiver, width, height, transparent))
+        assertEquals("pixel", JSONObject(method.invoke(receiver, width, height, opaque, 63) as String).getString("reasonId"))
+        assertEquals("generic", JSONObject(method.invoke(receiver, width, height, transparent, 63) as String).getString("reasonId"))
     }
 
     @Test fun preparationPreservesOriginalAndCpuPipelineWritesSelectedScale() = withOfflineTelemetry {

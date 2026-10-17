@@ -445,25 +445,38 @@ class ModuleUnitTest {
                 SessionStore.update{it.getJSONObject("image").put("previewUri",Uri.fromFile(preview).toString())}
             }
             for ((pixel,reason,profile) in listOf(
-                Triple(0xff123456.toInt(),"photo","lite"),
+                Triple(0xff123456.toInt(),"photo","standard"),
+                Triple(0xff445566.toInt(),"smooth","natural"),
+                Triple(0xff778899.toInt(),"mixed","balanced"),
                 Triple(0xff112233.toInt(),"art","art"),
                 Triple(0xffabcdef.toInt(),"pixel","pixel"),
             )) {
                 previewWith(pixel)
-                assertEquals("host JNI fixture should receive the stored preview pixels",reason,RecommendationEngine.analyze(Uri.fromFile(preview).toString()))
+                assertEquals("host JNI fixture should receive the stored preview pixels",reason,JSONObject(RecommendationEngine.analyze(Uri.fromFile(preview).toString())).getString("reasonId"))
                 val suggestion=call{module.getImageRecommendation(id,it)} as ReadableMap
                 assertEquals(id,suggestion.getString("imageId"));assertEquals(reason,suggestion.getString("reasonId"))
                 assertEquals(profile,suggestion.getString("profileId"));assertEquals("quality",suggestion.getString("speed"))
             }
             SessionStore.update{it.getJSONObject("image").put("previewUri",Uri.fromFile(File(ctx.cacheDir,"missing-preview.png")).toString())}
             val fallback=call{module.getImageRecommendation(id,it)} as ReadableMap
-            assertEquals("generic",fallback.getString("reasonId"));assertEquals("lite",fallback.getString("profileId"))
+            assertEquals("generic",fallback.getString("reasonId"));assertEquals("balanced",fallback.getString("profileId"))
 
             val flags=JSONObject().put("source","test").put("updatedAt",0)
             ProcessingProfiles.presets.forEach{flags.put(it,it!="pixel")}
             ctx.getSharedPreferences("remote_profiles",0).edit().putString("snapshot",flags.toString()).commit()
             ProfileAvailability.init(ctx)
             previewWith(0xffabcdef.toInt())
+            val alternative=call{module.getImageRecommendation(id,it)} as ReadableMap
+            assertEquals("standard",alternative.getString("profileId"))
+            assertEquals("unavailable",alternative.getString("reasonId"))
+            ProcessingProfiles.presets.forEach{flags.put(it,it=="lite")}
+            ctx.getSharedPreferences("remote_profiles",0).edit().putString("snapshot",flags.toString()).commit()
+            ProfileAvailability.init(ctx)
+            val lite=call{module.getImageRecommendation(id,it)} as ReadableMap
+            assertEquals("lite",lite.getString("profileId"))
+            ProcessingProfiles.presets.forEach{flags.put(it,false)}
+            ctx.getSharedPreferences("remote_profiles",0).edit().putString("snapshot",flags.toString()).commit()
+            ProfileAvailability.init(ctx)
             assertNull(call{module.getImageRecommendation(id,it)})
         } finally {
             preview.delete()
@@ -474,7 +487,7 @@ class ModuleUnitTest {
     @Test fun recommendationAnalyzerBoundsDecodeAndRejectsInvalidPreviews() {
         val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
         try {
-            assertEquals("generic",RecommendationEngine.analyze("opaque:without/path"))
+            assertEquals("generic",recommendationReason("opaque:without/path"))
             file.delete()
             try { RecommendationEngine.analyze(Uri.fromFile(file).toString());fail("missing preview should fail") }
             catch(_:IllegalArgumentException) { }
@@ -485,14 +498,14 @@ class ModuleUnitTest {
         val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
         try {
             withRecommendationDecoder(file,1200,600,null) { sample ->
-                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
-                assertEquals(8,sample.get())
+                assertEquals("generic",recommendationReason(Uri.fromFile(file).toString()))
+                assertEquals(2,sample.get())
             }
             val decoded=Bitmap.createBitmap(2,1,Bitmap.Config.ARGB_8888).apply{setPixel(0,0,0xff123456.toInt())}
             try {
                 withRecommendationDecoder(file,1200,600,decoded) { sample ->
-                    assertEquals("photo",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
-                    assertEquals(8,sample.get())
+                    assertEquals("photo",recommendationReason(Uri.fromFile(file).toString()))
+                    assertEquals(2,sample.get())
                 }
                 assertTrue(decoded.isRecycled)
             } finally { if(!decoded.isRecycled)decoded.recycle() }
@@ -501,22 +514,22 @@ class ModuleUnitTest {
 
     @Test fun recommendationAnalyzerDownscalesOversizedDecodeAndPreservesIdentityResult() {
         val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
-        val decoded=Bitmap.createBitmap(320,160,Bitmap.Config.ARGB_8888)
+        val decoded=Bitmap.createBitmap(1200,600,Bitmap.Config.ARGB_8888)
         try {
-            withRecommendationDecoder(file,320,160,decoded) {
-                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+            withRecommendationDecoder(file,1200,600,decoded) {
+                assertEquals("generic",recommendationReason(Uri.fromFile(file).toString()))
             }
             assertTrue("a distinct reduced bitmap releases the decode buffer",decoded.isRecycled)
         } finally { if(!decoded.isRecycled)decoded.recycle();file.delete() }
 
         file.writeBytes(byteArrayOf(1))
-        val identical=Bitmap.createBitmap(320,160,Bitmap.Config.ARGB_8888)
+        val identical=Bitmap.createBitmap(1200,600,Bitmap.Config.ARGB_8888)
         try {
-            withRecommendationDecoder(file,320,160,identical) {
+            withRecommendationDecoder(file,1200,600,identical) {
                 mockStatic(Bitmap::class.java,Answer<Any?>{invocation->
                     if(invocation.method.name=="createScaledBitmap")identical else Answers.RETURNS_DEFAULTS.answer(invocation)
                 }).use {
-                    assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+                    assertEquals("generic",recommendationReason(Uri.fromFile(file).toString()))
                 }
             }
             assertTrue("identity output remains readable and is released after analysis",identical.isRecycled)
@@ -533,10 +546,12 @@ class ModuleUnitTest {
                 }
             }
             withRecommendationDecoder(file,1200,600,null) {
-                assertEquals("generic",RecommendationEngine.analyze(Uri.fromFile(file).toString()))
+                assertEquals("generic",recommendationReason(Uri.fromFile(file).toString()))
             }
         } finally { file.delete() }
     }
+
+    private fun recommendationReason(uri:String):String = JSONObject(RecommendationEngine.analyze(uri)).getString("reasonId")
 
     private fun withRecommendationDecoder(file:File,width:Int,height:Int,bitmap:Bitmap?,block:(java.util.concurrent.atomic.AtomicInteger)->Unit) {
         val sample=java.util.concurrent.atomic.AtomicInteger()

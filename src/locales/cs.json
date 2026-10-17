@@ -244,7 +244,10 @@
     "generic": "Pro nejednoznačný obrázek se doporučuje obecný režim.",
     "photo": "Vypadá to jako fotografie.",
     "art": "Vypadá to jako kresba s jasnými liniemi.",
-    "pixel": "Byla rozpoznána výrazná pixelová mřížka."
+    "pixel": "Byla rozpoznána výrazná pixelová mřížka.",
+    "smooth": "Převažují hladké plochy; navrhuje se jemnější zpracování.",
+    "mixed": "Smíšený nebo nejasný obsah: zkuste vyvážený výsledek.",
+    "unavailable": "Navrhuje se alternativa, protože preferovaný režim není dostupný."
   },
   "preparationWhy": "Menší pracovní kopie může snížit využití paměti a dobu zpracování.",
   "preparationDetailLoss": "Jemné detaily se mohou změnit nebo ztratit.",

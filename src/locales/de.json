@@ -244,7 +244,10 @@
     "generic": "Bei einem uneindeutigen Bild wird ein allgemeiner Modus vorgeschlagen.",
     "photo": "Das sieht nach einem Foto aus.",
     "art": "Das sieht nach einer Zeichnung mit klaren Linien aus.",
-    "pixel": "Ein deutliches Pixelraster wurde erkannt."
+    "pixel": "Ein deutliches Pixelraster wurde erkannt.",
+    "smooth": "Glatte Bereiche überwiegen; eine sanftere Verarbeitung wird vorgeschlagen.",
+    "mixed": "Gemischter oder unklarer Inhalt: Ein ausgewogenes Ergebnis wird vorgeschlagen.",
+    "unavailable": "Der bevorzugte Modus ist nicht verfügbar. Eine Alternative wird vorgeschlagen."
   },
   "preparationWhy": "Eine kleinere Arbeitskopie kann Speicherbedarf und Verarbeitungszeit senken.",
   "preparationDetailLoss": "Feine Details können sich ändern oder verloren gehen.",

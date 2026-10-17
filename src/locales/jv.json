@@ -244,7 +244,10 @@
     "generic": "Saran umum kanggo gambar sing durung cetha.",
     "photo": "Iki katon kaya foto.",
     "art": "Iki katon kaya gambar kanthi garis sing cetha.",
-    "pixel": "Grid piksel sing katon cetha ditemokake."
+    "pixel": "Grid piksel sing katon cetha ditemokake.",
+    "smooth": "Wilayah alus luwih akeh; disaranake pangolahan sing luwih lembut.",
+    "mixed": "Isine campuran utawa ora cetha: coba asil sing imbang.",
+    "unavailable": "Disaranake pilihan liya amarga mode sing dipilih ora kasedhiya."
   },
   "preparationWhy": "Salinan kerja sing luwih cilik bisa nggunakake memori lan wektu pangolahan luwih sithik.",
   "preparationDetailLoss": "Rincian alus bisa owah utawa ilang.",

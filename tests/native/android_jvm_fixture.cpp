@@ -1,6 +1,8 @@
 #include <jni.h>
 
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
 
 namespace {
 
@@ -56,26 +58,35 @@ Java_dev_kigya_pixora_NativeEngine_resetCancellation(JNIEnv*, jobject) {}
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kigya_pixora_NativeEngine_cancel(JNIEnv*, jobject) {}
 
-// Host JVM boundary fixture only: prove RecommendationEngine forwards the bounded
-// bitmap's dimensions and ARGB sample. Physical instrumentation uses the real classifier.
+// Host JVM boundary fixture only: tests forwarding/transport, not classification.
+// The shared C++ suite and real JNI suite own classifier/availability assertions.
 extern "C" JNIEXPORT jstring JNICALL
 Java_dev_kigya_pixora_RecommendationEngine_analyzeRecommendation(
-    JNIEnv* env, jclass, jint width, jint height, jintArray argb) {
-  if (argb == nullptr || env->GetArrayLength(argb) == 0) {
-    return env->NewStringUTF("generic");
+    JNIEnv* env, jclass, jint width, jint height, jintArray argb, jint profiles) {
+  const char* profile = "balanced";
+  const char* reason = "generic";
+  int bit = 1;
+  if (argb != nullptr && env->GetArrayLength(argb) > 0) {
+    jint firstPixel = 0;
+    env->GetIntArrayRegion(argb, 0, 1, &firstPixel);
+    if (env->ExceptionCheck()) return nullptr;
+    if (width == 2 && height == 1) switch (static_cast<std::uint32_t>(firstPixel)) {
+      case 0xff123456U: profile="standard"; reason="photo"; bit=0; break;
+      case 0xff112233U: profile="art"; reason="art"; bit=4; break;
+      case 0xffabcdefU: profile="pixel"; reason="pixel"; bit=5; break;
+      case 0xff445566U: profile="natural"; reason="smooth"; bit=2; break;
+      case 0xff778899U: reason="mixed"; break;
+    }
   }
-  jint firstPixel = 0;
-  env->GetIntArrayRegion(argb, 0, 1, &firstPixel);
-  if (env->ExceptionCheck()) return nullptr;
-  if (width != 2 || height != 1) return env->NewStringUTF("generic");
-  switch (static_cast<std::uint32_t>(firstPixel)) {
-    case 0xff123456U:
-      return env->NewStringUTF("photo");
-    case 0xff112233U:
-      return env->NewStringUTF("art");
-    case 0xffabcdefU:
-      return env->NewStringUTF("pixel");
-    default:
-      return env->NewStringUTF("generic");
+  if (!(profiles & (1 << bit))) {
+    const char* alternatives[]={"standard","balanced","natural","lite"};
+    profile=nullptr;
+    for(int i=0;i<4;++i) if(profiles & (1<<i)) {profile=alternatives[i];break;}
+    reason="unavailable";
   }
+  if(!profile)return env->NewStringUTF("null");
+  char json[192];
+  std::snprintf(json,sizeof(json),
+      "{\"profileId\":\"%s\",\"speed\":\"quality\",\"reasonId\":\"%s\"}",profile,reason);
+  return env->NewStringUTF(json);
 }
