@@ -98,12 +98,17 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     override fun inspectSelection(id:String,p:Promise)=async(p){val image=requireImage(id);image.remove("sourcePath");image.remove("workPath");map(image)}
     override fun getImageRecommendation(id:String,p:Promise)=async(p){
         val image=requireImage(id)
-        val reason=try { RecommendationEngine.analyze(image.getString("previewUri")) }
-        catch(_:Throwable) { "generic" }
-        val profile=when(reason) { "photo" -> "lite"; "art" -> "art"; "pixel" -> "pixel"; else -> "lite" }
-        if(!ProfileAvailability.allowed(profile)) null else map(JSONObject()
-            .put("imageId",id).put("profileId",profile).put("speed","quality").put("reasonId",reason))
+        val encoded=try { RecommendationEngine.analyze(image.getString("previewUri")) }
+        catch(_:OutOfMemoryError) { RecommendationEngine.fallback() }
+        catch(_:Exception) { RecommendationEngine.fallback() }
+        requireImage(id) // Discard a result if selection changed during analysis.
+        if(encoded=="null") null else {
+            val result=JSONObject(encoded)
+            if(!ProfileAvailability.allowed(result.getString("profileId"))) null
+            else map(result.put("imageId",id))
+        }
     }
+
     override fun prepareSelection(id:String,p:Promise)=async(p){
         SessionStore.requireIdle();val image=requireImage(id);val work=ImageFiles.prepare(image)
         SessionStore.update{it.getJSONObject("image").put("workPath",work.path)}

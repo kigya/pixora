@@ -36,7 +36,14 @@ export type ImageRecommendation = {
   imageId: string;
   profileId: ProfileId;
   speed: ProcessingSpeed;
-  reasonId: 'generic' | 'photo' | 'art' | 'pixel';
+  reasonId:
+    | 'generic'
+    | 'photo'
+    | 'art'
+    | 'pixel'
+    | 'smooth'
+    | 'mixed'
+    | 'unavailable';
 };
 export type Session = {
   profileId?: string;

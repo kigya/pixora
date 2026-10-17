@@ -244,7 +244,10 @@
     "generic": "Bizonytalan képnél általános módot javaslunk.",
     "photo": "Fényképnek tűnik.",
     "art": "Tiszta vonalú rajznak tűnik.",
-    "pixel": "Jól látható pixelrácsot észleltünk."
+    "pixel": "Jól látható pixelrácsot észleltünk.",
+    "smooth": "Sima területek dominálnak; kíméletesebb feldolgozás javasolt.",
+    "mixed": "Vegyes vagy bizonytalan tartalom: próbáljon kiegyensúlyozott eredményt.",
+    "unavailable": "A kívánt mód nem érhető el, ezért másik lehetőséget javaslunk."
   },
   "preparationWhy": "A kisebb munkapéldány csökkentheti a memóriahasználatot és a feldolgozási időt.",
   "preparationDetailLoss": "Az apró részletek megváltozhatnak vagy elveszhetnek.",

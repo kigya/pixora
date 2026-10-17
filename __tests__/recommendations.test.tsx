@@ -10,7 +10,7 @@ import { LocaleContext } from '../src/ui/locale';
 import { ThemeContext, lightColors } from '../src/ui/theme';
 import { strings } from '../src/ui/i18n';
 import type { ImageRecommendation, ProfileAvailability } from '../src/specs/NativeUpscale';
-import Native, { capabilities, seed } from '../tests/nativeMock';
+import Native, { capabilities, emitSession, seed } from '../tests/nativeMock';
 
 const copy = strings.en;
 const navigation = { navigate: jest.fn(), goBack: jest.fn() };
@@ -63,6 +63,21 @@ test('recommendation card applies only after its button is pressed', async () =>
   expect(onApply).not.toHaveBeenCalled();
   await userEvent.press(screen.getByRole('button', { name: copy.recommendationApply }));
   expect(onApply).toHaveBeenCalledWith(recommendation);
+});
+
+test.each([
+  ['standard', 'photo'],
+  ['natural', 'smooth'],
+  ['balanced', 'mixed'],
+  ['lite', 'unavailable'],
+] as const)('card explains the %s suggestion without an accuracy percentage', async (profileId, reasonId) => {
+  await render(
+    <AppProvider>
+      <RecommendationCard value={{ ...recommendation, profileId, reasonId }} copy={copy} onApply={jest.fn()} />
+    </AppProvider>,
+  );
+  expect(screen.getByText(`${copy.recommendationReason[reasonId]} · ${copy.presets[profileId].title}`)).toBeOnTheScreen();
+  expect(screen.queryByText(/\d+\s*%/)).not.toBeOnTheScreen();
 });
 
 test('recommendation requests reject stale, mismatched, unavailable and missing results', () => {
@@ -245,4 +260,22 @@ test('help link works with the default no-op help context', async () => {
   );
   await userEvent.press(screen.getByRole('button', { name: copy.how }));
   expect(screen.queryByText(copy.howTitle)).not.toBeOnTheScreen();
+});
+
+test('a delayed recommendation for a replaced image cannot replace the new suggestion', async () => {
+  seed({ state: 'READY', image });
+  let resolveOld!: (value: ImageRecommendation) => void;
+  Native.getImageRecommendation.mockImplementation((id: string) =>
+    id === image.id
+      ? new Promise<ImageRecommendation>(resolve => { resolveOld = resolve; })
+      : Promise.resolve<ImageRecommendation>({ ...recommendation, imageId: id, profileId: 'natural', reasonId: 'smooth' }),
+  );
+  await render(<AppProvider><Home {...props} /></AppProvider>);
+  await waitFor(() => expect(Native.getImageRecommendation).toHaveBeenCalledWith(image.id));
+  const replacement = { ...image, id: 'replacement' };
+  await act(async () => { emitSession({ state: 'READY', image: replacement }); });
+  expect(await screen.findByText(`${copy.recommendationReason.smooth} · ${copy.presets.natural.title}`)).toBeOnTheScreen();
+  await act(async () => { resolveOld(recommendation); });
+  expect(screen.queryByText(`${copy.recommendationReason.art} · ${copy.presets.art.title}`)).not.toBeOnTheScreen();
+  expect(screen.getByText(`${copy.recommendationReason.smooth} · ${copy.presets.natural.title}`)).toBeOnTheScreen();
 });

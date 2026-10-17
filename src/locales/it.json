@@ -244,7 +244,10 @@
     "generic": "Per un'immagine poco chiara, suggeriamo una modalità generale.",
     "photo": "Sembra una foto.",
     "art": "Sembra un disegno con linee definite.",
-    "pixel": "È stata rilevata una griglia di pixel netta."
+    "pixel": "È stata rilevata una griglia di pixel netta.",
+    "smooth": "Prevalgono aree uniformi: si suggerisce un trattamento più delicato.",
+    "mixed": "Contenuto misto o poco chiaro: prova un risultato bilanciato.",
+    "unavailable": "Si suggerisce un’alternativa perché la modalità preferita non è disponibile."
   },
   "preparationWhy": "Una copia di lavoro più piccola può ridurre l'uso della memoria e il tempo di elaborazione.",
   "preparationDetailLoss": "I dettagli fini possono cambiare o andare persi.",

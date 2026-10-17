@@ -47,3 +47,13 @@ Version 0.8.3/code 13 retains the split jobs, all strict gates and dependency pi
 The owner's 2026-10-17 correction removes the first-launch language-selection screen. Version 0.8.4/code 14 opens Home after startup settings load, including on a clean install. The native default already uses `system`; existing manual choices remain saved and can be changed in Settings. This supersedes the initial-selection part of FEAT-805 without changing the supported languages or native locale sync. LESSON-0006 records the broader Personal preference in the local shared library.
 
 The owner requested source publication through the established GitHub PR flow without new application testing. Do not carry 0.8.3 coverage/build/device receipts forward as 0.8.4 PASS. Main-only GitHub CI may run automatically after the final merge; its result belongs to that exact commit. The existing signed 0.8.3 APK and Samsung installation are historical artifacts, not this source revision.
+
+
+## ADR-819 — conservative recommendation without new classifier weights
+
+On 2026-10-17 the owner approved the conservative option: existing Standard/Natural/Balanced/Art/Pixel recommendations, with Lite available manually or as a fallback and sharpening manual only. Shared native working-resolution, overview and patch evidence replaces the fixed photo→Lite mapping. Ambiguity yields Balanced; disabled profiles use Standard→Balanced→Natural→Lite or no card. Full source/working-image pixels remain local. The `getImageRecommendation` call stays compatible; reasons gain smooth/mixed/unavailable, with authored translations in every active locale. No new models, SDKs or dependencies.
+
+This explicitly supersedes the FEAT-801 photo/uncertainty→Lite policy. The owner requested implementation without running checks; new scenarios are written but unexecuted and old coverage/device receipts remain historical. Recommendation accuracy, size delta and latency are unmeasured. USB installation and GitHub publication are deferred to a later owner request.
+
+
+Publication clarification, 2026-10-17: after accepting the USB-installed recommendation build, the owner authorized the usual task PR → release/0.8.5 → single squash into main without additional checks. Version 0.8.5/code 15 aligns app, lockfile, both platforms, iOS generator and fallback metadata. The accepted signed USB artifact remains 0.8.4/code 14; the 0.8.5 metadata revision has not been rebuilt or retested. Main-only CI remains automatic; no outcome is presumed.

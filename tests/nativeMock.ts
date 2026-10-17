@@ -79,7 +79,7 @@ const native = {
   finishStartup: jest.fn(),
   getCurrentSession: jest.fn(async () => session),
   getImageRecommendation: jest.fn(
-    async (): Promise<import('../src/specs/NativeUpscale').ImageRecommendation | null> => null,
+    async (_imageId: string): Promise<import('../src/specs/NativeUpscale').ImageRecommendation | null> => null,
   ),
   getSettings: jest.fn(async () => settings),
   getCapabilities: jest.fn(async () => capabilities),

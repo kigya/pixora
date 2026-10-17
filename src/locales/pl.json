@@ -244,7 +244,10 @@
     "generic": "Dla niejednoznacznego obrazu sugerujemy tryb ogólny.",
     "photo": "To wygląda na zdjęcie.",
     "art": "To wygląda na rysunek z wyraźnymi liniami.",
-    "pixel": "Wykryto wyraźną siatkę pikseli."
+    "pixel": "Wykryto wyraźną siatkę pikseli.",
+    "smooth": "Przeważają gładkie obszary; sugerowane jest łagodniejsze przetwarzanie.",
+    "mixed": "Treść mieszana lub niejednoznaczna: wypróbuj zrównoważony wynik.",
+    "unavailable": "Sugerowana jest alternatywa, ponieważ preferowany tryb jest niedostępny."
   },
   "preparationWhy": "Mniejsza kopia robocza może ograniczyć użycie pamięci i czas przetwarzania.",
   "preparationDetailLoss": "Drobne szczegóły mogą się zmienić lub zniknąć.",

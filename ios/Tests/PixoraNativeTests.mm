@@ -105,6 +105,33 @@ static NSArray* ListShares(id manager,SEL cmd,NSURL* directory,NSArray* keys,NSD
  NSDictionary* capabilities=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getCapabilities:a reject:b];} error:nil];XCTAssertTrue([capabilities[@"modelValid"] boolValue]);XCTAssertEqual([capabilities[@"modes"] count],8u);
  NSDictionary* layout=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getWindowLayout:a reject:b];} error:nil];XCTAssertGreaterThan([layout[@"width"] doubleValue],0);
 }
+- (void)testRecommendationFallbackAndAvailabilityWithoutInference {
+ NSDictionary* imported=[_module import:[self fixture:8 height:6]];NSString* identifier=imported[@"id"];
+ // Fewer than 64 visible pixels: the real shared core must return generic Balanced.
+ NSDictionary* result=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];
+ XCTAssertEqualObjects(result[@"profileId"],@"balanced");
+ XCTAssertEqualObjects(result[@"reasonId"],@"generic");
+ XCTAssertEqualObjects(result[@"speed"],@"quality");
+ NSDictionary* saved=[[_module valueForKey:@"availability"] copy];
+ @try {
+  NSMutableDictionary* flags=[saved mutableCopy];
+  for(NSString* profile in @[@"standard",@"balanced",@"natural",@"lite",@"details",@"sharp",@"art",@"pixel"])flags[profile]=@NO;
+  flags[@"standard"]=@YES;[_module setValue:flags forKey:@"availability"];
+  result=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];
+  XCTAssertEqualObjects(result[@"profileId"],@"standard");XCTAssertEqualObjects(result[@"reasonId"],@"unavailable");
+  flags[@"standard"]=@NO;flags[@"lite"]=@YES;
+  result=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];
+  XCTAssertEqualObjects(result[@"profileId"],@"lite");
+  flags[@"lite"]=@NO;flags[@"sharp"]=@YES;
+  result=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];
+  XCTAssertNil(result); // A sharpening-only configuration has no suitable recommendation.
+  flags[@"balanced"]=@YES;
+  NSMutableDictionary* session=[_module valueForKey:@"session"];
+  session[@"image"][@"sourcePath"]=[_folder URLByAppendingPathComponent:@"missing-source"].path;
+  result=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];
+  XCTAssertEqualObjects(result[@"profileId"],@"balanced");XCTAssertEqualObjects(result[@"reasonId"],@"generic");
+ } @finally {[_module setValue:[saved mutableCopy] forKey:@"availability"];}
+}
 - (void)testRealInferenceAllPresetsAndExports {
  NSDictionary* imported=[_module import:[self fixture:8 height:6]];NSString* identifier=imported[@"id"];
  NSDictionary* recommendation=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module getImageRecommendation:identifier resolve:a reject:b];} error:nil];XCTAssertEqualObjects(recommendation[@"imageId"],identifier);
