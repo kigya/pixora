@@ -21,6 +21,6 @@ config="${CONFIGURATION:-Release}"
 platform="${IOS_PLATFORM:-iphoneos}"
 mkdir -p artifacts/ios
 if [[ -n "${PIXORA_METRO_CONFIG:-}" ]]; then export BUNDLE_CONFIG="$PIXORA_METRO_CONFIG"; fi
-xcodebuild -workspace ios/Pixora.xcworkspace -scheme Pixora -configuration "$config" \
+xcodebuild -toolchain "$TOOLCHAINS" -workspace ios/Pixora.xcworkspace -scheme Pixora -configuration "$config" \
  -sdk "$platform" -destination "generic/platform=$([[ "$platform" == iphonesimulator ]] && echo 'iOS Simulator' || echo iOS)" \
  -derivedDataPath "${IOS_DERIVED_DATA_PATH:-artifacts/ios/DerivedData}" CODE_SIGNING_ALLOWED=NO build "${ci_args[@]}" "$@"
