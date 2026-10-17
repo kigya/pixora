@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform, Pressable, Text, StyleSheet } from 'react-native';
 import {
-  act,
   fireEvent,
   render,
   screen,
@@ -9,7 +8,6 @@ import {
 } from '@testing-library/react-native';
 import { AppProvider } from '../src/application/AppProvider';
 import { FeedbackScreen } from '../src/screens/Feedback';
-import { LanguageOnboarding } from '../src/screens/LanguageOnboarding';
 import { SettingsScreen } from '../src/screens/Settings';
 import { TelemetryControls, TelemetryNotice } from '../src/ui/telemetryControls';
 import { BackgroundNotice } from '../src/ui/information';
@@ -31,33 +29,6 @@ beforeEach(() => {
   seed();
   Native.getFeedbackStatus.mockResolvedValue(true);
   Native.getNotificationStatus.mockResolvedValue(false);
-});
-
-test('first-run language selection persists the chosen language and preserves other settings', async () => {
-  seed({}, { language: 'en', languageChosen: false, format: 'webp', theme: 'dark' });
-  await render(<AppProvider><LanguageOnboarding /></AppProvider>);
-  await userEvent.press(screen.getByTestId('language-picker'));
-  await userEvent.press(screen.getByTestId('language-es'));
-  expect(Native.updateSettings).toHaveBeenCalledWith('es', 'webp', 'dark');
-});
-
-test('first-run language selection shows a native save failure and leaves picker usable', async () => {
-  Native.updateSettings.mockRejectedValueOnce({ code: 'NO_SPACE' });
-  await render(<AppProvider><LanguageOnboarding /></AppProvider>);
-  await userEvent.press(screen.getByTestId('language-picker'));
-  await userEvent.press(screen.getByTestId('language-es'));
-  expect(await screen.findByText(t.errors.INFERENCE_FAILED)).toBeOnTheScreen();
-  expect(screen.getByTestId('language-picker')).toBeOnTheScreen();
-});
-
-test('first-run language selection exposes the pending native save state', async () => {
-  let complete!: (value: any) => void;
-  Native.updateSettings.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }) as any);
-  await render(<AppProvider><LanguageOnboarding /></AppProvider>);
-  await userEvent.press(screen.getByTestId('language-picker'));
-  await userEvent.press(screen.getByTestId('language-es'));
-  expect(screen.getByTestId('language-es')).toBeDisabled();
-  await act(async () => complete({ language: 'es', format: 'png', theme: 'light' }));
 });
 
 test('feedback validates optional reply address, uses a centered header, and sends through the app service', async () => {

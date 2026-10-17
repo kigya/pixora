@@ -111,8 +111,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild { cmake { arguments "-DFEEDBACK_GENERATED_DIR=${layout.buildDirectory.dir('generated/feedback').get().asFile}", "-DANDROID_STL=c++_shared", "-DUPSCALE_COVERAGE=${project.hasProperty('coverage') ? 'ON' : 'OFF'}" } }
         buildConfigField "boolean", "FAST_MODEL_ENABLED", (project.findProperty("fastModeEnabled") ?: "true")
-        versionCode 13
-        versionName "0.8.3"
+        versionCode 14
+        versionName "0.8.4"
     }
     externalNativeBuild { cmake { path "src/main/cpp/CMakeLists.txt"; version "3.22.1" } }
     androidResources { noCompress += ["bin", "param"] }
