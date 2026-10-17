@@ -24,7 +24,7 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 - `ProcessorTest`, `ServiceLifecycleTest`, `StoreAndLocalizationTest`, `ModuleUnitTest`: states, progress, cancellation, recovery, failure/timeout/out-of-memory, backend selection and save/export.
 - `tests/native/{pixels,adapter}_test.cpp`: owned C++ engine, tile boundaries, alpha, cleanup, exceptions and cancellation; the unit harness's ncnn stub is separate from real inference.
 - Android instrumentation `NativePipelineTest`, `QualityReviewTest`, `ModuleContractTest`, `Pixora08Test`: real bundled models and bridge. Do not enable actual feedback submission without separate authorization.
-- iOS XCTest: target scenarios include all eight presets/five models, actual inference, tiled/whole delta, PNG/JPEG/WebP, preparation, cancellation/INTERRUPTED and retry. Current 0.8.2 simulator XCTest passes 52/52 with 607/607 owned lines and 794/794 branches; unsigned generic-device Release also passed. Final main CI is recorded separately. Simulator XCTest does not establish physical iPhone behavior.
+- iOS XCTest: target scenarios include all eight presets/five models, actual inference, tiled/whole delta, PNG/JPEG/WebP, preparation, cancellation/INTERRUPTED and retry. Local 0.8.3 simulator XCTest passed 52/52 with 607/607 owned lines and 794/794 branches, and its unsigned generic-device Release passed with explicit XcodeDefault selection. Actual 0.8.2 main CI iOS linking failed (ADR-817); the corrective version must pass its own separate main gate. Simulator XCTest does not establish physical iPhone behavior.
 - Samsung debug: two Maestro flows and three `Pixora08Test` instrumentation tests passed for the recorded recommendation/preparation/upscale/save and settings/RTL/theme/feedback-privacy scenarios. The full scenario matrix, release installation and final artifact/hash remain pending; results are recorded locally.
 
 ## TEST-804 — consent, feedback and review (FEAT-804)
@@ -42,7 +42,7 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 
 ## TEST-806 — GitHub and release verification (FEAT-806)
 
-Task PRs with independent review target release/<version>; one squash into main after local acceptance. A failed main run requires a new corrective version under ADR-815/816. CI runs only on main pushes. Check the same SHA, every job and CodeQL alerts, retaining links. Require measured 100% JS statements/functions/lines/branches and owned Kotlin/C++/ObjC++ lines/branches, plus presence of every owned source. Security covers secrets, workflows, dependency advisories, mobile static scans and independent review.
+Task PRs with independent review target `release/<version>`; one squash into main after local acceptance. A failed main run requires a new corrective version under ADR-815–817. CI runs only on main pushes. Check the same SHA, every job and CodeQL alerts, retaining links. Require measured 100% JS statements/functions/lines/branches and owned Kotlin/C++/ObjC++ lines/branches, plus presence of every owned source. Security covers secrets, workflows, dependency advisories, mobile static scans and independent review.
 
 Secrets, private serials, raw logcat, user images and local signing material never enter public evidence. Final signing/store/GitHub Release publication uses a separate release workflow.
 
@@ -57,3 +57,5 @@ Secrets, private serials, raw logcat, user images and local signing material nev
 ## TEST-808 — corrective CI organization (ADR-816)
 
 The 0.8.2 workflow separately runs first-party C++ extraction/strict coverage, unsigned iOS generic-device Release, and simulator XCTest/strict coverage. Every owned implementation source must appear in its report, with nonzero 100% line and branch totals. Compile-only commands include the remaining Android/JNI C++ translation units for CodeQL; they do not count as additional runtime coverage. Objective-C++ remains covered by the iOS mobile source scan, not CodeQL. Main CI must pass on the final squash SHA; local PASS does not predict that result. Samsung installation and UI remain deferred.
+
+TEST-808 also verifies ADR-817: both iOS scripts explicitly select the Xcode default toolchain, including when the parent environment lists Metal first. Device/simulator build settings must resolve existing Swift compatibility libraries; a successful settings query is not a build or test PASS.

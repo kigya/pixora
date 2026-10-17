@@ -33,7 +33,7 @@ cd android
 
 ## iOS
 
-Use the pinned Xcode 26.6 toolchain. `bash scripts/build-ios.sh` prepares native dependencies and produces an unsigned Release build. `bash scripts/test-ios.sh` runs simulator XCTest. Neither command publishes an App Store build.
+Use the pinned Xcode 26.6 default toolchain. The iOS scripts select `com.apple.dt.toolchain.XcodeDefault` process-locally and pass it explicitly to `xcodebuild`, so an installed Metal toolchain cannot redirect Swift compatibility library search paths. `bash scripts/build-ios.sh` prepares native dependencies and produces an unsigned Release build. `bash scripts/test-ios.sh` runs simulator XCTest. Neither command publishes an App Store build.
 
 Ordinary builds require your own ignored `ios/Config/Debug/GoogleService-Info.plist` and `ios/Config/Release/GoogleService-Info.plist`. To compile and test with an unregistered placeholder project, run `PIXORA_CI=1 bash scripts/build-ios.sh` or `PIXORA_CI=1 bash scripts/test-ios.sh` in a clean checkout. Placeholder generation refuses to replace real configurations. It uses no production Firebase identity; analytics is deactivated for these verification builds.
 

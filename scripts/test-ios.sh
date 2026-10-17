@@ -38,7 +38,7 @@ trap cleanup EXIT
 xcrun simctl boot "$simulator_id" >/dev/null 2>&1 || true
 xcrun simctl bootstatus "$simulator_id" -b
 if [[ -n "${PIXORA_METRO_CONFIG:-}" ]]; then export BUNDLE_CONFIG="$PIXORA_METRO_CONFIG"; fi
-xcodebuild -workspace ios/Pixora.xcworkspace -scheme Pixora -configuration Debug \
+xcodebuild -toolchain "$TOOLCHAINS" -workspace ios/Pixora.xcworkspace -scheme Pixora -configuration Debug \
  -sdk iphonesimulator -destination "platform=iOS Simulator,id=$simulator_id" \
  -derivedDataPath artifacts/ios/DerivedData -enableCodeCoverage YES \
  CODE_SIGNING_ALLOWED=NO ENABLE_DEBUG_DYLIB=NO test "${ci_args[@]}" "$@"

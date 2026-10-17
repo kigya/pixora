@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Source from the project root; all overrides are process-local.
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+# Hosted Xcode may prefer Metal, which has no Swift compatibility libraries.
+export TOOLCHAINS=com.apple.dt.toolchain.XcodeDefault
 export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
 [[ "$(node -p 'process.versions.node.split(".")[0]')" == 22 ]] || { echo 'Node 22 required' >&2; exit 1; }
 if [[ -x "$PWD/.p-build-app/local/ruby-3.3.12/bin/ruby" ]]; then
