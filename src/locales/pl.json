@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Mniejsza kopia robocza może ograniczyć użycie pamięci i czas przetwarzania.",
   "preparationDetailLoss": "Drobne szczegóły mogą się zmienić lub zniknąć.",
-  "preparationFast": "Tryb szybki ogranicza też dłuższy bok wejścia AI do 512 px. To osobny limit, niezależny od kopii roboczej."
+  "preparationFast": "Tryb szybki ogranicza też dłuższy bok wejścia AI do 512 px. To osobny limit, niezależny od kopii roboczej.",
+  "privacyPolicyLink": "Otwórz pełną politykę prywatności",
+  "privacyPolicyOpenFailed": "Nie udało się otworzyć polityki prywatności. Sprawdź połączenie z internetem i spróbuj ponownie."
 }

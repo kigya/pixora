@@ -251,5 +251,7 @@
   },
   "preparationWhy": "较小的工作副本可以减少内存占用和处理时间。",
   "preparationDetailLoss": "细节可能会改变或丢失。",
-  "preparationFast": "快速模式还会将 AI 输入图像的最长边限制为 512 像素。这与工作副本是两项独立限制。"
+  "preparationFast": "快速模式还会将 AI 输入图像的最长边限制为 512 像素。这与工作副本是两项独立限制。",
+  "privacyPolicyLink": "打开完整隐私政策",
+  "privacyPolicyOpenFailed": "无法打开隐私政策。请检查网络连接后重试。"
 }

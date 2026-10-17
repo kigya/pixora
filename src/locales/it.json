@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Una copia di lavoro più piccola può ridurre l'uso della memoria e il tempo di elaborazione.",
   "preparationDetailLoss": "I dettagli fini possono cambiare o andare persi.",
-  "preparationFast": "La modalità veloce limita anche il lato lungo dell'input AI a 512 px. È un limite distinto dalla copia di lavoro."
+  "preparationFast": "La modalità veloce limita anche il lato lungo dell'input AI a 512 px. È un limite distinto dalla copia di lavoro.",
+  "privacyPolicyLink": "Apri l’informativa completa sulla privacy",
+  "privacyPolicyOpenFailed": "Impossibile aprire l’informativa sulla privacy. Controlla la connessione internet e riprova."
 }

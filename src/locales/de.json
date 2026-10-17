@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Eine kleinere Arbeitskopie kann Speicherbedarf und Verarbeitungszeit senken.",
   "preparationDetailLoss": "Feine Details können sich ändern oder verloren gehen.",
-  "preparationFast": "Der schnelle Modus begrenzt außerdem die lange Seite der KI-Eingabe auf 512 px. Das ist unabhängig von der Arbeitskopie."
+  "preparationFast": "Der schnelle Modus begrenzt außerdem die lange Seite der KI-Eingabe auf 512 px. Das ist unabhängig von der Arbeitskopie.",
+  "privacyPolicyLink": "Vollständige Datenschutzerklärung öffnen",
+  "privacyPolicyOpenFailed": "Die Datenschutzerklärung konnte nicht geöffnet werden. Prüfe deine Internetverbindung und versuche es erneut."
 }

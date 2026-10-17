@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Bản sao làm việc nhỏ hơn có thể giảm bộ nhớ và thời gian xử lý.",
   "preparationDetailLoss": "Các chi tiết nhỏ có thể thay đổi hoặc mất đi.",
-  "preparationFast": "Chế độ Nhanh cũng giới hạn cạnh dài của đầu vào AI ở 512 px. Đây là giới hạn riêng với bản sao làm việc."
+  "preparationFast": "Chế độ Nhanh cũng giới hạn cạnh dài của đầu vào AI ở 512 px. Đây là giới hạn riêng với bản sao làm việc.",
+  "privacyPolicyLink": "Mở chính sách quyền riêng tư đầy đủ",
+  "privacyPolicyOpenFailed": "Không thể mở chính sách quyền riêng tư. Hãy kiểm tra kết nối internet rồi thử lại."
 }

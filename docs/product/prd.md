@@ -25,3 +25,9 @@ Manual-review clarification on 2026-10-16: splash stays until initial data/navig
 Acceptance clarification (ADR-814): automatic checks/fixes are authorized; repeated Samsung UI/update installation is explicitly deferred. Splash lasts max(initial loading, 1500 ms); missing fresh physical validation must remain explicit.
 
 Corrective 0.8.1/code 11 (ADR-815) fixes only CI/lock reproducibility after failed 0.8.0 main CI; FEAT-801–806 and accepted product requirements are preserved.
+
+## Approved privacy and release update — 2026-10-17
+
+FEAT-807: retain the localized Privacy summary and provide an accessible, explicit-action button to open the full per-app public HTTPS policy in the external browser. A rejected browser open must show a localized error. No user content or identifiers are added to the URL. The policy reflects Android/iOS data flows and observed provider configuration. Revisit policy/store disclosures whenever SDKs, permissions, telemetry, network payloads, consent, storage, deletion or audience changes. Source: explicit owner-approved privacy and 0.8.6 release plan.
+
+Acceptance scenarios: successful browser handoff, rejected open, offline summary availability, navigation, RTL and long localized labels. The owner explicitly chose build-only delivery: new tests, lint, coverage, E2E and device checks are not run. Version0.8.6/code16 may be built, source-published, attached to a GitHub Release and uploaded only as a Play draft; formal readiness remains unverified. Existing main-push CI remains configured.
