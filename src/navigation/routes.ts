@@ -1,5 +1,4 @@
 export type Routes = {
-  LanguageOnboarding: undefined;
   Home: undefined;
   Settings: undefined;
   Feedback:

@@ -15,7 +15,6 @@ import { useTheme } from '../ui/theme';
 import { FeedbackScreen } from '../screens/Feedback';
 import { Home } from '../screens/Home';
 import { SettingsScreen } from '../screens/Settings';
-import { LanguageOnboarding } from '../screens/LanguageOnboarding';
 import { useApp } from '../application/AppProvider';
 import type { Routes } from './routes';
 import Native from '../specs/NativeUpscale';
@@ -23,7 +22,7 @@ const Stack = createNativeStackNavigator<Routes>();
 
 export function AppNavigation() {
   const { colors, dark } = useTheme();
-  const { loading, settings } = useApp();
+  const { loading } = useApp();
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -63,20 +62,13 @@ export function AppNavigation() {
         }}
       >
         <Stack.Navigator
-          key={settings.languageChosen ? 'main' : 'language'}
-          initialRouteName={
-            settings.languageChosen ? 'Home' : 'LanguageOnboarding'
-          }
+          initialRouteName="Home"
           screenOptions={{
             headerShown: false,
             animation: reduceMotion ? 'none' : 'fade',
             contentStyle: { backgroundColor: colors.bg },
           }}
         >
-          <Stack.Screen
-            name="LanguageOnboarding"
-            component={LanguageOnboarding}
-          />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />
