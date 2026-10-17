@@ -244,7 +244,10 @@
     "generic": "Para uma imagem pouco clara, sugerimos um modo geral.",
     "photo": "Parece uma fotografia.",
     "art": "Parece um desenho com linhas nítidas.",
-    "pixel": "Foi detetada uma grelha de píxeis marcada."
+    "pixel": "Foi detetada uma grelha de píxeis marcada.",
+    "smooth": "Predominam áreas suaves; sugerimos um processamento mais delicado.",
+    "mixed": "Conteúdo misto ou incerto: experimente um resultado equilibrado.",
+    "unavailable": "Sugerimos uma alternativa porque o modo preferido está indisponível."
   },
   "preparationWhy": "Uma cópia de trabalho menor pode reduzir a memória usada e o tempo de processamento.",
   "preparationDetailLoss": "Os detalhes finos podem mudar ou perder-se.",

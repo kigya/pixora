@@ -244,7 +244,10 @@
     "generic": "Para una imagen poco clara, se sugiere un modo general.",
     "photo": "Parece una fotografía.",
     "art": "Parece un dibujo con líneas definidas.",
-    "pixel": "Se detectó una cuadrícula de píxeles marcada."
+    "pixel": "Se detectó una cuadrícula de píxeles marcada.",
+    "smooth": "Predominan las zonas suaves; se sugiere un tratamiento más delicado.",
+    "mixed": "Contenido mixto o poco claro: prueba un resultado equilibrado.",
+    "unavailable": "Se sugiere una alternativa porque el modo preferido no está disponible."
   },
   "preparationWhy": "Una copia de trabajo más pequeña puede reducir el uso de memoria y el tiempo de procesamiento.",
   "preparationDetailLoss": "Los detalles finos pueden cambiar o perderse.",

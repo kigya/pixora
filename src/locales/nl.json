@@ -244,7 +244,10 @@
     "generic": "Voor een onduidelijke afbeelding wordt een algemene modus voorgesteld.",
     "photo": "Dit lijkt op een foto.",
     "art": "Dit lijkt op een tekening met duidelijke lijnen.",
-    "pixel": "Er is een duidelijk pixelraster gevonden."
+    "pixel": "Er is een duidelijk pixelraster gevonden.",
+    "smooth": "Gladde vlakken overheersen; een zachtere verwerking wordt voorgesteld.",
+    "mixed": "Gemengde of onduidelijke inhoud: probeer een evenwichtig resultaat.",
+    "unavailable": "Er wordt een alternatief voorgesteld omdat de voorkeursmodus niet beschikbaar is."
   },
   "preparationWhy": "Een kleinere werkkopie kan het geheugengebruik en de verwerkingstijd verlagen.",
   "preparationDetailLoss": "Fijne details kunnen veranderen of verloren gaan.",

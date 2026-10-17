@@ -1,6 +1,7 @@
 #include <jni.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <new>
 #include <vector>
 
@@ -8,9 +9,21 @@
 
 namespace {
 
-jstring generic(JNIEnv* env) {
+jstring encode(JNIEnv* env, pixora::recommendation::Recommendation result,
+               jint profiles) {
   if (env->ExceptionCheck()) return nullptr;
-  return env->NewStringUTF("generic");
+  result = pixora::recommendation::available(result, static_cast<uint32_t>(profiles));
+  if (!result.profile_id) return env->NewStringUTF("null");
+  // All strings originate in the fixed native enum vocabulary.
+  char json[192];
+  std::snprintf(json, sizeof(json),
+      "{\"profileId\":\"%s\",\"speed\":\"%s\",\"reasonId\":\"%s\"}",
+      result.profile_id, result.speed, result.reason_id);
+  return env->NewStringUTF(json);
+}
+
+jstring generic(JNIEnv* env, jint profiles) {
+  return encode(env, pixora::recommendation::analyze(nullptr, 0, 0, 0), profiles);
 }
 
 class ScopedIntArrayElements {
@@ -37,22 +50,22 @@ class ScopedIntArrayElements {
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_dev_kigya_pixora_RecommendationEngine_analyzeRecommendation(
-    JNIEnv* env, jclass, jint width, jint height, jintArray argb) {
+    JNIEnv* env, jclass, jint width, jint height, jintArray argb, jint profiles) {
   if (env == nullptr || env->ExceptionCheck()) return nullptr;
-  if (argb == nullptr || width < 2 || height < 2 || width > 256 ||
-      height > 256)
-    return generic(env);
+  if (argb == nullptr || width < 2 || height < 2 || width > 1024 ||
+      height > 1024)
+    return generic(env, profiles);
 
   const jint length = env->GetArrayLength(argb);
   if (env->ExceptionCheck()) return nullptr;
-  if (length != width * height) return generic(env);
+  if (length != width * height) return generic(env, profiles);
 
   jint* values = env->GetIntArrayElements(argb, nullptr);
   if (env->ExceptionCheck()) {
     if (values != nullptr) env->ReleaseIntArrayElements(argb, values, JNI_ABORT);
     return nullptr;
   }
-  if (values == nullptr) return generic(env);
+  if (values == nullptr) return generic(env, profiles);
   ScopedIntArrayElements elements(env, argb, values);
 
   try {
@@ -68,12 +81,12 @@ Java_dev_kigya_pixora_RecommendationEngine_analyzeRecommendation(
     if (env->ExceptionCheck()) return nullptr;
     const auto result = pixora::recommendation::analyze(
         rgba.data(), width, height, width * 4);
-    return env->NewStringUTF(result.reason_id);
+    return encode(env, result, profiles);
   } catch (const std::bad_alloc&) {
     elements.release();
-    return generic(env);
+    return generic(env, profiles);
   } catch (...) {
     elements.release();
-    return generic(env);
+    return generic(env, profiles);
   }
 }

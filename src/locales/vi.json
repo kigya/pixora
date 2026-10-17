@@ -244,7 +244,10 @@
     "generic": "Với hình ảnh khó xác định, chế độ chung được đề xuất.",
     "photo": "Hình ảnh này có vẻ là ảnh chụp.",
     "art": "Hình ảnh này có vẻ là tranh với đường nét rõ.",
-    "pixel": "Đã phát hiện lưới điểm ảnh rõ rệt."
+    "pixel": "Đã phát hiện lưới điểm ảnh rõ rệt.",
+    "smooth": "Các vùng mịn chiếm ưu thế; gợi ý xử lý nhẹ hơn.",
+    "mixed": "Nội dung hỗn hợp hoặc chưa rõ: hãy thử kết quả cân bằng.",
+    "unavailable": "Gợi ý phương án khác vì chế độ ưu tiên không khả dụng."
   },
   "preparationWhy": "Bản sao làm việc nhỏ hơn có thể giảm bộ nhớ và thời gian xử lý.",
   "preparationDetailLoss": "Các chi tiết nhỏ có thể thay đổi hoặc mất đi.",

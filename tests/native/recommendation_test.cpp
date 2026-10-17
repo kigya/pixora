@@ -1,5 +1,6 @@
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 
 #include "recommendation.h"
@@ -41,7 +42,7 @@ void photoSample() {
     }
   }
   assert(analyze(pixels.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Photo);
   for (int y = 0; y < height; ++y) {
     for (int x = 0; x < width; ++x) set(pixels, width, x, y,
         static_cast<uint8_t>(35 + (x * 2 + (x / 9 + y / 11) % 5 * 45) % 190),
@@ -52,7 +53,7 @@ void photoSample() {
          ContentKind::Photo);
 }
 
-void smoothPhotoLikeSampleStaysGeneric() {
+void smoothPhotoLikeSampleUsesNatural() {
   constexpr int width = 96, height = 80;
   auto pixels = image(width, height);
   for (int y = 0; y < height; ++y) {
@@ -61,7 +62,7 @@ void smoothPhotoLikeSampleStaysGeneric() {
           static_cast<uint8_t>(y * 3), static_cast<uint8_t>(x + y));
   }
   assert(analyze(pixels.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Smooth);
 }
 
 void drawingSample() {
@@ -127,7 +128,7 @@ void transparentHiddenPixelGridStaysGeneric() {
          ContentKind::Generic);
 }
 
-void screenshotAndAlphaSamplesStayGeneric() {
+void screenshotAndAlphaSamplesStayConservative() {
   constexpr int width = 96, height = 80;
   auto screenshot = image(width, height);
   for (int y = 0; y < height; ++y) {
@@ -140,7 +141,7 @@ void screenshotAndAlphaSamplesStayGeneric() {
     }
   }
   assert(analyze(screenshot.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Mixed);
 
   auto alpha = image(width, height, 0);
   for (int y = 16; y < 64; ++y) {
@@ -150,7 +151,7 @@ void screenshotAndAlphaSamplesStayGeneric() {
          ContentKind::Generic);
 }
 
-void mixedAndJpegNoiseStayGeneric() {
+void mixedAndNoiseUseBalanced() {
   constexpr int width = 96, height = 80;
   auto mixed = image(width, height);
   uint32_t state = 1;
@@ -167,7 +168,7 @@ void mixedAndJpegNoiseStayGeneric() {
     }
   }
   assert(analyze(mixed.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Mixed);
 
   auto noise = image(width, height);
   state = 12;
@@ -179,10 +180,10 @@ void mixedAndJpegNoiseStayGeneric() {
     }
   }
   assert(analyze(noise.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Mixed);
 }
 
-void lowContrastAndShortGridStayGeneric() {
+void lowContrastAndShortGridStayConservative() {
   constexpr int width = 64, height = 64;
   auto low_contrast = image(width, height);
   constexpr uint8_t colors[][3] = {
@@ -196,7 +197,7 @@ void lowContrastAndShortGridStayGeneric() {
     }
   }
   assert(analyze(low_contrast.data(), width, height, width * 4).kind ==
-         ContentKind::Generic);
+         ContentKind::Mixed);
   auto short_image = image(32, 8);
   assert(analyze(short_image.data(), 32, 8, 32 * 4).kind ==
          ContentKind::Generic);
@@ -215,16 +216,111 @@ void malformedInputStaysGeneric() {
   assert(analyze(small.data(), 2, 2, 8).kind == ContentKind::Generic);
 }
 
+void grayscaleSmoothContentUsesNatural() {
+  constexpr int w = 128, h = 128;
+  auto pixels = image(w, h);
+  for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x)
+    set(pixels, w, x, y, x * 2, x * 2, x * 2);
+  const auto result = analyze(pixels.data(), w, h, w * 4);
+  assert(result.kind == ContentKind::Smooth);
+  assert(std::strcmp(result.profile_id, "natural") == 0);
+}
+
+void shiftedGridKeepsNativeResolution() {
+  // A 256 px overview would collapse these 4 px cells to 1 px.
+  constexpr int w = 1024, h = 768;
+  auto pixels = image(w, h);
+  for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+    const int cell = (((x + 1) / 4) * 7 + ((y + 3) / 4) * 11) % 6;
+    set(pixels, w, x, y, cell * 42, (cell * 67) % 256, 255 - cell * 31);
+  }
+  const auto result = analyze(pixels.data(), w, h, w * 4);
+  assert(result.kind == ContentKind::PixelArt);
+  assert(std::strcmp(result.profile_id, "pixel") == 0);
+}
+
+void compressionAndOneAxisAreNotPixelArt() {
+  constexpr int w = 128, h = 128;
+  for (int block : {8, 16}) {
+    auto pixels = image(w, h);
+    for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+      const int cell = ((x / block) * 7 + (y / block) * 11) % 6;
+      set(pixels, w, x, y, cell * 42, (cell * 67) % 256, 255 - cell * 31);
+    }
+    const auto result = analyze(pixels.data(), w, h, w * 4);
+    assert(result.kind == ContentKind::Mixed);
+    assert(std::strcmp(result.profile_id, "balanced") == 0);
+  }
+  auto stripes = image(w, h);
+  for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+    const int cell = (x / 4) % 6;
+    set(stripes, w, x, y, cell * 42, (cell * 67) % 256, 255 - cell * 31);
+  }
+  assert(analyze(stripes.data(), w, h, w * 4).kind != ContentKind::PixelArt);
+}
+
+void mixedPatchesDoNotBecomeIllustrations() {
+  constexpr int w = 512, h = 384;
+  auto pixels = image(w, h);
+  for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+    if (x < w / 2) {
+      const int patch = ((x / 9 + y / 11) % 5) * 45;
+      set(pixels, w, x, y, 35 + (x * 2 + patch) % 190,
+          25 + (y * 3 + patch) % 190, 30 + (x + y + patch) % 190);
+    } else {
+      const bool ink = y % 28 < 3 && x % 40 < 28;
+      set(pixels, w, x, y, ink ? 18 : 248, ink ? 18 : 248, ink ? 18 : 248);
+    }
+  }
+  assert(analyze(pixels.data(), w, h, w * 4).kind == ContentKind::Mixed);
+}
+
+void invalidAndTransparentInputsUseGenericBalanced() {
+  auto pixels = image(128, 128, 0);
+  const auto result = analyze(pixels.data(), 128, 128, 128 * 4);
+  assert(std::strcmp(result.profile_id, "balanced") == 0);
+  assert(std::strcmp(result.reason_id, "generic") == 0);
+  assert(std::strcmp(result.speed, "quality") == 0);
+}
+
+void availabilityIsSharedAndNeverAddsSharpening() {
+  using namespace pixora::recommendation;
+  const Recommendation photo{ContentKind::Photo, "standard", "quality", "photo"};
+  const Recommendation art{ContentKind::LineArt, "art", "quality", "art"};
+  const Recommendation pixel{ContentKind::PixelArt, "pixel", "quality", "pixel"};
+  assert(std::strcmp(available(photo, All).reason_id, "photo") == 0);
+  assert(std::strcmp(available(art, Art).profile_id, "art") == 0);
+  assert(std::strcmp(available(pixel, Pixel).profile_id, "pixel") == 0);
+  for (auto decision : {photo, art, pixel}) {
+    const auto fallback = available(decision, Standard | Balanced | Natural | Lite);
+    assert(std::strcmp(fallback.profile_id, "standard") == 0);
+    for (auto flag : {Balanced, Natural, Lite}) {
+      const auto alternative = available(decision, flag);
+      assert(alternative.profile_id != nullptr);
+      assert(std::strcmp(alternative.reason_id, "unavailable") == 0);
+    }
+    assert(available(decision, 0).profile_id == nullptr);
+  }
+  assert(available(photo, Art | Pixel).profile_id == nullptr);
+  assert(available(photo, 1u << 20).profile_id == nullptr);
+}
+
 }  // namespace
 
 int main() {
+  grayscaleSmoothContentUsesNatural();
+  shiftedGridKeepsNativeResolution();
+  compressionAndOneAxisAreNotPixelArt();
+  mixedPatchesDoNotBecomeIllustrations();
+  invalidAndTransparentInputsUseGenericBalanced();
+  availabilityIsSharedAndNeverAddsSharpening();
   malformedInputStaysGeneric();
   photoSample();
-  smoothPhotoLikeSampleStaysGeneric();
+  smoothPhotoLikeSampleUsesNatural();
   drawingSample();
   pixelGridSample();
-  screenshotAndAlphaSamplesStayGeneric();
+  screenshotAndAlphaSamplesStayConservative();
   transparentHiddenPixelGridStaysGeneric();
-  mixedAndJpegNoiseStayGeneric();
-  lowContrastAndShortGridStayGeneric();
+  mixedAndNoiseUseBalanced();
+  lowContrastAndShortGridStayConservative();
 }

@@ -244,7 +244,10 @@
     "generic": "Untuk gambar yang tidak jelas, disarankan mode umum.",
     "photo": "Gambar ini tampak seperti foto.",
     "art": "Gambar ini tampak seperti ilustrasi dengan garis tegas.",
-    "pixel": "Grid piksel yang kuat terdeteksi."
+    "pixel": "Grid piksel yang kuat terdeteksi.",
+    "smooth": "Area halus mendominasi; pemrosesan lebih lembut disarankan.",
+    "mixed": "Konten campuran atau kurang jelas: coba hasil yang seimbang.",
+    "unavailable": "Alternatif disarankan karena mode pilihan tidak tersedia."
   },
   "preparationWhy": "Salinan kerja yang lebih kecil dapat mengurangi penggunaan memori dan waktu pemrosesan.",
   "preparationDetailLoss": "Detail halus dapat berubah atau hilang.",

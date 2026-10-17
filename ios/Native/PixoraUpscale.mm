@@ -162,7 +162,7 @@ static PixoraUpscale* SharedUpscale;
 - (NSDictionary*)layout {CGRect rect=Presenter().view.bounds;return @{@"x":@0,@"y":@0,@"width":@(rect.size.width),@"height":@(rect.size.height),@"separating":@NO};}
 - (void)getWindowLayout:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {dispatch_async(dispatch_get_main_queue(),^{resolve([self layout]);});}
 - (void)layoutChanged:(NSNotification*)notification {if(_eventEmitterCallback)[self emitOnWindowLayoutChanged:[self layout]];}
-- (void)getCapabilities:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self perform:resolve reject:reject work:^id{uint64_t memory=self->_services.memory();return @{@"modes":Presets(),@"sdk":@([UIDevice.currentDevice.systemVersion intValue]),@"supported":@(memory>=3.5*1024*1024*1024),@"modelValid":@([self validateModels]),@"ramBytes":@(memory),@"storageBytes":@([self freeBytes]),@"workBytes":@([self workBytes]),@"version":[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"]?:@"0.8.4"};}];}
+- (void)getCapabilities:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self perform:resolve reject:reject work:^id{uint64_t memory=self->_services.memory();return @{@"modes":Presets(),@"sdk":@([UIDevice.currentDevice.systemVersion intValue]),@"supported":@(memory>=3.5*1024*1024*1024),@"modelValid":@([self validateModels]),@"ramBytes":@(memory),@"storageBytes":@([self freeBytes]),@"workBytes":@([self workBytes]),@"version":[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"]?:@"0.8.5"};}];}
 - (void)pickImage:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {dispatch_async(dispatch_get_main_queue(),^{@try{[self requireIdle];if(self->_pickerResolve)PixoraFail(@"BUSY");UIViewController* presenter=Presenter();if(!presenter)PixoraFail(@"SOURCE_UNAVAILABLE");PHPickerConfiguration* config=[[PHPickerConfiguration alloc] init];config.filter=PHPickerFilter.imagesFilter;config.selectionLimit=1;config.preferredAssetRepresentationMode=PHPickerConfigurationAssetRepresentationModeCurrent;PHPickerViewController* picker=[[PHPickerViewController alloc] initWithConfiguration:config];picker.delegate=self;self->_pickerResolve=resolve;self->_pickerReject=reject;[self event:@"image_import_started" values:@{@"source":@"picker"}];[presenter presentViewController:picker animated:YES completion:nil];}@catch(NSException* e){reject(e.name,@"Selection unavailable",nil);}});}
 - (void)picker:(PHPickerViewController*)picker didFinishPicking:(NSArray<PHPickerResult*>*)results {
  [picker dismissViewControllerAnimated:YES completion:nil];RCTPromiseResolveBlock resolve=_pickerResolve;RCTPromiseRejectBlock reject=_pickerReject;_pickerResolve=nil;_pickerReject=nil;if(!resolve)return;if(!results.count){[self event:@"image_import_finished" values:@{@"source":@"picker",@"status":@"cancelled"}];resolve(NSNull.null);return;}
@@ -185,16 +185,36 @@ static PixoraUpscale* SharedUpscale;
 }
 - (void)inspectSelection:(NSString*)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self perform:resolve reject:reject work:^id{NSMutableDictionary* image=[self requireImage:identifier];[image removeObjectForKey:@"sourcePath"];[image removeObjectForKey:@"workPath"];return image;}];}
 - (void)prepareSelection:(NSString*)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self perform:resolve reject:reject work:^id{[self requireIdle];NSMutableDictionary* image=[self requireImage:identifier];pixora::Image input=pixora::decode([NSURL fileURLWithPath:image[@"sourcePath"]],1024,self->_services.images);NSURL* file=[[NSURL fileURLWithPath:image[@"sourcePath"]].URLByDeletingLastPathComponent URLByAppendingPathComponent:@"work.png"];if(!pixora::write(input,file,@"png",self->_services.images))PixoraFail(@"LOW_STORAGE");[self change:^(NSMutableDictionary* value){value[@"image"][@"workPath"]=file.path;} persist:YES];[image removeObjectForKey:@"sourcePath"];return image;}];}
-- (void)getImageRecommendation:(NSString*)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self perform:resolve reject:reject work:^id{NSDictionary* image=[self requireImage:identifier];pixora::Image preview=pixora::decode([NSURL URLWithString:image[@"previewUri"]],256,self->_services.images);
+- (void)getImageRecommendation:(NSString*)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+ [self perform:resolve reject:reject work:^id{
+  NSDictionary* image=[self requireImage:identifier];
 #if __has_include("recommendation.h")
- // The classifier composites straight RGBA over gray; CoreGraphics decodes premultiplied RGBA.
- for(size_t i=0;i<preview.rgba.size();i+=4)for(int c=0;c<3;c++)preview.rgba[i+c]=preview.rgba[i+3]?std::min(255,(int)preview.rgba[i+c]*255/preview.rgba[i+3]):0;
- auto result=pixora::recommendation::analyze(preview.rgba.data(),preview.width,preview.height,preview.width*4);
- [self requireImage:identifier];return @{@"imageId":identifier,@"profileId":[NSString stringWithUTF8String:result.profile_id],@"speed":[NSString stringWithUTF8String:result.speed],@"reasonId":[NSString stringWithUTF8String:result.reason_id]};
+  auto result=pixora::recommendation::analyze(nullptr,0,0,0);
+  @try { try {
+   // Match prepareSelection's 1024 px decode, without resampling the 1536 px display preview twice.
+   pixora::Image preview=pixora::decode([NSURL fileURLWithPath:image[@"sourcePath"]],1024,self->_services.images);
+   // CoreGraphics supplies premultiplied RGBA; the shared classifier expects straight RGBA.
+   for(size_t i=0;i<preview.rgba.size();i+=4)for(int c=0;c<3;c++)
+    preview.rgba[i+c]=preview.rgba[i+3]?std::min(255,(int)preview.rgba[i+c]*255/preview.rgba[i+3]):0;
+   result=pixora::recommendation::analyze(preview.rgba.data(),preview.width,preview.height,preview.width*4);
+  } catch(const std::exception&) { /* Keep the generic suggestion on decode/allocation failure. */ }
+  } @catch(NSException* error) { /* A missing preview still permits manual processing. */ }
+  [self requireImage:identifier];
+  @synchronized(self) {
+   uint32_t mask=0;NSUInteger bit=0;
+   for(NSString* profile in @[@"standard",@"balanced",@"natural",@"lite",@"art",@"pixel"]) {
+    if([self->_availability[profile] boolValue])mask|=1u<<bit;
+    ++bit;
+   }
+   result=pixora::recommendation::available(result,mask);
+  }
+  if(!result.profile_id)return nil;
+  return @{@"imageId":identifier,@"profileId":[NSString stringWithUTF8String:result.profile_id],@"speed":[NSString stringWithUTF8String:result.speed],@"reasonId":[NSString stringWithUTF8String:result.reason_id]};
 #else
- PixoraFail(@"INFERENCE_FAILED");return nil;
+  PixoraFail(@"INFERENCE_FAILED");return nil;
 #endif
- }];}
+ }];
+}
 - (void)startJob:(NSString*)identifier scale:(double)scale preparationConfirmed:(BOOL)confirmed resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self launch:identifier scale:scale profile:@"standard" speed:@"quality" mode:@"quality" confirmed:confirmed resolve:resolve reject:reject];}
 - (void)startJobWithMode:(NSString*)identifier scale:(double)scale preparationConfirmed:(BOOL)confirmed mode:(NSString*)mode resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {NSDictionary* aliases=@{@"quality":@"standard",@"fast":@"lite",@"illustration":@"art",@"illustration-fast":@"art"};NSString* preset=aliases[mode]?:mode;[self launch:identifier scale:scale profile:preset speed:@"quality" mode:mode confirmed:confirmed resolve:resolve reject:reject];}
 - (void)startJobWithProfile:(NSString*)identifier scale:(double)scale profile:(NSString*)profile speed:(NSString*)speed preparationConfirmed:(BOOL)confirmed resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {[self launch:identifier scale:scale profile:profile speed:speed mode:profile confirmed:confirmed resolve:resolve reject:reject];}

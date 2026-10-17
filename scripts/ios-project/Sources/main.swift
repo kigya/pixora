@@ -24,8 +24,8 @@ for target in project.pbxproj.nativeTargets {
   config.buildSettings["PIXORA_APP_INFO_PLIST"] = "Pixora/Info.plist"
   config.buildSettings["INFOPLIST_FILE"] = "$(PIXORA_APP_INFO_PLIST)"
   config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] = config.name == "Debug" ? "dev.kigya.pixora.debug" : "dev.kigya.pixora"
-  config.buildSettings["CURRENT_PROJECT_VERSION"] = "14"
-  config.buildSettings["MARKETING_VERSION"] = "0.8.4"
+  config.buildSettings["CURRENT_PROJECT_VERSION"] = "15"
+  config.buildSettings["MARKETING_VERSION"] = "0.8.5"
   config.buildSettings["ENABLE_USER_SCRIPT_SANDBOXING"] = "NO"
   config.buildSettings["DEBUG_INFORMATION_FORMAT"] = "dwarf-with-dsym"
  }

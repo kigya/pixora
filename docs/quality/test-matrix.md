@@ -6,6 +6,15 @@ The matrix links PRD criteria to executable checks. Test presence is not PASS; f
 
 ## TEST-801 — recommendation (FEAT-801)
 
+Current revision, 2026-10-17 (ADR-819): all updated scenarios below are **NOT RUN** at owner request. No new build, coverage, device, accuracy, size or latency result exists.
+
+- Shared core: Standard vs Natural vs Balanced, alpha/hidden RGB, drawing agreement, mixed photo/text patches, phase-shifted full-resolution grids, 8/16 px block-grid abstention, one-axis patterns, malformed bounds and all availability fallback paths.
+- JNI/Kotlin: structured decision/`null`, stable availability bits, 1024 px decode bound, buffer release, exceptions, fallback explanation, Lite-only configuration and no suitable profile.
+- iOS: real shared generic decision, availability fallback/no suitable profile and missing-source analysis fallback without inference.
+- Components: all new explanation reasons, explicit Apply/manual scale preservation and late old-image answers after replacement.
+
+The following Samsung results are historical and do not verify ADR-819:
+
 - `__tests__/recommendations.test.tsx`: post-import suggestions, Apply, manual mode/scale preservation, availability refresh, unsupported modes, analysis failure and stale asynchronous responses after photo replacement/removal.
 - `tests/native/recommendation_test.cpp`: texture/edges/pixel grid, ambiguous inputs, small dimensions, alpha and extreme sizes. These are controlled fixtures, not an assessment of market accuracy.
 - `tests/native/recommendation_jni_test.cpp`: JNI bitmap lock/unlock, exceptions, resource lifetimes and opaque compositing.

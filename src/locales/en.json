@@ -244,7 +244,10 @@
     "generic": "A general suggestion for an unclear image.",
     "photo": "This looks like a photo.",
     "art": "This looks like a drawing with clear lines.",
-    "pixel": "A strong pixel grid was found."
+    "pixel": "A strong pixel grid was found.",
+    "smooth": "Smooth areas suggest gentler processing.",
+    "mixed": "Mixed or unclear content: try a balanced result.",
+    "unavailable": "An alternative is suggested because the preferred mode is unavailable."
   },
   "preparationWhy": "A smaller working copy can use less memory and processing time.",
   "preparationDetailLoss": "Fine details may change or be lost.",

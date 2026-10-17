@@ -244,7 +244,10 @@
     "generic": "Ett allmänt läge föreslås när bilden är svår att avgöra.",
     "photo": "Det här ser ut som ett foto.",
     "art": "Det här ser ut som en teckning med tydliga linjer.",
-    "pixel": "Ett tydligt pixelrutnät upptäcktes."
+    "pixel": "Ett tydligt pixelrutnät upptäcktes.",
+    "smooth": "Släta områden dominerar; en mjukare bearbetning föreslås.",
+    "mixed": "Blandat eller otydligt innehåll: prova ett balanserat resultat.",
+    "unavailable": "Ett alternativ föreslås eftersom det önskade läget inte är tillgängligt."
   },
   "preparationWhy": "En mindre arbetskopia kan minska minnesanvändning och bearbetningstid.",
   "preparationDetailLoss": "Små detaljer kan ändras eller försvinna.",

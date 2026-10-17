@@ -244,7 +244,10 @@
     "generic": "Pour une image difficile à identifier, un mode général est suggéré.",
     "photo": "Cela ressemble à une photo.",
     "art": "Cela ressemble à un dessin aux contours nets.",
-    "pixel": "Une grille de pixels marquée a été détectée."
+    "pixel": "Une grille de pixels marquée a été détectée.",
+    "smooth": "Les zones lisses dominent : un traitement plus doux est suggéré.",
+    "mixed": "Contenu mixte ou incertain : essayez un résultat équilibré.",
+    "unavailable": "Une alternative est proposée car le mode préféré est indisponible."
   },
   "preparationWhy": "Une copie de travail plus petite peut réduire la mémoire utilisée et le temps de traitement.",
   "preparationDetailLoss": "Les détails fins peuvent changer ou disparaître.",

@@ -244,7 +244,10 @@
     "generic": "Pentru o imagine neclară, se sugerează un mod general.",
     "photo": "Pare a fi o fotografie.",
     "art": "Pare a fi un desen cu linii clare.",
-    "pixel": "A fost detectată o grilă clară de pixeli."
+    "pixel": "A fost detectată o grilă clară de pixeli.",
+    "smooth": "Predomină zonele netede; se sugerează o prelucrare mai blândă.",
+    "mixed": "Conținut mixt sau neclar: încearcă un rezultat echilibrat.",
+    "unavailable": "Se sugerează o alternativă deoarece modul preferat nu este disponibil."
   },
   "preparationWhy": "O copie de lucru mai mică poate reduce memoria folosită și timpul de procesare.",
   "preparationDetailLoss": "Detaliile fine se pot schimba sau pierde.",

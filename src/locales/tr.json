@@ -244,7 +244,10 @@
     "generic": "Türü belirsiz görseller için genel bir mod önerilir.",
     "photo": "Fotoğrafa benziyor.",
     "art": "Belirgin çizgileri olan bir çizime benziyor.",
-    "pixel": "Belirgin bir piksel ızgarası algılandı."
+    "pixel": "Belirgin bir piksel ızgarası algılandı.",
+    "smooth": "Düz alanlar baskın; daha yumuşak işleme öneriliyor.",
+    "mixed": "İçerik karışık veya belirsiz: dengeli bir sonuç deneyin.",
+    "unavailable": "Tercih edilen mod kullanılamadığı için bir alternatif öneriliyor."
   },
   "preparationWhy": "Daha küçük bir çalışma kopyası bellek kullanımını ve işlem süresini azaltabilir.",
   "preparationDetailLoss": "İnce ayrıntılar değişebilir veya kaybolabilir.",
