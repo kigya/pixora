@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Salinan kerja yang lebih kecil dapat mengurangi penggunaan memori dan waktu pemrosesan.",
   "preparationDetailLoss": "Detail halus dapat berubah atau hilang.",
-  "preparationFast": "Mode Cepat juga membatasi sisi terpanjang input AI hingga 512 px. Ini terpisah dari salinan kerja."
+  "preparationFast": "Mode Cepat juga membatasi sisi terpanjang input AI hingga 512 px. Ini terpisah dari salinan kerja.",
+  "privacyPolicyLink": "Buka kebijakan privasi lengkap",
+  "privacyPolicyOpenFailed": "Kebijakan privasi tidak dapat dibuka. Periksa koneksi internet lalu coba lagi."
 }

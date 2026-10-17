@@ -251,5 +251,7 @@
   },
   "preparationWhy": "O copie de lucru mai mică poate reduce memoria folosită și timpul de procesare.",
   "preparationDetailLoss": "Detaliile fine se pot schimba sau pierde.",
-  "preparationFast": "Modul rapid limitează și latura lungă a intrării AI la 512 px. Aceasta este o limită separată de copia de lucru."
+  "preparationFast": "Modul rapid limitează și latura lungă a intrării AI la 512 px. Aceasta este o limită separată de copia de lucru.",
+  "privacyPolicyLink": "Deschide politica de confidențialitate completă",
+  "privacyPolicyOpenFailed": "Politica de confidențialitate nu a putut fi deschisă. Verifică conexiunea la internet și încearcă din nou."
 }

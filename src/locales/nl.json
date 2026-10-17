@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Een kleinere werkkopie kan het geheugengebruik en de verwerkingstijd verlagen.",
   "preparationDetailLoss": "Fijne details kunnen veranderen of verloren gaan.",
-  "preparationFast": "De snelle modus beperkt ook de langste zijde van de AI-invoer tot 512 px. Dit staat los van de werkkopie."
+  "preparationFast": "De snelle modus beperkt ook de langste zijde van de AI-invoer tot 512 px. Dit staat los van de werkkopie.",
+  "privacyPolicyLink": "Volledig privacybeleid openen",
+  "privacyPolicyOpenFailed": "Het privacybeleid kon niet worden geopend. Controleer je internetverbinding en probeer het opnieuw."
 }

@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Menší pracovní kopie může snížit využití paměti a dobu zpracování.",
   "preparationDetailLoss": "Jemné detaily se mohou změnit nebo ztratit.",
-  "preparationFast": "Rychlý režim také omezuje delší stranu vstupu AI na 512 px. Jde o samostatné omezení pracovní kopie."
+  "preparationFast": "Rychlý režim také omezuje delší stranu vstupu AI na 512 px. Jde o samostatné omezení pracovní kopie.",
+  "privacyPolicyLink": "Otevřít úplné zásady ochrany soukromí",
+  "privacyPolicyOpenFailed": "Zásady ochrany soukromí se nepodařilo otevřít. Zkontrolujte připojení k internetu a zkuste to znovu."
 }

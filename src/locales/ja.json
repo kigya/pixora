@@ -251,5 +251,7 @@
   },
   "preparationWhy": "小さな作業用コピーにすると、メモリ使用量と処理時間を減らせる場合があります。",
   "preparationDetailLoss": "細部が変わったり失われたりすることがあります。",
-  "preparationFast": "Fast モードでは AI 入力の長辺も 512 px に制限されます。作業用コピーとは別の制限です。"
+  "preparationFast": "Fast モードでは AI 入力の長辺も 512 px に制限されます。作業用コピーとは別の制限です。",
+  "privacyPolicyLink": "プライバシーポリシー全文を開く",
+  "privacyPolicyOpenFailed": "プライバシーポリシーを開けませんでした。インターネット接続を確認して、もう一度お試しください。"
 }
