@@ -68,3 +68,7 @@ Secrets, private serials, raw logcat, user images and local signing material nev
 The 0.8.2 workflow separately runs first-party C++ extraction/strict coverage, unsigned iOS generic-device Release, and simulator XCTest/strict coverage. Every owned implementation source must appear in its report, with nonzero 100% line and branch totals. Compile-only commands include the remaining Android/JNI C++ translation units for CodeQL; they do not count as additional runtime coverage. Objective-C++ remains covered by the iOS mobile source scan, not CodeQL. Main CI must pass on the final squash SHA; local PASS does not predict that result. Samsung installation and UI remain deferred.
 
 TEST-808 also verifies ADR-817: both iOS scripts explicitly select the Xcode default toolchain, including when the parent environment lists Metal first. Device/simulator build settings must resolve existing Swift compatibility libraries; a successful settings query is not a build or test PASS.
+
+## TEST-808 — full privacy policy access (0.8.6)
+
+Requirement FEAT-807, explicit owner instruction on2026-10-17. Scenarios: Settings→Privacy preserves the local summary; explicit press opens the fixed HTTPS URL once without user-data parameters; browser rejection shows the localized failure message; offline keeps the summary available; navigation, all34 locales/legacy pt, RTL and long labels remain usable. Status: NOT RUN by explicit owner build-only decision; no device or automated runtime evidence is claimed.

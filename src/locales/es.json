@@ -251,5 +251,7 @@
   },
   "preparationWhy": "Una copia de trabajo más pequeña puede reducir el uso de memoria y el tiempo de procesamiento.",
   "preparationDetailLoss": "Los detalles finos pueden cambiar o perderse.",
-  "preparationFast": "El modo rápido también limita a 512 px el lado más largo de la entrada de IA. Es un límite distinto al de la copia de trabajo."
+  "preparationFast": "El modo rápido también limita a 512 px el lado más largo de la entrada de IA. Es un límite distinto al de la copia de trabajo.",
+  "privacyPolicyLink": "Abrir la política de privacidad completa",
+  "privacyPolicyOpenFailed": "No se pudo abrir la política de privacidad. Comprueba tu conexión a internet e inténtalo de nuevo."
 }

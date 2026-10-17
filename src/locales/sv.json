@@ -251,5 +251,7 @@
   },
   "preparationWhy": "En mindre arbetskopia kan minska minnesanvändning och bearbetningstid.",
   "preparationDetailLoss": "Små detaljer kan ändras eller försvinna.",
-  "preparationFast": "Snabbt läge begränsar också AI-indata till 512 px på den längsta sidan. Det är separat från arbetskopian."
+  "preparationFast": "Snabbt läge begränsar också AI-indata till 512 px på den längsta sidan. Det är separat från arbetskopian.",
+  "privacyPolicyLink": "Öppna hela integritetspolicyn",
+  "privacyPolicyOpenFailed": "Det gick inte att öppna integritetspolicyn. Kontrollera internetanslutningen och försök igen."
 }

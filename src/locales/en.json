@@ -251,5 +251,7 @@
   },
   "preparationWhy": "A smaller working copy can use less memory and processing time.",
   "preparationDetailLoss": "Fine details may change or be lost.",
-  "preparationFast": "Fast mode also limits the AI input to 512 px on the long side. This is separate from the working copy."
+  "preparationFast": "Fast mode also limits the AI input to 512 px on the long side. This is separate from the working copy.",
+  "privacyPolicyLink": "Open full privacy policy",
+  "privacyPolicyOpenFailed": "Could not open the privacy policy. Check your internet connection and try again."
 }

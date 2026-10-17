@@ -6,6 +6,7 @@ import {
   View,
   Pressable,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -21,6 +22,7 @@ import { errorText } from '../application/errors';
 import { TelemetryControls } from '../ui/telemetryControls';
 import { StorageSlider } from '../ui/storageSlider';
 import { useOperation } from '../application/useOperation';
+import { PRIVACY_POLICY_URL } from '../application/privacy';
 
 import { track, useTrackedScreen } from '../application/telemetry';
 
@@ -46,6 +48,7 @@ export function SettingsScreen({
   const confirm = useConfirm();
   const [info, setInfo] = useState(''),
     [legal, setLegal] = useState('');
+  const [privacyLinkError, setPrivacyLinkError] = useState(false);
   const { operation, error, setError, run } = useOperation();
   const busy = !!operation;
   const workBytes = caps?.workBytes ?? 0;
@@ -77,11 +80,37 @@ export function SettingsScreen({
           <View style={{ width: 48 }} />
         </View>
         {info ? (
-          <Text selectable style={s.body}>
-            {info === 'legal'
-              ? legal
-              : `${t.privacyBody}\n\n${t.feedbackPrivacy}\n\n${t.cacheLimitNote}`}
-          </Text>
+          <>
+            <Text selectable style={s.body}>
+              {info === 'legal'
+                ? legal
+                : `${t.privacyBody}\n\n${t.feedbackPrivacy}\n\n${t.cacheLimitNote}`}
+            </Text>
+            {info === 'privacy' && (
+              <>
+                <Button
+                  title={t.privacyPolicyLink}
+                  secondary
+                  onPress={async () => {
+                    setPrivacyLinkError(false);
+                    try {
+                      await Linking.openURL(PRIVACY_POLICY_URL);
+                    } catch {
+                      setPrivacyLinkError(true);
+                    }
+                  }}
+                />
+                {privacyLinkError && (
+                  <Text
+                    style={s.errorText}
+                    accessibilityLiveRegion="polite"
+                  >
+                    {t.privacyPolicyOpenFailed}
+                  </Text>
+                )}
+              </>
+            )}
+          </>
         ) : (
           <>
             <Text style={s.label}>{t.interface}</Text>
@@ -272,6 +301,7 @@ export function SettingsScreen({
                 secondary
                 onPress={() => {
                   track('ui_action', { action: 'privacy_opened' });
+                  setPrivacyLinkError(false);
                   setInfo('privacy');
                 }}
               />
