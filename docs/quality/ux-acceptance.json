@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "source_fingerprint": "0b45fc295d0e954938962d615ddde0ff71aa9a3567d3d6e68d5c458d5c83ac6e",
+  "recorded_at": "2026-10-22T18:50:11.063662+00:00",
+  "criteria": [
+    {
+      "id": "REQ-TRACE-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "ARCH-BOUNDARY-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "ICON-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "SPLASH-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "ONBOARD-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "NAV-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "MOTION-A11Y-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "LOCALE-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "PERMISSION-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "PRIVACY-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "LICENSE-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "LOCAL-DATA-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "PLATFORM-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "QUALITY-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    },
+    {
+      "id": "HANDOFF-001",
+      "status": "not_run",
+      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "test_ids": [
+        "TEST-905",
+        "TEST-906",
+        "TEST-907"
+      ],
+      "references": []
+    }
+  ]
+}
