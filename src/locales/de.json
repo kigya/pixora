@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Feine Details können sich ändern oder verloren gehen.",
   "preparationFast": "Der schnelle Modus begrenzt außerdem die lange Seite der KI-Eingabe auf 512 px. Das ist unabhängig von der Arbeitskopie.",
   "privacyPolicyLink": "Vollständige Datenschutzerklärung öffnen",
-  "privacyPolicyOpenFailed": "Die Datenschutzerklärung konnte nicht geöffnet werden. Prüfe deine Internetverbindung und versuche es erneut."
+  "privacyPolicyOpenFailed": "Die Datenschutzerklärung konnte nicht geöffnet werden. Prüfe deine Internetverbindung und versuche es erneut.",
+  "onboarding": {
+    "detailTitle": "Mehr Details",
+    "modesTitle": "Passend zu deinem Bild",
+    "offlineTitle": "Fotos bleiben auf deinem Smartphone",
+    "detailBody": "Vergrößere Fotos und vergleiche das Ergebnis.",
+    "modesBody": "Wähle die Verarbeitung für Fotos und Illustrationen.",
+    "offlineBody": "Die Bildverarbeitung funktioniert ohne Internet.",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "start": "Loslegen",
+    "replay": "Einführung ansehen"
+  },
+  "resolution": {
+    "title": "Auflösung",
+    "prepared": "Vorbereitete Kopie",
+    "original": "Originalauflösung",
+    "note": "Ergebnisse in Originalauflösung nutzen PNG. Grenze: 64 MP und 16384 px je Seite.",
+    "limit": "Das Ergebnis überschreitet die Grenze. Wähle die vorbereitete Kopie oder einen kleineren Faktor."
+  }
 }

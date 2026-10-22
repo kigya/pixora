@@ -72,3 +72,23 @@ TEST-808 also verifies ADR-817: both iOS scripts explicitly select the Xcode def
 ## TEST-808 — full privacy policy access (0.8.6)
 
 Requirement FEAT-807, explicit owner instruction on2026-10-17. Scenarios: Settings→Privacy preserves the local summary; explicit press opens the fixed HTTPS URL once without user-data parameters; browser rejection shows the localized failure message; offline keeps the summary available; navigation, all34 locales/legacy pt, RTL and long labels remain usable. Status: NOT RUN by explicit owner build-only decision; no device or automated runtime evidence is claimed.
+
+## TEST-901 — product introduction (FEAT-901)
+
+Host component tests cover fresh/upgrade navigation, skip/completion/replay, native-save rejection/retry, duplicate completion, page/back actions, category demo, draggable bounds, Reduce Motion and app focus/background. OnboardingAndResolutionTest covers the independent Android marker, old preference/session/update evidence and failed writes; ApplicationStartupTest covers startup after marker failure. Language remains system-default. Locale schema/placeholder/hash validation covers34 active dictionaries plus the authored compatibility dictionary. These checks do not establish rendered phone layout, motion smoothness, TalkBack or native-speaker quality; the full light/dark/RTL/large-font matrix and iOS runtime are NOT RUN.
+
+## TEST-902 — presentation comparisons (FEAT-902)
+
+The deterministic developer script checks untouched After hashes and records Before transforms/provenance. Compare all eight before/after bytes and geometry against the source Git revision. Presentation assets are never quality-ground-truth data. Physical visual acceptance is NOT RUN.
+
+## TEST-903 — bounded original resolution (FEAT-903)
+
+JS resolution tests and native bridge tests cover explicit choice, same caps, no silent reduction, Quality-only original launch, notification gate and PNG-only export/share. OriginalProcessorTest covers region assembly, both scales, finishing profiles, transform/crop pixels with a controlled host region reader, real streamed PNG, CPU/GPU/allocation fallback, failures, timeout, cancellation and cleanup. MediaExportTest verifies original PNG bytes survive export/share without full-image transcoding. Shared raster/JNI tests cover alpha, scanline compression/CRC, bounds and IO/cancellation failures. Host tests do not replace real decoder/inference/memory/device acceptance. iOS is compile-verified only in this task; its new runtime coverage is NOT RUN.
+
+## TEST-904 — model candidates and context (FEAT-904)
+
+The research harness uses real bundled ncnn inference for whole-image/tile comparisons, candidates, PSNR/SSIM and optional LPIPS; it accepts a licensed calibration/holdout manifest. Separate candidate evaluation includes official2x, general/WDN, Natural/GAN interpolation and pinned SwinIR. Only measured RRDB context changes ship; current weights/finishers remain. Representative faces/fur/severe-damage holdout, independent blind review and all phone speed/memory comparisons are NOT RUN. TinySR export/inference is NOT RUN because full checkpoint licensing and offline export integration remain unresolved; no product reconstruction mode is enabled.
+
+## TEST-801 host classifier coverage repair — 2026-10-22
+
+`test-recommendation-core.sh` runs the preserved public image cases, private feature/vote/grid boundary cases and frozen pre-refactor regression fixtures against one real production implementation. Classifier:227/227 lines and266/266 branches,100%; no exclusions or threshold changes. Golden results match the independently compiled pre-refactor classifier for60 inputs and3840 profile-availability combinations, including padded RGBA strides and alpha. Allocation-failure fallback and unavailable-profile behavior are covered. The same suites pass ASan/UBSan. Recommendation JNI remains57/57 lines and34/34 branches. Negative controls confirm the unchanged checker rejects an uncovered branch, an empty denominator and a missing owned source. This closes the previous host classifier coverage failure, not device quality/performance or iOS runtime acceptance. Xiaomi, emulators and simulators are NOT RUN by explicit owner constraint.

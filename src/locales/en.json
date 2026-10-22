@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Fine details may change or be lost.",
   "preparationFast": "Fast mode also limits the AI input to 512 px on the long side. This is separate from the working copy.",
   "privacyPolicyLink": "Open full privacy policy",
-  "privacyPolicyOpenFailed": "Could not open the privacy policy. Check your internet connection and try again."
+  "privacyPolicyOpenFailed": "Could not open the privacy policy. Check your internet connection and try again.",
+  "onboarding": {
+    "detailTitle": "More detail",
+    "modesTitle": "Made for your image",
+    "offlineTitle": "Photos stay on your phone",
+    "detailBody": "Enlarge photos and compare the result.",
+    "modesBody": "Choose processing for photos and illustrations.",
+    "offlineBody": "Image processing works without internet.",
+    "next": "Next",
+    "skip": "Skip",
+    "start": "Get started",
+    "replay": "Show introduction"
+  },
+  "resolution": {
+    "title": "Resolution",
+    "prepared": "Prepared copy",
+    "original": "Original resolution",
+    "note": "Original-resolution results use PNG. The limit is 64 MP and 16384 px per side.",
+    "limit": "The output exceeds the limit. Choose Prepared copy or reduce the scale."
+  }
 }

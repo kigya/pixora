@@ -2467,7 +2467,7 @@ SPEC CHECKSUMS:
   hermes-engine: 63c5db7d529c36335fada6582fd293ae2a105d77
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  PixoraNative: c935b699e2cd064627ff425eca127535296d782f
+  PixoraNative: 3f0a5cb4a68ffe53bbffbe1e099411059dd71885
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
   RCT-Folly: d173e541eeb78cad5c81011c1bbf62d5b86b9778

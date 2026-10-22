@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Jemné detaily se mohou změnit nebo ztratit.",
   "preparationFast": "Rychlý režim také omezuje delší stranu vstupu AI na 512 px. Jde o samostatné omezení pracovní kopie.",
   "privacyPolicyLink": "Otevřít úplné zásady ochrany soukromí",
-  "privacyPolicyOpenFailed": "Zásady ochrany soukromí se nepodařilo otevřít. Zkontrolujte připojení k internetu a zkuste to znovu."
+  "privacyPolicyOpenFailed": "Zásady ochrany soukromí se nepodařilo otevřít. Zkontrolujte připojení k internetu a zkuste to znovu.",
+  "onboarding": {
+    "detailTitle": "Více detailů",
+    "modesTitle": "Pro váš obrázek",
+    "offlineTitle": "Fotky zůstávají v telefonu",
+    "detailBody": "Zvětšujte fotky a porovnejte výsledek.",
+    "modesBody": "Vyberte zpracování pro fotky a ilustrace.",
+    "offlineBody": "Zpracování obrázků funguje bez internetu.",
+    "next": "Další",
+    "skip": "Přeskočit",
+    "start": "Začít",
+    "replay": "Zobrazit úvod"
+  },
+  "resolution": {
+    "title": "Rozlišení",
+    "prepared": "Připravená kopie",
+    "original": "Původní rozlišení",
+    "note": "Výsledek v původním rozlišení používá PNG. Limit je 64 MP a 16384 px na stranu.",
+    "limit": "Výsledek překračuje limit. Zvolte připravenou kopii nebo menší měřítko."
+  }
 }

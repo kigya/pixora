@@ -4,9 +4,10 @@
 #import <ImageIO/ImageIO.h>
 #include <vector>
 #include <functional>
+#include <atomic>
 NSBundle* PixoraAssets(NSBundle* appBundle=NSBundle.mainBundle);
 [[noreturn]] void PixoraFail(NSString* code);
-namespace upscale {struct Model;}
+namespace upscale {struct Model;struct Callbacks;}
 namespace pixora {
 struct ImageAPI {
  decltype(&CGBitmapContextCreate) context;
@@ -31,6 +32,8 @@ Image decode(NSURL* url,int maxSide,const ImageAPI& api=imageAPI());
 Image resize(const Image& source,int width,int height,bool nearest=false,const ImageAPI& api=imageAPI());
 NSData* encode(const Image& image,NSString* format,const ImageAPI& api=imageAPI());
 bool write(const Image& image,NSURL* url,NSString* format,const ImageAPI& api=imageAPI());
+NSDictionary* inspectOutput(NSURL* url);
 NSDictionary* inspect(NSURL* url,const ImageAPI& api=imageAPI());
+bool processOriginal(NSURL* source,NSURL* destination,NSString* profile,int width,int height,int scale,std::atomic<bool>& cancelled,const upscale::Callbacks& callbacks,const std::function<bool()>& shouldCancel);
 bool finish(Image& image,const Image& original,NSString* preset,const std::function<bool()>& cancelled,const ImageAPI& api=imageAPI());
 }

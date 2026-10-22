@@ -10,6 +10,7 @@ struct Callbacks {
 };
 struct Model { const char* param; const char* weights; const char* input; const char* output; };
 Model modelFor(int profile);
+int paddingFor(int profile);
 void initializeGPU();
 // Caller owns RGBA buffers, cancellation and platform model loading.
 // The network and scratch storage are released when this call returns.

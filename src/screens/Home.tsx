@@ -1,3 +1,8 @@
+import {
+  originalSizeAllowed,
+  processingDimensions,
+  type Resolution,
+} from '../domain/resolution';
 import React, { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -68,6 +73,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
     setMessage,
   } = useApp();
   const [legacyMode, setLegacyMode] = useState('');
+  const [resolution, setResolution] = useState<Resolution>('prepared');
   const [speed, setSpeed] = useState<ProcessingSpeed>('quality');
   const [mode, setMode] = useState<ProfileId>('standard');
   const [scale, setScale] = useState(2),
@@ -78,8 +84,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const appliedRecommendationImage = useRef<string | undefined>(undefined);
   const { operation, error, run } = useOperation(() => setMessage(''));
   useEffect(() => {
-    setFormat(settings.format);
-  }, [settings.format]);
+    setFormat(v.resolution === 'original' ? 'png' : settings.format);
+  }, [settings.format, v.resolution]);
   useEffect(() => {
     setScale(v.scale);
     setMode(publicProfile(v.profileId || v.mode));
@@ -93,7 +99,16 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
         : '',
     );
     setSpeed(v.speed === 'fast' ? 'fast' : 'quality');
-  }, [v.sessionId, v.jobId, v.scale, v.mode, v.profileId, v.speed]);
+    setResolution(v.resolution === 'original' ? 'original' : 'prepared');
+  }, [
+    v.sessionId,
+    v.jobId,
+    v.scale,
+    v.mode,
+    v.profileId,
+    v.speed,
+    v.resolution,
+  ]);
   const busy = isActive(v);
   useTrackedScreen(`home_${v.state.toLowerCase()}`, jobContext(v), navigation);
   const resultSeen = useRef('');
@@ -163,6 +178,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
       await Native.pickImage();
       await refresh();
       setScale(2);
+      setResolution('prepared');
     });
   const start = () =>
     perform('start', async () => {
@@ -214,6 +230,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
           await refresh();
           return true;
         },
+        resolution,
       );
       if (started) accept(started);
     });
@@ -236,6 +253,11 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
     perform('share', async () => {
       if (await alphaConfirm()) await Native.shareResult(v.jobId, format);
     });
+  const dimensions = v.image
+    ? processingDimensions(v.image, resolution)
+    : { width: 0, height: 0 };
+  const originalAllowed =
+    !v.image || originalSizeAllowed(v.image.width, v.image.height, scale);
   const saved = v.exports.find(e => e.format === format),
     working = v.image;
   const elapsed = v.elapsedMs;
@@ -363,7 +385,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     )}
                   </Text>
                 </View>
-                {working.needsPreparation && (
+                {working.needsPreparation && resolution === 'prepared' && (
                   <>
                     <View style={s.row}>
                       <Text style={s.caption}>{t.preparationLabel}</Text>
@@ -387,8 +409,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                       <Text style={s.caption}>{t.output}</Text>
                       <Text style={s.value}>
                         {ltrValue(
-                          `${number(working.workWidth * scale)} × ${number(
-                            working.workHeight * scale,
+                          `${number(dimensions.width * scale)} × ${number(
+                            dimensions.height * scale,
                           )}`,
                         )}
                       </Text>
@@ -403,10 +425,30 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                       setLegacyMode('');
                       setMode(value.profileId);
                       setSpeed(value.speed);
+                      if (resolution === 'original') setSpeed('quality');
                       appliedRecommendationImage.current = v.image?.id;
                       setRecommendation(null);
                     }}
                   />
+                )}
+                <Text style={s.label}>{t.resolution.title}</Text>
+                <Segments
+                  values={[
+                    { id: 'prepared', label: t.resolution.prepared },
+                    { id: 'original', label: t.resolution.original },
+                  ]}
+                  value={resolution}
+                  onChange={id => {
+                    setResolution(id as Resolution);
+                    setLegacyMode('');
+                    if (id === 'original') setSpeed('quality');
+                  }}
+                />
+                {resolution === 'original' && (
+                  <Text style={s.caption}>{t.resolution.note}</Text>
+                )}
+                {resolution === 'original' && !originalAllowed && (
+                  <Text style={s.errorText}>{t.resolution.limit}</Text>
                 )}
                 <Text style={s.label}>{t.profileTitle}</Text>
                 <ProcessingPicker
@@ -423,7 +465,9 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     <Segments
                       values={[
                         { id: 'quality', label: t.speedQuality },
-                        { id: 'fast', label: t.speedFast },
+                        ...(resolution === 'original'
+                          ? []
+                          : [{ id: 'fast', label: t.speedFast }]),
                       ]}
                       value={speed}
                       onChange={id => {
@@ -440,7 +484,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     {speed === 'fast' ? (
                       <Text style={s.caption}>{t.speedNote}</Text>
                     ) : null}
-                    {Math.max(working.workWidth, working.workHeight) <= 512 ? (
+                    {Math.max(dimensions.width, dimensions.height) <= 512 ? (
                       <Text style={s.caption}>{t.sameInput}</Text>
                     ) : null}
                     <View style={s.row}>
@@ -449,15 +493,15 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                         {ltrValue(
                           `${number(
                             aiSize(
-                              working.workWidth,
-                              working.workHeight,
+                              dimensions.width,
+                              dimensions.height,
                               speed,
                               mode,
                             ).width,
                           )} × ${number(
                             aiSize(
-                              working.workWidth,
-                              working.workHeight,
+                              dimensions.width,
+                              dimensions.height,
                               speed,
                               mode,
                             ).height,
@@ -489,8 +533,8 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                   <Text style={s.caption}>{t.output}</Text>
                   <Text style={s.value}>
                     {ltrValue(
-                      `${number(working.workWidth * scale)} × ${number(
-                        working.workHeight * scale,
+                      `${number(dimensions.width * scale)} × ${number(
+                        dimensions.height * scale,
                       )}`,
                     )}
                   </Text>
@@ -515,7 +559,12 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                 testID="start-job"
                 title={v.state === 'READY' ? t.upscale : t.retry}
                 icon="spark"
-                disabled={blocked || !!operation || !anyProfiles}
+                disabled={
+                  blocked ||
+                  !!operation ||
+                  !anyProfiles ||
+                  (resolution === 'original' && !originalAllowed)
+                }
                 onPress={start}
               />
               <Button
@@ -613,8 +662,12 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                   preserveOrder
                   values={[
                     { id: 'png', label: 'PNG' },
-                    { id: 'jpeg', label: 'JPEG' },
-                    { id: 'webp', label: 'WebP' },
+                    ...(v.resolution === 'original'
+                      ? []
+                      : [
+                          { id: 'jpeg', label: 'JPEG' },
+                          { id: 'webp', label: 'WebP' },
+                        ]),
                   ]}
                   value={format}
                   onChange={setFormat}

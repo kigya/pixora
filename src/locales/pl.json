@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Drobne szczegóły mogą się zmienić lub zniknąć.",
   "preparationFast": "Tryb szybki ogranicza też dłuższy bok wejścia AI do 512 px. To osobny limit, niezależny od kopii roboczej.",
   "privacyPolicyLink": "Otwórz pełną politykę prywatności",
-  "privacyPolicyOpenFailed": "Nie udało się otworzyć polityki prywatności. Sprawdź połączenie z internetem i spróbuj ponownie."
+  "privacyPolicyOpenFailed": "Nie udało się otworzyć polityki prywatności. Sprawdź połączenie z internetem i spróbuj ponownie.",
+  "onboarding": {
+    "detailTitle": "Więcej szczegółów",
+    "modesTitle": "Do Twojego obrazu",
+    "offlineTitle": "Zdjęcia zostają na telefonie",
+    "detailBody": "Powiększaj zdjęcia i porównuj wynik.",
+    "modesBody": "Wybierz przetwarzanie zdjęć i ilustracji.",
+    "offlineBody": "Przetwarzanie obrazów działa bez internetu.",
+    "next": "Dalej",
+    "skip": "Pomiń",
+    "start": "Zacznij",
+    "replay": "Pokaż wprowadzenie"
+  },
+  "resolution": {
+    "title": "Rozdzielczość",
+    "prepared": "Przygotowana kopia",
+    "original": "Oryginalna rozdzielczość",
+    "note": "Wynik w oryginalnej rozdzielczości używa PNG. Limit: 64 MP i 16384 px na bok.",
+    "limit": "Wynik przekracza limit. Wybierz przygotowaną kopię lub mniejszą skalę."
+  }
 }

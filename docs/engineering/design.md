@@ -38,3 +38,10 @@ Picker, help, dialogs and actions must work without mandatory dragging and have 
 ## Icon and motion
 
 Brand sources are in `assets/brand/`; export formats and preview results are verified only by corresponding build/store handoff evidence, not this description. Avoid animations competing with long-running AI progress. Respect reduced motion and retain meaning without animation.
+
+
+## Product introduction — approved 2026-10-22
+
+The new `Onboarding` route uses existing system typography, neutral surfaces, purple action accents and restrained cyan. Scene1 assembles nine image fragments then reveals the comparison; scene2 shows photo/illustration/pixel examples; scene3 places the image in a phone frame. Reanimated transforms/opacity and local assets only; no shaders, video, WebView or new UI dependencies. Pages advance only by explicit actions. Before/Compare/After controls avoid mandatory dragging. Motion stops in background/unfocused states and becomes static under system Reduce Motion.
+
+`onboardingVersion` and `completeOnboarding` are separate from language and notification settings. New installs start at version0; completion/skip persist version1 before navigation resets to Home. Existing saved app settings/session/update evidence bypass the intro. Settings offers replay. A never-used historical iOS installation with no durable app evidence cannot be reliably distinguished from a new installation; it receives the introduction.

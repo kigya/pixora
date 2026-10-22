@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Detail halus dapat berubah atau hilang.",
   "preparationFast": "Mode Cepat juga membatasi sisi terpanjang input AI hingga 512 px. Ini terpisah dari salinan kerja.",
   "privacyPolicyLink": "Buka kebijakan privasi lengkap",
-  "privacyPolicyOpenFailed": "Kebijakan privasi tidak dapat dibuka. Periksa koneksi internet lalu coba lagi."
+  "privacyPolicyOpenFailed": "Kebijakan privasi tidak dapat dibuka. Periksa koneksi internet lalu coba lagi.",
+  "onboarding": {
+    "detailTitle": "Lebih banyak detail",
+    "modesTitle": "Sesuai gambarmu",
+    "offlineTitle": "Foto tetap di ponselmu",
+    "detailBody": "Perbesar foto dan bandingkan hasilnya.",
+    "modesBody": "Pilih pemrosesan untuk foto dan ilustrasi.",
+    "offlineBody": "Pemrosesan gambar bekerja tanpa internet.",
+    "next": "Lanjut",
+    "skip": "Lewati",
+    "start": "Mulai",
+    "replay": "Lihat pengantar"
+  },
+  "resolution": {
+    "title": "Resolusi",
+    "prepared": "Salinan yang disiapkan",
+    "original": "Resolusi asli",
+    "note": "Hasil resolusi asli memakai PNG. Batasnya 64 MP dan 16384 px per sisi.",
+    "limit": "Hasil melebihi batas. Pilih salinan yang disiapkan atau skala lebih kecil."
+  }
 }

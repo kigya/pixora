@@ -3,6 +3,9 @@ import android.content.res.AssetManager
 import android.graphics.Bitmap
 object NativeEngine {
     init { System.loadLibrary("upscale") }
+    external fun createRaster(path: String, width: Int, height: Int): Int
+    external fun writeRaster(path: String, width: Int, height: Int, image: Bitmap, x: Int, y: Int, cropX: Int, cropY: Int, copyWidth: Int, copyHeight: Int): Int
+    external fun finishRaster(raw: String, png: String, width: Int, height: Int, callback: ProgressCallback): Int
     external fun feedbackEndpoint(): String
     external fun setCoveragePath(path: String)
     external fun flushCoverage()

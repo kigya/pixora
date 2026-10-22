@@ -90,3 +90,31 @@ Java_dev_kigya_pixora_RecommendationEngine_analyzeRecommendation(
       "{\"profileId\":\"%s\",\"speed\":\"quality\",\"reasonId\":\"%s\"}",profile,reason);
   return env->NewStringUTF(json);
 }
+
+// Real disk-raster implementation behind the host JVM boundary. The inference
+// fixture above still does not run a model and must not be treated as AI proof.
+#include "../../native/engine/raster.h"
+#include <vector>
+#include <algorithm>
+extern "C" JNIEXPORT jint JNICALL Java_dev_kigya_pixora_NativeEngine_createRaster(JNIEnv* env,jobject,jstring path,jint w,jint h) {
+ const char* p=env->GetStringUTFChars(path,nullptr);int status=0;
+ try{upscale::Raster raster(p,w,h,true);}catch(...){status=-7;}
+ env->ReleaseStringUTFChars(path,p);return status;
+}
+extern "C" JNIEXPORT jint JNICALL Java_dev_kigya_pixora_NativeEngine_writeRaster(JNIEnv* env,jobject,jstring path,jint w,jint h,jobject bitmap,jint x,jint y,jint cx,jint cy,jint cw,jint ch) {
+ jclass type=env->GetObjectClass(bitmap);auto getW=env->GetMethodID(type,"getWidth","()I"),getH=env->GetMethodID(type,"getHeight","()I");
+ int width=env->CallIntMethod(bitmap,getW),height=env->CallIntMethod(bitmap,getH);jintArray argb=env->NewIntArray(width*height);
+ auto getPixels=env->GetMethodID(type,"getPixels","([IIIIIII)V");env->CallVoidMethod(bitmap,getPixels,argb,0,width,0,0,width,height);
+ std::vector<jint> pixels(width*height);env->GetIntArrayRegion(argb,0,width*height,pixels.data());env->DeleteLocalRef(argb);env->DeleteLocalRef(type);
+ std::vector<uint8_t> rgba(width*height*4);
+ for(size_t i=0;i<pixels.size();i++){int alpha=(unsigned)pixels[i]>>24;for(int c=0;c<3;c++)rgba[i*4+c]=(((pixels[i]>>(16-c*8))&255)*alpha+127)/255;rgba[i*4+3]=alpha;}
+ const char* p=env->GetStringUTFChars(path,nullptr);int status=0;
+ try{upscale::Raster raster(p,w,h,false);raster.write({rgba.data(),width,height,width*4},x,y,cx,cy,cw,ch);}catch(...){status=-7;}
+ env->ReleaseStringUTFChars(path,p);return status;
+}
+extern "C" JNIEXPORT jint JNICALL Java_dev_kigya_pixora_NativeEngine_finishRaster(JNIEnv* env,jobject,jstring raw,jstring png,jint w,jint h,jobject callback) {
+ const char* source=env->GetStringUTFChars(raw,nullptr);const char* output=env->GetStringUTFChars(png,nullptr);int status=0;
+ jclass type=env->GetObjectClass(callback);auto progress=env->GetMethodID(type,"onProgress","(II)Z");
+ try{upscale::Raster raster(source,w,h,false);if(!raster.png(output,[&]{return !env->CallBooleanMethod(callback,progress,0,0);}))status=1;}catch(...){status=-7;}
+ env->DeleteLocalRef(type);env->ReleaseStringUTFChars(raw,source);env->ReleaseStringUTFChars(png,output);return status;
+}

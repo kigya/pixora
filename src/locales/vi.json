@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Các chi tiết nhỏ có thể thay đổi hoặc mất đi.",
   "preparationFast": "Chế độ Nhanh cũng giới hạn cạnh dài của đầu vào AI ở 512 px. Đây là giới hạn riêng với bản sao làm việc.",
   "privacyPolicyLink": "Mở chính sách quyền riêng tư đầy đủ",
-  "privacyPolicyOpenFailed": "Không thể mở chính sách quyền riêng tư. Hãy kiểm tra kết nối internet rồi thử lại."
+  "privacyPolicyOpenFailed": "Không thể mở chính sách quyền riêng tư. Hãy kiểm tra kết nối internet rồi thử lại.",
+  "onboarding": {
+    "detailTitle": "Thêm chi tiết",
+    "modesTitle": "Phù hợp với ảnh của bạn",
+    "offlineTitle": "Ảnh vẫn ở trên điện thoại",
+    "detailBody": "Phóng to ảnh và so sánh kết quả.",
+    "modesBody": "Chọn cách xử lý cho ảnh chụp và hình minh họa.",
+    "offlineBody": "Xử lý ảnh không cần internet.",
+    "next": "Tiếp",
+    "skip": "Bỏ qua",
+    "start": "Bắt đầu",
+    "replay": "Xem giới thiệu"
+  },
+  "resolution": {
+    "title": "Độ phân giải",
+    "prepared": "Bản sao đã chuẩn bị",
+    "original": "Độ phân giải gốc",
+    "note": "Kết quả ở độ phân giải gốc dùng PNG. Giới hạn là 64 MP và 16384 px mỗi cạnh.",
+    "limit": "Kết quả vượt giới hạn. Chọn bản sao đã chuẩn bị hoặc tỷ lệ nhỏ hơn."
+  }
 }

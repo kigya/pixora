@@ -167,6 +167,7 @@ jobs:
           --llvm coverage/recommendation-jni/coverage.json
           --source-dir native/engine --source-dir native/recommendation
           --require-source android/app/src/main/cpp/engine/upscale.cpp
+          --require-source android/app/src/main/cpp/engine/raster_jni.cpp
           --require-source android/app/src/main/cpp/engine/recommendation_jni.cpp
       # CodeQL supports C/C++; Objective-C++ iOS sources remain in the iOS mobile source scan.
       - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4

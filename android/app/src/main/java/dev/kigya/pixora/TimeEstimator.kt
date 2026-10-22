@@ -8,7 +8,8 @@ import kotlin.math.*
 /** Local observations only. Tile area includes actual clipped context padding. */
 class TimeEstimator(context:Context,model:String,backend:String,private val width:Int,private val height:Int,private val tile:Int,profile:String,speed:String,scale:Int,private val outputPixels:Long=width.toLong()*height*scale*scale,private val elapsed:()->Long) {
     private val preferences=context.getSharedPreferences("processing-estimates",Context.MODE_PRIVATE)
-    private val key="${BuildConfig.VERSION_NAME}:$model:$backend:$tile:$profile:$speed:$scale"
+    private val padding=ProcessingProfiles.padding(profile)
+    private val key="${BuildConfig.VERSION_NAME}:$model:$backend:$tile:$profile:$speed:$scale:pad$padding"
     private val history=try{
         val raw=JSONArray(preferences.getString(key,"[]"));val valid=JSONArray()
         for(i in 0 until raw.length()) {
@@ -19,7 +20,7 @@ class TimeEstimator(context:Context,model:String,backend:String,private val widt
         valid
     }catch(_:Exception){JSONArray()}
     private val nx=(width+tile-1)/tile
-    private val areas=DoubleArray(nx*((height+tile-1)/tile)){i->val x=i%nx*tile;val y=i/nx*tile;(min(width,x+tile+32)-max(0,x-32)).toDouble()*(min(height,y+tile+32)-max(0,y-32))}
+    private val areas=DoubleArray(nx*((height+tile-1)/tile)){i->val x=i%nx*tile;val y=i/nx*tile;(min(width,x+tile+padding)-max(0,x-padding)).toDouble()*(min(height,y+tile+padding)-max(0,y-padding))}
     private val total=areas.sum()
     private var completed=0.0
     private var previousDone=0

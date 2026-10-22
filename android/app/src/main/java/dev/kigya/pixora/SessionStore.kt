@@ -43,6 +43,10 @@ object SessionStore {
         if (value.optString("state") == "SUCCEEDED" && !File(value.optString("resultPath")).isFile) {
             value.put("state", "INTERRUPTED").put("error", "INTERRUPTED")
         }
+        value.optJSONObject("image")?.let { restored ->
+            val folder=File(restored.getString("sourcePath")).parentFile
+            for(name in listOf("original.rgba.partial","result.png.partial"))File(folder,name).delete()
+        }
         ImageFiles.cleanupShares(context, false)
         RetentionPolicy.applyAtLaunch(context)
     }
@@ -96,7 +100,7 @@ object SessionStore {
         val appInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
         val upgradedInstall = appInfo.lastUpdateTime > appInfo.firstInstallTime
         val languageChosen = p.contains("language") || p.all.isNotEmpty() || File(context.filesDir, "session.json").exists() || upgradedInstall
-        return JSONObject().put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", language)
+        return JSONObject().put("onboardingVersion",OnboardingStore.version(ctx)).put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", language)
             .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("systemLanguage", android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
     }
 }

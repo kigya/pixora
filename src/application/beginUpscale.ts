@@ -9,9 +9,10 @@ export async function beginUpscale(
   confirmPreparation: (image: ImageInfo, scale: number) => Promise<boolean>,
   speed?: string,
   beforeStart?: () => Promise<boolean>,
+  resolution: 'prepared' | 'original' = 'prepared',
 ) {
   if (!image) return null;
-  if (image.needsPreparation) {
+  if (resolution === 'prepared' && image.needsPreparation) {
     const confirmed = await confirmPreparation(image, scale);
     track('preparation_decision', {
       profile_id: mode,
@@ -21,6 +22,15 @@ export async function beginUpscale(
     if (!confirmed) return null;
   }
   if (beforeStart && !(await beforeStart())) return null;
+  if (resolution === 'original')
+    return Native.startJobWithResolution(
+      image.id,
+      scale,
+      mode,
+      'quality',
+      resolution,
+      true,
+    );
   if (speed !== undefined)
     return Native.startJobWithProfile(image.id, scale, mode, speed, true);
   return Native.startJobWithMode(image.id, scale, true, mode);

@@ -5,12 +5,22 @@
     "source": "Downloads/compressed-images (1)/1.jpg",
     "sourceSha256": "32fea566a01ec4e9238aedcf2dd28708ec5c65072ba14af278da26db05ee13e0",
     "asset": "standard-before.jpg",
-    "assetSha256": "0f9a51ebf7f25234a2f99cae482bc404701648b903b0267be0a14a9700dbeb4c",
-    "bytes": 218153,
+    "assetSha256": "925128bc710145d6a9069abf5967b9d21ed3a4bb9ba2daaae27ae747c046548a",
+    "bytes": 38368,
     "sourceWidth": 1920,
     "sourceHeight": 1440,
     "width": 1280,
-    "height": 960
+    "height": 960,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "0f9a51ebf7f25234a2f99cae482bc404701648b903b0267be0a14a9700dbeb4c",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "standard",
@@ -31,12 +41,22 @@
     "source": "Downloads/compressed-images (1)/2.jpg",
     "sourceSha256": "f465f0f03846e5e275d8354665d278b158664ae9b874ed9cc524fb4c5e1ae503",
     "asset": "lite-before.jpg",
-    "assetSha256": "74adfb9203769711c39f0a03eda5e2aa745a0278c8113d5670bd92874996390d",
-    "bytes": 287206,
+    "assetSha256": "be8e4eefd3bb40c5b13a079b53dad96395af91150995b802b6d0a3352106178c",
+    "bytes": 34048,
     "sourceWidth": 1920,
     "sourceHeight": 1440,
     "width": 1280,
-    "height": 960
+    "height": 960,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "74adfb9203769711c39f0a03eda5e2aa745a0278c8113d5670bd92874996390d",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "lite",
@@ -57,12 +77,22 @@
     "source": "Downloads/compressed-images (1)/3.JPG",
     "sourceSha256": "e67a1c0a5265d00e31ab61c5847a054865f9952454bb204cbc9c13c36be9b432",
     "asset": "natural-before.jpg",
-    "assetSha256": "b0bec63470d9a64eb36152c1b1602815ae406a8a613fbc38ea2e64ecf23f5384",
-    "bytes": 450819,
+    "assetSha256": "315ba600047ee088aa286c58c0250329f28411078948edbb2976612d08ca5ba6",
+    "bytes": 70242,
     "sourceWidth": 1920,
     "sourceHeight": 1440,
     "width": 1280,
-    "height": 960
+    "height": 960,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "b0bec63470d9a64eb36152c1b1602815ae406a8a613fbc38ea2e64ecf23f5384",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "natural",
@@ -83,12 +113,22 @@
     "source": "Downloads/compressed-images (1)/4.jpg",
     "sourceSha256": "63f09464cdf4ef0d3e9c841602a765bf138f8698551a0dae94a8fbf13d240668",
     "asset": "details-before.jpg",
-    "assetSha256": "b2779b43e0e35d6636f995dcbeb07731b6450a578c068b5ca3b747215e0c1f37",
-    "bytes": 61556,
+    "assetSha256": "ce88e4d1a09575b40da3562f88dd952ca5fe4b0193de70f9d7e2710710dd32d3",
+    "bytes": 18373,
     "sourceWidth": 1920,
     "sourceHeight": 1285,
     "width": 1280,
-    "height": 857
+    "height": 857,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "b2779b43e0e35d6636f995dcbeb07731b6450a578c068b5ca3b747215e0c1f37",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "details",
@@ -109,12 +149,22 @@
     "source": "Downloads/compressed-images (1)/5.jpg",
     "sourceSha256": "bfd52638e37c67533e7e726e9c8646fb07367766ea8f7cef61549d5c1b6f9ae8",
     "asset": "balanced-before.jpg",
-    "assetSha256": "f904e0e8e23fe076181541d8bf2e259a9c7675dcde598fdab490cb889406d8c5",
-    "bytes": 205365,
+    "assetSha256": "a520dba2464618c81be43ff92fbe993a07418f7b6ead0aa5ed4a767f741f17ad",
+    "bytes": 27580,
     "sourceWidth": 1920,
     "sourceHeight": 863,
     "width": 1280,
-    "height": 575
+    "height": 575,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "f904e0e8e23fe076181541d8bf2e259a9c7675dcde598fdab490cb889406d8c5",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "balanced",
@@ -135,12 +185,22 @@
     "source": "Downloads/compressed-images (1)/6.jpg",
     "sourceSha256": "a8820b6ce453b03798c01f64d0d436cc317df2475084c05d047dc81c6409d7d6",
     "asset": "sharp-before.jpg",
-    "assetSha256": "58c36a6fd708d6e1c0952139f59d42170320d42e19d10a469406f768dfd63a65",
-    "bytes": 386898,
+    "assetSha256": "fb200ea0f668b69bc90464c02a51890adb9a752730fb0994c1239ac986420b8f",
+    "bytes": 49197,
     "sourceWidth": 1920,
     "sourceHeight": 1440,
     "width": 1280,
-    "height": 960
+    "height": 960,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "58c36a6fd708d6e1c0952139f59d42170320d42e19d10a469406f768dfd63a65",
+      "downsample": 4,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.3,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "sharp",
@@ -161,12 +221,22 @@
     "source": "Downloads/compressed-images (1)/7.jpg",
     "sourceSha256": "5cbe44412b07b4a81c508011a855d95d2cb4567d8c3394a9fc63b331fa6205d7",
     "asset": "art-before.jpg",
-    "assetSha256": "69281486569868ad669140340d92aa1e0ba8e8f997616174a76973fbbaf2a847",
-    "bytes": 129912,
+    "assetSha256": "9b1fa49c238de53301d5441db5998b5bfee6e41c7cef9f62e42dc41a36af020a",
+    "bytes": 31362,
     "sourceWidth": 1920,
     "sourceHeight": 1671,
     "width": 1280,
-    "height": 1114
+    "height": 1114,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "69281486569868ad669140340d92aa1e0ba8e8f997616174a76973fbbaf2a847",
+      "downsample": 8,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.4,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": 35
+    }
   },
   {
     "profile": "art",
@@ -187,12 +257,22 @@
     "source": "Downloads/compressed-images (1)/8.png",
     "sourceSha256": "fd883a19175238bff83346f0cbefaa77fbfa27f98460581aaa195477e8978950",
     "asset": "pixel-before.png",
-    "assetSha256": "c9afadcdde024179e5cee485654ec47e6e70d1191206e69d00c9a2a392932507",
-    "bytes": 247930,
+    "assetSha256": "6e543969892e23d9cbfc1d06d2307805f9d41a63bcee7130fc2ed69d8896cf31",
+    "bytes": 515137,
     "sourceWidth": 1150,
     "sourceHeight": 1500,
     "width": 981,
-    "height": 1280
+    "height": 1280,
+    "presentationDegradation": {
+      "version": 1,
+      "sourceGitRef": "6a79e1f38047b1a241d8be3b21256b850c75190e",
+      "sourceAssetSha256": "c9afadcdde024179e5cee485654ec47e6e70d1191206e69d00c9a2a392932507",
+      "downsample": 8,
+      "downsampleFilter": "box",
+      "blurSigmaAtReducedSize": 0.4,
+      "upsampleFilter": "bilinear",
+      "jpegQuality": null
+    }
   },
   {
     "profile": "pixel",

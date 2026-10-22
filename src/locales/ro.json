@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Detaliile fine se pot schimba sau pierde.",
   "preparationFast": "Modul rapid limitează și latura lungă a intrării AI la 512 px. Aceasta este o limită separată de copia de lucru.",
   "privacyPolicyLink": "Deschide politica de confidențialitate completă",
-  "privacyPolicyOpenFailed": "Politica de confidențialitate nu a putut fi deschisă. Verifică conexiunea la internet și încearcă din nou."
+  "privacyPolicyOpenFailed": "Politica de confidențialitate nu a putut fi deschisă. Verifică conexiunea la internet și încearcă din nou.",
+  "onboarding": {
+    "detailTitle": "Mai multe detalii",
+    "modesTitle": "Pentru imaginea ta",
+    "offlineTitle": "Fotografiile rămân pe telefon",
+    "detailBody": "Mărește fotografiile și compară rezultatul.",
+    "modesBody": "Alege procesarea pentru fotografii și ilustrații.",
+    "offlineBody": "Procesarea imaginilor funcționează fără internet.",
+    "next": "Înainte",
+    "skip": "Omite",
+    "start": "Începe",
+    "replay": "Vezi introducerea"
+  },
+  "resolution": {
+    "title": "Rezoluție",
+    "prepared": "Copie pregătită",
+    "original": "Rezoluție originală",
+    "note": "Rezultatul la rezoluția originală folosește PNG. Limita este 64 MP și 16384 px pe latură.",
+    "limit": "Rezultatul depășește limita. Alege copia pregătită sau o scară mai mică."
+  }
 }

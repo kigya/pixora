@@ -47,6 +47,8 @@ static void sharedProcessRejectsInvalidBoundaryViews() {
     assert(cancelled.load() && stages==2 && loads==1);
 }
 int main(){
+    assert(upscale::paddingFor(0)==64 && upscale::paddingFor(2)==64 && upscale::paddingFor(4)==64);
+    assert(upscale::paddingFor(1)==32 && upscale::paddingFor(3)==32);
     sharedProcessRejectsInvalidBoundaryViews();
     assert(JNI_OnLoad(nullptr,nullptr)==JNI_VERSION_1_6);
     JNIEnv env;AAssetManager assets;FakeBitmap in(33,35),out(132,140);
