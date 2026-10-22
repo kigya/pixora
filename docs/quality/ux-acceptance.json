@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_fingerprint": "0b45fc295d0e954938962d615ddde0ff71aa9a3567d3d6e68d5c458d5c83ac6e",
-  "recorded_at": "2026-10-22T18:50:11.063662+00:00",
+  "source_fingerprint": "a4cd48c337f648710c05a10c0145a4b986ce7d92ddfd5636ba4dad75b118da52",
+  "recorded_at": "2026-10-22T18:57:52.559496+00:00",
   "criteria": [
     {
       "id": "REQ-TRACE-001",

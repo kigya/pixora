@@ -62,10 +62,10 @@ test('pending confirmation is rejected on unmount and replacement',async()=>{
 });
 test('help and language panels close through native Back',async()=>{
  await render(<InformationProvider><HelpLink/><LanguagePicker value="system" onChange={async()=>{}}/></InformationProvider>);
- await userEvent.press(screen.getByRole('button',{name:t.how}));await fireEvent(screen.getByTestId('information-panel'),'requestClose');
+ await userEvent.press(screen.getByRole('button',{name:t.how}));await fireEvent(screen.getByTestId('information-panel-modal'),'requestClose');
  expect(screen.queryByText(t.howTitle)).not.toBeOnTheScreen();
  await userEvent.press(screen.getByRole('button',{name:`${t.language}: ${t.system}`}));await userEvent.press(screen.getByRole('radio',{name:t.system}));
- await userEvent.press(screen.getByRole('button',{name:`${t.language}: ${t.system}`}));await fireEvent(screen.getByTestId('information-panel'),'requestClose');
+ await userEvent.press(screen.getByRole('button',{name:`${t.language}: ${t.system}`}));await fireEvent(screen.getByTestId('information-panel-modal'),'requestClose');
 });
 test.each([{width:320,rtl:false,fontScale:1},{width:840,rtl:false,fontScale:1},{width:840,rtl:true,fontScale:1},{width:840,rtl:false,fontScale:2}])('responsive workbench %#',async item=>{
  jest.spyOn(require('react-native'),'useWindowDimensions').mockReturnValue({width:item.width,height:600,scale:1,fontScale:item.fontScale});

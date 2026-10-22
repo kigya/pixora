@@ -43,6 +43,7 @@ export type PopDialogProps = {
   /** A tap outside closes it. Defaults to true. */
   dismissable?: boolean;
   testID?: string;
+  backdropTestID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -63,6 +64,7 @@ export function PopDialog({
   actions,
   dismissable = true,
   testID,
+  backdropTestID,
   style,
 }: PopDialogProps) {
   const { colors, font, radius, space, shadow } = useKinetikTheme();
@@ -114,6 +116,7 @@ export function PopDialog({
       <View style={styles.root} onAccessibilityEscape={onClose}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, scrim]}>
           <Pressable
+            testID={backdropTestID}
             style={StyleSheet.absoluteFill}
             onPress={dismissable ? onClose : undefined}
             accessible={dismissable}
@@ -151,11 +154,11 @@ export function PopDialog({
             </Text>
           ) : null}
           {children}
-          <View style={[stacked ? styles.stack : styles.pair, { marginTop: space[4] }]}>
+          {actions.length > 0 && <View style={[stacked ? styles.stack : styles.pair, { marginTop: space[4] }]}>
             {actions.map((a) => (
               <ActionButton key={a.label} action={a} fill={!stacked} />
             ))}
-          </View>
+          </View>}
         </Animated.View>
       </View>
     </Modal>

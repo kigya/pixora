@@ -65,7 +65,7 @@ test.each([false,true])('first launch permits explicit notification choice=%s', 
 test('closing the notification explanation cancels launch without persisting a choice', async () => {
  seed({state:'READY',image},{notificationIntroSeen:false});
  await viewHome();await userEvent.press(await screen.findByRole('button',{name:t.upscale}));
- await act(() => fireEvent(screen.getByTestId('information-panel'), 'requestClose'));
+ await act(() => fireEvent(screen.getByTestId('information-panel-modal'), 'requestClose'));
  expect(Native.markNotificationIntroSeen).not.toHaveBeenCalled();
  expect(Native.startJobWithProfile).not.toHaveBeenCalled();
 });

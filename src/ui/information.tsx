@@ -1,16 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import {
-  Modal,
   View,
   Text,
   Pressable,
   ScrollView,
   FlatList,
-  AccessibilityInfo,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import { usePane } from './layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './theme';
 import { useLocale, languages } from './locale';
@@ -18,6 +16,7 @@ import { strings } from './i18n';
 import { flagXml } from './flags';
 import { Button, Icon, createStyles } from './components';
 import { track } from '../application/telemetry';
+import { PopDialog } from '../components/kinetik/pop-dialog';
 
 export function Panel({
   visible,
@@ -30,78 +29,32 @@ export function Panel({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const { colors } = useTheme();
-  const pane = usePane();
   const insets = useSafeAreaInsets();
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduced);
-    const sub = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduced,
-    );
-    return () => sub.remove();
-  }, []);
+  const window = useWindowDimensions();
+  const { locale } = useLocale();
   return (
-    <Modal
+    <PopDialog
       testID="information-panel"
-      transparent
+      backdropTestID="information-backdrop"
       visible={visible}
-      animationType={reduced ? 'none' : 'fade'}
-      statusBarTranslucent
-      onRequestClose={onClose}
+      onClose={onClose}
+      closeLabel={strings[locale].back}
+      title=""
+      actions={[]}
+      style={{
+        width: Math.min(480, window.width - insets.left - insets.right - 32),
+        maxHeight: window.height - insets.top - insets.bottom - 32,
+      }}
     >
-      <View
-        style={{ flex: 1, backgroundColor: '#00000099' }}
-        accessibilityViewIsModal
-      >
-        <Pressable
-          testID="information-backdrop"
-          accessible={false}
-          onPress={onClose}
-          style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
-        />
-        <View
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            left: pane.marginLeft + insets.left,
-            top: pane.marginTop + insets.top,
-            width: pane.width,
-            height: pane.height,
-            padding: 16,
-            justifyContent: pane.width >= 600 ? 'center' : 'flex-end',
-            alignItems: 'center',
-          }}
-        >
-          <View
-            style={{
-              width: '100%',
-              maxWidth: 480,
-              maxHeight: pane.height - 32,
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              borderWidth: 1,
-              borderRadius: 24,
-              padding: 20,
-            }}
-          >
-            {scroll ? (
-              <ScrollView
-                contentContainerStyle={{ gap: 20 }}
-                keyboardShouldPersistTaps="handled"
-              >
-                {children}
-              </ScrollView>
-            ) : (
-              children
-            )}
-          </View>
-        </View>
-      </View>
-    </Modal>
+      {scroll ? (
+        <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 20 }} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+      ) : children}
+    </PopDialog>
   );
 }
+
 const HelpContext = createContext<() => void>(() => {});
 export const useHow = () => useContext(HelpContext);
 export function InformationProvider({
