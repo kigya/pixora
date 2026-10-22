@@ -50,12 +50,12 @@ object ImageFiles {
         throw AppFailure("UNSUPPORTED_FORMAT")
     }
     fun orientation(file: File) = try { ExifInterface(file).getAttributeInt(ExifInterface.TAG_ORIENTATION, 1) } catch (_: Exception) { 1 }
-    private fun matrix(o: Int) = Matrix().apply {
+    internal fun matrix(o: Int) = Matrix().apply {
         when(o) { 2 -> setScale(-1f,1f); 3 -> setRotate(180f); 4 -> setScale(1f,-1f)
             5 -> {setRotate(90f); postScale(-1f,1f)}; 6 -> setRotate(90f)
             7 -> {setRotate(-90f); postScale(-1f,1f)}; 8 -> setRotate(-90f) }
     }
-    private fun decode(file: File, targetW: Int, targetH: Int): Bitmap {
+    internal fun decode(file: File, targetW: Int, targetH: Int): Bitmap {
         val o = orientation(file); val swapped = o in 5..8
         val rawW = if(swapped) targetH else targetW; val rawH = if(swapped) targetW else targetH
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -127,6 +127,7 @@ object ImageFiles {
     }
     fun export(ctx: Context, session: JSONObject, format: String): JSONObject {
         if(format !in setOf("png","jpeg","webp")) throw AppFailure("EXPORT_FAILED")
+        if(session.optString("resolution")=="original" && format!="png")throw AppFailure("EXPORT_FAILED")
         val mime = if(format=="png") "image/png" else if(format=="webp") "image/webp" else "image/jpeg"
         val extension = if(format=="png") "png" else if(format=="webp") "webp" else "jpg"
         val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss",java.util.Locale.US).format(java.util.Date())
@@ -136,19 +137,23 @@ object ImageFiles {
         val values = ContentValues().apply { put(MediaStore.MediaColumns.DISPLAY_NAME,name); put(MediaStore.MediaColumns.MIME_TYPE,mime); put(MediaStore.MediaColumns.RELATIVE_PATH,"Pictures/Pixora/"); put(MediaStore.MediaColumns.IS_PENDING,1) }
         val uri = ctx.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values) ?: throw AppFailure("EXPORT_FAILED")
         try {
-            val bitmap = BitmapFactory.decodeFile(session.getString("resultPath")) ?: throw AppFailure("EXPORT_FAILED")
+            val bitmap = if(session.optString("resolution")=="original")null else BitmapFactory.decodeFile(session.getString("resultPath")) ?: throw AppFailure("EXPORT_FAILED")
             val staging = File(ctx.cacheDir,"export-${UUID.randomUUID()}.$extension")
-            try { write(bitmap,staging,format)
+            try { if(bitmap==null)File(session.getString("resultPath")).copyTo(staging,overwrite=true) else write(bitmap,staging,format)
                 val output=ctx.contentResolver.openOutputStream(uri) ?: throw AppFailure("EXPORT_FAILED")
                 withClosed(output) { out -> withClosed(staging.inputStream()) { it.copyTo(out) } }
                 val size=staging.length(); ctx.contentResolver.update(uri,ContentValues().apply{put(MediaStore.MediaColumns.IS_PENDING,0)},null,null)
-                return JSONObject().put("id",UUID.randomUUID().toString()).put("format",format).put("mime",mime).put("uri",uri.toString()).put("width",bitmap.width).put("height",bitmap.height).put("size",size).put("createdAt",System.currentTimeMillis())
-            } finally { bitmap.recycle(); staging.delete() }
+                return JSONObject().put("id",UUID.randomUUID().toString()).put("format",format).put("mime",mime).put("uri",uri.toString()).put("width",bitmap?.width ?: session.getInt("resultWidth")).put("height",bitmap?.height ?: session.getInt("resultHeight")).put("size",size).put("createdAt",System.currentTimeMillis())
+            } finally { bitmap?.recycle(); staging.delete() }
         } catch(e: Throwable) { ctx.contentResolver.delete(uri,null,null); throw e }
     }
     fun shareFile(ctx: Context, session: JSONObject, format: String): File {
         if(format !in setOf("png","jpeg","webp")) throw AppFailure("SHARE_FAILED")
         val file=File(File(ctx.cacheDir,"share").apply{mkdirs()},"Pixora_${UUID.randomUUID()}.${if(format=="png") "png" else if(format=="webp") "webp" else "jpg"}")
+        if(session.optString("resolution")=="original"){
+            if(format!="png")throw AppFailure("SHARE_FAILED")
+            try {File(session.getString("resultPath")).copyTo(file,overwrite=true);return file}catch(e:Throwable){file.delete();throw e}
+        }
         val b=BitmapFactory.decodeFile(session.getString("resultPath")) ?: throw AppFailure("SHARE_FAILED")
         try {write(b,file,format)} finally {b.recycle()}; return file
     }

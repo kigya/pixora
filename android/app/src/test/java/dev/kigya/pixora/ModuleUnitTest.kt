@@ -214,6 +214,28 @@ class ModuleUnitTest {
         val destroyed=Robolectric.buildActivity(Activity::class.java).setup().destroy().get();react.onHostResume(destroyed)
         assertTrue(destroyed.isDestroyed);fails("SERVICE_START_FAILED"){module.startJob(id,2.0,true,it)}
     }
+    @Test fun originalResolutionBridgeRejectsInvalidOptionsAndKeepsPreparationExplicit() {
+        call(module::completeOnboarding)
+        assertEquals(1,(call(module::getSettings) as ReadableMap).getDouble("onboardingVersion").toInt())
+        val id=image()
+        for(options in listOf(Triple("unknown","quality","original"),Triple("standard","quality","unknown"),Triple("standard","other","original"),Triple("standard","fast","original"),Triple("pixel","fast","prepared"))) {
+            fails("INFERENCE_FAILED"){module.startJobWithResolution(id,2.0,options.first,options.second,options.third,false,it)}
+        }
+        SessionStore.update{it.getJSONObject("image").put("width",8193)}
+        fails("DIMENSIONS_TOO_LARGE"){module.startJobWithResolution(id,2.0,"standard","quality","original",false,it)}
+        SessionStore.update{it.getJSONObject("image").put("width",8).put("height",8193)}
+        fails("DIMENSIONS_TOO_LARGE"){module.startJobWithResolution(id,2.0,"standard","quality","original",false,it)}
+        SessionStore.update{it.getJSONObject("image").put("height",8).put("needsPreparation",true)}
+        val activity=Robolectric.buildActivity(Activity::class.java).setup().get();react.onHostResume(activity)
+        for(options in listOf(Triple("standard","quality","original"),Triple("pixel","quality","original"),Triple("standard","fast","prepared"))) {
+            SessionStore.update{it.put("state","READY")}
+            val result=call{module.startJobWithResolution(id,2.0,options.first,options.second,options.third,true,it)} as ReadableMap
+            assertEquals(options.third,result.getString("resolution"))
+        }
+        SessionStore.update{it.put("state","READY")}
+        val result=call{module.startJobWithResolution(id,2.0,"standard","quality","original",false,it)} as ReadableMap
+        assertEquals("PREPARING",result.getString("state"))
+    }
     @Test fun notificationPermissionIsOptionalAndHasNoDuplicatePrompt() {
         val prefs=ctx.getSharedPreferences("settings",0)
         call(module::getNotificationStatus);call(module::openNotificationSettings)
@@ -484,6 +506,21 @@ class ModuleUnitTest {
         }
     }
 
+    @Test fun recommendationBoundarySurvivesAllocationFailureAndAnAvailabilityRace() {
+        val id=image();module.invalidate()
+        ctx.getSharedPreferences("remote_profiles",0).edit().clear().commit();ProfileAvailability.init(ctx)
+        module=UpscaleModule(react,javaBridge,ModelVerifier{true},recommendation={throw OutOfMemoryError()})
+        val fallback=call{module.getImageRecommendation(id,it)} as ReadableMap
+        assertEquals("balanced",fallback.getString("profileId"));module.invalidate()
+        module=UpscaleModule(react,javaBridge,ModelVerifier{true},recommendation={
+            val flags=JSONObject().put("source","test").put("updatedAt",0)
+            ProcessingProfiles.presets.forEach{flags.put(it,false)}
+            ctx.getSharedPreferences("remote_profiles",0).edit().putString("snapshot",flags.toString()).commit();ProfileAvailability.init(ctx)
+            "{\"profileId\":\"standard\",\"speed\":\"quality\",\"reasonId\":\"photo\"}"
+        })
+        try {assertNull(call{module.getImageRecommendation(id,it)})}
+        finally {ctx.getSharedPreferences("remote_profiles",0).edit().clear().commit();ProfileAvailability.init(ctx)}
+    }
     @Test fun recommendationAnalyzerBoundsDecodeAndRejectsInvalidPreviews() {
         val file=File.createTempFile("recommendation-test",".png",ctx.cacheDir)
         try {

@@ -46,6 +46,7 @@ export type ImageRecommendation = {
     | 'unavailable';
 };
 export type Session = {
+  resolution?: string;
   profileId?: string;
   speed?: string;
   aiInputWidth?: number;
@@ -89,6 +90,7 @@ export type Session = {
   exports: ReadonlyArray<ExportInfo>;
 };
 export type Settings = {
+  onboardingVersion: number;
   cacheLimitMiB: number;
   notificationHintCount: number;
   theme: string;
@@ -165,6 +167,14 @@ export interface Spec extends TurboModule {
     speed: string,
     preparationConfirmed: boolean,
   ): Promise<Session>;
+  startJobWithResolution(
+    id: string,
+    scale: number,
+    profile: string,
+    speed: string,
+    resolution: string,
+    preparationConfirmed: boolean,
+  ): Promise<Session>;
   startJobWithMode(
     inputId: string,
     scale: number,
@@ -179,6 +189,7 @@ export interface Spec extends TurboModule {
   discardSession(): Promise<Session>;
   clearTemporaryFiles(): Promise<number>;
   getSettings(): Promise<Settings>;
+  completeOnboarding(): Promise<Settings>;
   dismissNotificationHint(sessionId: string): Promise<Settings>;
   updateSettings(
     language: string,

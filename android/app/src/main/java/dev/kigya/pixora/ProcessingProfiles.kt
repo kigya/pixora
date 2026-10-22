@@ -13,6 +13,7 @@ object ProcessingProfiles {
         "natural" to ("realesrnet-x4plus" to 4),
         "pixel" to ("nearest-neighbor" to 0),
     )
+    fun padding(mode:String)=if(mode=="pixel")0 else if(nativeId(mode) in setOf(0,2,4))64 else 32
     fun model(mode:String)=engines[mode]?.first ?: "realesrgan-x4plus"
     fun nativeId(mode:String):Int {val engine=engines[mode] ?: return 0;return engine.second}
     private val publicIds=mapOf("quality" to "standard","fast" to "lite","illustration" to "art","illustration-fast" to "art")

@@ -12,8 +12,8 @@ Pod::Spec.new do |s|
   s.header_mappings_dir = 'ios/Native'
   s.vendored_frameworks = 'ios/Vendor/ncnn.xcframework'
   s.resource_bundles = { 'PixoraAssets' => ['android/app/src/main/assets/models/*', 'android/app/src/main/assets/model-manifest.json', 'android/app/src/main/assets/LEGAL.txt', 'src/locales/*.json', 'ios/Resources/LEGAL-ios.txt'] }
-  s.frameworks = 'UIKit', 'ImageIO', 'PhotosUI', 'UserNotifications', 'StoreKit', 'UniformTypeIdentifiers'
-  s.libraries = 'c++'
+  s.frameworks = 'UIKit', 'ImageIO', 'PhotosUI', 'UserNotifications', 'StoreKit', 'UniformTypeIdentifiers', 'CoreImage'
+  s.libraries = 'c++', 'z'
   s.pod_target_xcconfig = { 'CLANG_CXX_LANGUAGE_STANDARD' => 'c++20', 'GCC_ENABLE_CPP_RTTI' => 'YES', 'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_TARGET_SRCROOT)/native/engine" "$(PODS_TARGET_SRCROOT)/native/recommendation/include"', 'DEFINES_MODULE' => 'YES' }
   s.user_target_xcconfig = { 'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_ROOT)/../build/generated/ios/ReactCodegen"' }
   s.dependency 'React-Core'

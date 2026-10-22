@@ -13,6 +13,9 @@ void initializeGPU() {
  std::call_once(once,[]{ncnn::create_gpu_instance();});
 #endif
 }
+// Host whole-image parity improves with 64 px for the RRDB networks. Compact
+// SRVGG networks retain 32 px; bundled weights and arithmetic are unchanged.
+int paddingFor(int profile) {return profile==0 || profile==2 || profile==4?64:32;}
 Model modelFor(int profile) {
  switch(profile) {
  case 1:return {"realesr-general-x4v3.param","realesr-general-x4v3.bin","in0","out0"};
@@ -70,7 +73,7 @@ int process(PixelsView input,PixelsView output,bool gpu,int tile,int profile,boo
     double preprocessingMs=0,inferenceMs=0,assemblyMs=0;
     for(int ty=0;ty<ny;ty++)for(int tx=0;tx<nx;tx++) {
         if(cancelled.load()) return 1;
-        const auto region=upscale::tileBounds(w,h,tile,tx,ty);
+        const auto region=upscale::tileBounds(w,h,tile,tx,ty,paddingFor(profile));
         const int tw=region.right-region.left,th=region.bottom-region.top;
         const auto preprocessStart=std::chrono::steady_clock::now();
         upscale::prepareRGB({static_cast<uint8_t*>(input.data),w,h,static_cast<int>(input.stride)},region,scratch);

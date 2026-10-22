@@ -25,7 +25,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
-class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint())):NativeUpscaleSpec(ctx) {
+class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint()), private val recommendation:(String)->String={RecommendationEngine.analyze(it)}):NativeUpscaleSpec(ctx) {
     companion object{const val NAME="NativeUpscale"; const val PICK=4301;const val NOTIFY=4302}
     private val io=Executors.newSingleThreadExecutor()
     private val feedbackIo=Executors.newSingleThreadExecutor()
@@ -98,7 +98,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     override fun inspectSelection(id:String,p:Promise)=async(p){val image=requireImage(id);image.remove("sourcePath");image.remove("workPath");map(image)}
     override fun getImageRecommendation(id:String,p:Promise)=async(p){
         val image=requireImage(id)
-        val encoded=try { RecommendationEngine.analyze(image.getString("previewUri")) }
+        val encoded=try { recommendation(image.getString("previewUri")) }
         catch(_:OutOfMemoryError) { RecommendationEngine.fallback() }
         catch(_:Exception) { RecommendationEngine.fallback() }
         requireImage(id) // Discard a result if selection changed during analysis.
@@ -120,7 +120,11 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         if(profile !in ProcessingProfiles.presets || speed !in setOf("fast","quality") || (profile=="pixel" && speed!="quality")){p.reject("INFERENCE_FAILED","Invalid profile");return}
         launchJob(id,scale,preparationConfirmed,profile,p,speed,profile)
     }
-    private fun launchJob(id:String,scale:Double,preparationConfirmed:Boolean,mode:String,p:Promise,speed:String="quality",profile:String="")=async(p){
+    override fun startJobWithResolution(id:String,scale:Double,profile:String,speed:String,resolution:String,preparationConfirmed:Boolean,p:Promise) {
+        if(profile !in ProcessingProfiles.presets || resolution !in setOf("prepared","original") || speed !in setOf("quality","fast") || (resolution=="original" && speed!="quality") || (profile=="pixel" && speed!="quality")){p.reject("INFERENCE_FAILED","Invalid processing options");return}
+        launchJob(id,scale,preparationConfirmed,profile,p,speed,profile,resolution)
+    }
+    private fun launchJob(id:String,scale:Double,preparationConfirmed:Boolean,mode:String,p:Promise,speed:String="quality",profile:String="",resolution:String="prepared")=async(p){
         if(mode !in ProcessingProfiles.modes || (!BuildConfig.FAST_MODEL_ENABLED && mode in setOf("fast","illustration-fast","lite")))throw AppFailure("INFERENCE_FAILED")
         synchronized(SessionStore.lock) {
             if(!ProfileAvailability.allowed(mode))throw AppFailure("PROFILE_UNAVAILABLE")
@@ -128,12 +132,14 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             val image=requireImage(id);if(!models.valid())throw AppFailure("MODEL_INVALID")
             val mem=ActivityManager.MemoryInfo();(ctx.getSystemService(Context.ACTIVITY_SERVICE)as ActivityManager).getMemoryInfo(mem)
             if(mem.totalMem<3.5*1024*1024*1024)throw AppFailure("DEVICE_UNSUPPORTED")
-            if(ImageFiles.space(ctx)<ImageFiles.reserve(image.getInt("workWidth"),image.getInt("workHeight"),scale.toInt()))throw AppFailure("LOW_STORAGE")
-            if(image.getBoolean("needsPreparation") && !preparationConfirmed)throw AppFailure("PREPARATION_REQUIRED")
+            val w=image.getInt(if(resolution=="original")"width" else "workWidth");val h=image.getInt(if(resolution=="original")"height" else "workHeight")
+            if(resolution=="original" && !OriginalProcessor.allowed(w,h,scale.toInt()))throw AppFailure("DIMENSIONS_TOO_LARGE")
+            if(ImageFiles.space(ctx)<ImageFiles.reserve(w,h,scale.toInt()))throw AppFailure("LOW_STORAGE")
+            if(resolution!="original" && image.getBoolean("needsPreparation") && !preparationConfirmed)throw AppFailure("PREPARATION_REQUIRED")
             val activity=ctx.currentActivity ?: throw AppFailure("SERVICE_START_FAILED")
             if(activity.isFinishing || activity.isDestroyed)throw AppFailure("SERVICE_START_FAILED")
             control.reset()
-            SessionStore.update{for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
+            SessionStore.update{for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("resolution",resolution).put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
             try{ContextCompat.startForegroundService(ctx,Intent(ctx,ProcessingService::class.java).setAction("PROCESS"))}
             catch(_:Exception){SessionStore.update{it.put("state","FAILED").put("error","SERVICE_START_FAILED")};throw AppFailure("SERVICE_START_FAILED")}
             Telemetry.event("job_started",Telemetry.jobContext(SessionStore.snapshot()))
@@ -188,6 +194,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         ctx.getSharedPreferences("settings",0).edit().putString("notificationDismissedSession",sessionId).commit()
         map(SessionStore.settings(ctx))
     }
+    override fun completeOnboarding(p:Promise)=async(p){OnboardingStore.complete(ctx);map(SessionStore.settings(ctx))}
     override fun getSettings(p:Promise)=async(p){map(SessionStore.settings(ctx))}
     override fun updateSettings(language:String,format:String,theme:String,p:Promise)=async(p){
         if(theme !in setOf("system","light","dark"))throw AppFailure("INFERENCE_FAILED")

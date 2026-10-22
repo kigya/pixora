@@ -24,6 +24,8 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    // A failed marker write is retried by getSettings; it must not prevent startup.
+    try { OnboardingStore.version(this) } catch (_: Exception) { }
     AppCompatDelegate.setDefaultNightMode(ThemePolicy.nightMode(getSharedPreferences("settings", MODE_PRIVATE).getString("theme","system")))
     // Keep the app usable offline if durable consent reconciliation fails. Firebase components
     // must not initialize until stale SDK collection overrides are safely removed or reconciled.

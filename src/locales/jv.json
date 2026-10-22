@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Rincian alus bisa owah utawa ilang.",
   "preparationFast": "Mode Cepet uga matesi sisih dawa input AI nganti 512 px. Wates iki beda karo salinan kerja.",
   "privacyPolicyLink": "Bukak kabijakan privasi lengkap",
-  "privacyPolicyOpenFailed": "Kabijakan privasi ora bisa dibukak. Priksa sambungan internet banjur coba maneh."
+  "privacyPolicyOpenFailed": "Kabijakan privasi ora bisa dibukak. Priksa sambungan internet banjur coba maneh.",
+  "onboarding": {
+    "detailTitle": "Luwih rinci",
+    "modesTitle": "Cocog karo gambarmu",
+    "offlineTitle": "Foto tetep ing telponmu",
+    "detailBody": "Gedhekna foto lan bandhingna asile.",
+    "modesBody": "Pilih pangolahan kanggo foto lan ilustrasi.",
+    "offlineBody": "Pangolahan gambar bisa tanpa internet.",
+    "next": "Sabanjure",
+    "skip": "Liwati",
+    "start": "Wiwiti",
+    "replay": "Deleng pitepangan"
+  },
+  "resolution": {
+    "title": "Resolusi",
+    "prepared": "Salinan sing disiapake",
+    "original": "Resolusi asli",
+    "note": "Asil resolusi asli nganggo PNG. Watese 64 MP lan saben sisih 16384 px.",
+    "limit": "Asile ngluwihi wates. Pilih salinan sing disiapake utawa skala luwih cilik."
+  }
 }

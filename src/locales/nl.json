@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Fijne details kunnen veranderen of verloren gaan.",
   "preparationFast": "De snelle modus beperkt ook de langste zijde van de AI-invoer tot 512 px. Dit staat los van de werkkopie.",
   "privacyPolicyLink": "Volledig privacybeleid openen",
-  "privacyPolicyOpenFailed": "Het privacybeleid kon niet worden geopend. Controleer je internetverbinding en probeer het opnieuw."
+  "privacyPolicyOpenFailed": "Het privacybeleid kon niet worden geopend. Controleer je internetverbinding en probeer het opnieuw.",
+  "onboarding": {
+    "detailTitle": "Meer details",
+    "modesTitle": "Passend bij je afbeelding",
+    "offlineTitle": "Foto’s blijven op je telefoon",
+    "detailBody": "Vergroot foto’s en vergelijk het resultaat.",
+    "modesBody": "Kies verwerking voor foto’s en illustraties.",
+    "offlineBody": "Afbeeldingen verwerken werkt zonder internet.",
+    "next": "Volgende",
+    "skip": "Overslaan",
+    "start": "Aan de slag",
+    "replay": "Introductie bekijken"
+  },
+  "resolution": {
+    "title": "Resolutie",
+    "prepared": "Voorbereide kopie",
+    "original": "Oorspronkelijke resolutie",
+    "note": "Het resultaat op oorspronkelijke resolutie gebruikt PNG. Limiet: 64 MP en 16384 px per zijde.",
+    "limit": "Het resultaat is te groot. Kies de voorbereide kopie of een kleinere schaal."
+  }
 }

@@ -10,7 +10,7 @@ import { LocaleContext } from '../src/ui/locale';
 import { ThemeContext, lightColors } from '../src/ui/theme';
 import { strings } from '../src/ui/i18n';
 import type { ImageRecommendation, ProfileAvailability } from '../src/specs/NativeUpscale';
-import Native, { capabilities, emitSession, seed } from '../tests/nativeMock';
+import Native, { capabilities, emitSession, seed, session } from '../tests/nativeMock';
 
 const copy = strings.en;
 const navigation = { navigate: jest.fn(), goBack: jest.fn() };
@@ -49,6 +49,7 @@ const available: ProfileAvailability = {
 beforeEach(() => {
   jest.clearAllMocks();
   seed();
+  Native.getCurrentSession.mockImplementation(async () => session);
   Native.getImageRecommendation.mockResolvedValue(null);
 });
 

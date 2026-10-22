@@ -52,6 +52,7 @@ export const useApp = () => useContext(AppContext)!;
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [session, accept] = useReducer(sessionReducer, emptySession),
     [settings, setSettings] = useState<Settings>({
+      onboardingVersion: 1,
       cacheLimitMiB: -1,
       notificationHintCount: 0,
       theme: 'system',

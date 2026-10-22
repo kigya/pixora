@@ -253,5 +253,24 @@
   "preparationDetailLoss": "细节可能会改变或丢失。",
   "preparationFast": "快速模式还会将 AI 输入图像的最长边限制为 512 像素。这与工作副本是两项独立限制。",
   "privacyPolicyLink": "打开完整隐私政策",
-  "privacyPolicyOpenFailed": "无法打开隐私政策。请检查网络连接后重试。"
+  "privacyPolicyOpenFailed": "无法打开隐私政策。请检查网络连接后重试。",
+  "onboarding": {
+    "detailTitle": "更多细节",
+    "modesTitle": "适合你的图片",
+    "offlineTitle": "照片留在手机上",
+    "detailBody": "放大照片并比较效果。",
+    "modesBody": "为照片和插画选择处理模式。",
+    "offlineBody": "无需联网即可处理图片。",
+    "next": "下一步",
+    "skip": "跳过",
+    "start": "开始使用",
+    "replay": "查看使用介绍"
+  },
+  "resolution": {
+    "title": "分辨率",
+    "prepared": "预处理副本",
+    "original": "原始分辨率",
+    "note": "原始分辨率结果使用 PNG。上限为 6400 万像素，每边 16384 px。",
+    "limit": "输出超出上限。请选择预处理副本或降低放大倍数。"
+  }
 }

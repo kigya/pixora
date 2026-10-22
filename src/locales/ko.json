@@ -253,5 +253,24 @@
   "preparationDetailLoss": "작은 세부 사항이 바뀌거나 사라질 수 있습니다.",
   "preparationFast": "빠른 모드는 AI 입력의 긴 쪽도 512px로 제한합니다. 작업용 사본과는 별개의 제한입니다.",
   "privacyPolicyLink": "개인정보 처리방침 전체 보기",
-  "privacyPolicyOpenFailed": "개인정보 처리방침을 열 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하세요."
+  "privacyPolicyOpenFailed": "개인정보 처리방침을 열 수 없습니다. 인터넷 연결을 확인한 후 다시 시도하세요.",
+  "onboarding": {
+    "detailTitle": "더 풍부한 디테일",
+    "modesTitle": "이미지에 맞는 처리",
+    "offlineTitle": "사진은 휴대전화 안에",
+    "detailBody": "사진을 확대하고 결과를 비교하세요.",
+    "modesBody": "사진과 일러스트에 맞는 처리를 선택하세요.",
+    "offlineBody": "인터넷 없이 이미지를 처리할 수 있어요.",
+    "next": "다음",
+    "skip": "건너뛰기",
+    "start": "시작하기",
+    "replay": "소개 보기"
+  },
+  "resolution": {
+    "title": "해상도",
+    "prepared": "준비된 사본",
+    "original": "원본 해상도",
+    "note": "원본 해상도 결과는 PNG를 사용해요. 한도는 6400만 화소, 한 변 16384 px예요.",
+    "limit": "결과가 한도를 초과해요. 준비된 사본이나 더 작은 배율을 선택하세요."
+  }
 }

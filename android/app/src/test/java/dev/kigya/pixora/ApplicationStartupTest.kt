@@ -39,7 +39,9 @@ class ApplicationStartupTest {
     @Test fun missingFirebaseConfigurationStillLoadsOfflineApplication() = startup(2, "null")
     @Test fun failedFirebaseInitializationStillLoadsOfflineApplication() = startup(2, "throws")
 
-    private fun startup(version: Int, outcome: String) {
+    @Test fun introductionMarkerDiskFailureStillLoadsOfflineApplication() = startup(2, "ready", true)
+
+    private fun startup(version: Int, outcome: String, introFailure: Boolean = false) {
         val app = MainApplication()
         org.robolectric.util.ReflectionHelpers.callInstanceMethod<Void>(app, "attach",
             org.robolectric.util.ReflectionHelpers.ClassParameter.from(Context::class.java, org.robolectric.RuntimeEnvironment.getApplication()))
@@ -62,6 +64,12 @@ class ApplicationStartupTest {
             }
             doReturn(wrapped).`when`(this).applicationContext
         } else app
+        val actualTarget = if(introFailure) spy(target).apply {
+            val marker=mock(android.content.SharedPreferences::class.java)
+            val editor=rejectingPreferencesEditor()
+            `when`(marker.edit()).thenReturn(editor)
+            doReturn(marker).`when`(this).getSharedPreferences("product-intro",0)
+        } else target
         val analytics = mock(FirebaseAnalytics::class.java)
         val crashes = mock(FirebaseCrashlytics::class.java)
         val config = mock(FirebaseRemoteConfig::class.java)
@@ -76,7 +84,7 @@ class ApplicationStartupTest {
                             analyticsStatic.`when`<FirebaseAnalytics> { FirebaseAnalytics.getInstance(any(Context::class.java)) }.thenReturn(analytics)
                             crashStatic.`when`<FirebaseCrashlytics> { FirebaseCrashlytics.getInstance() }.thenReturn(crashes)
                             configStatic.`when`<FirebaseRemoteConfig> { FirebaseRemoteConfig.getInstance() }.thenReturn(config)
-                            firebase.`when`<FirebaseApp> { FirebaseApp.initializeApp(target) }.thenAnswer {
+                            firebase.`when`<FirebaseApp> { FirebaseApp.initializeApp(actualTarget) }.thenAnswer {
                                 if (version == 2) {
                                     assertFalse(measurement.getBoolean("measurement_enabled", true))
                                     assertFalse(measurement.getBoolean("measurement_enabled_from_api", true))
@@ -94,12 +102,12 @@ class ApplicationStartupTest {
                                     else -> mock(FirebaseApp::class.java)
                                 }
                             }
-                            target.onCreate()
+                            actualTarget.onCreate()
                             repeat(10) { Shadows.shadowOf(android.os.Looper.getMainLooper()).idle() }
-                            renderer.verify { ReactNativeApplicationEntryPoint.loadReactNative(target) }
+                            renderer.verify { ReactNativeApplicationEntryPoint.loadReactNative(actualTarget) }
                             assertTrue(ProfileAvailability.snapshot().getBoolean("lite"))
                             if (outcome == "disk-failure") firebase.verifyNoInteractions()
-                            else firebase.verify { FirebaseApp.initializeApp(target) }
+                            else firebase.verify { FirebaseApp.initializeApp(actualTarget) }
                             if (outcome == "ready") { verify(config).fetchAndActivate(); Unit }
                             else { configStatic.verifyNoInteractions(); analyticsStatic.verifyNoInteractions(); crashStatic.verifyNoInteractions() }
                             Unit

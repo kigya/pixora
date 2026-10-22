@@ -21,6 +21,7 @@ export function seed(
 ) {
   session = { ...emptySession, sequence: 10, ...next };
   settings = {
+    onboardingVersion: 1,
     cacheLimitMiB: -1,
     notificationHintCount: 0,
     theme: 'light',
@@ -79,9 +80,16 @@ const native = {
   finishStartup: jest.fn(),
   getCurrentSession: jest.fn(async () => session),
   getImageRecommendation: jest.fn(
-    async (_imageId: string): Promise<import('../src/specs/NativeUpscale').ImageRecommendation | null> => null,
+    async (
+      _imageId: string,
+    ): Promise<
+      import('../src/specs/NativeUpscale').ImageRecommendation | null
+    > => null,
   ),
   getSettings: jest.fn(async () => settings),
+  completeOnboarding: jest.fn(
+    async () => (settings = { ...settings, onboardingVersion: 1 }),
+  ),
   getCapabilities: jest.fn(async () => capabilities),
   onSessionChanged: jest.fn((listener: (s: Session) => void) => {
     sessionListeners.add(listener);
@@ -124,6 +132,25 @@ const native = {
         jobId: 'job',
       }),
   ),
+  startJobWithResolution: jest.fn(
+    async (
+      _id: string,
+      scale: number,
+      profileId: string,
+      speed: string,
+      resolution: string,
+      _confirmed: boolean,
+    ) =>
+      emitSession({
+        state: 'RUNNING',
+        scale,
+        profileId,
+        mode: profileId,
+        speed,
+        resolution,
+        jobId: 'job',
+      }),
+  ),
   cancelJob: jest.fn(async () => emitSession({ state: 'CANCELLED' })),
   exportResult: jest.fn(async () => ({})),
   shareResult: jest.fn(async () => true),
@@ -134,7 +161,13 @@ const native = {
   ),
   updateSettings: jest.fn(
     async (language: string, format: string, theme: string) =>
-      (settings = { ...settings, language, format, theme, languageChosen: true }),
+      (settings = {
+        ...settings,
+        language,
+        format,
+        theme,
+        languageChosen: true,
+      }),
   ),
   requestNotifications: jest.fn(async () => true),
   openNotificationSettings: jest.fn(async () => true),

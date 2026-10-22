@@ -253,5 +253,24 @@
   "preparationDetailLoss": "細部が変わったり失われたりすることがあります。",
   "preparationFast": "Fast モードでは AI 入力の長辺も 512 px に制限されます。作業用コピーとは別の制限です。",
   "privacyPolicyLink": "プライバシーポリシー全文を開く",
-  "privacyPolicyOpenFailed": "プライバシーポリシーを開けませんでした。インターネット接続を確認して、もう一度お試しください。"
+  "privacyPolicyOpenFailed": "プライバシーポリシーを開けませんでした。インターネット接続を確認して、もう一度お試しください。",
+  "onboarding": {
+    "detailTitle": "もっと細かく",
+    "modesTitle": "画像に合った処理を",
+    "offlineTitle": "写真はスマートフォン内に",
+    "detailBody": "写真を拡大して結果を比較できます。",
+    "modesBody": "写真やイラストに合った処理を選べます。",
+    "offlineBody": "画像処理にインターネットは不要です。",
+    "next": "次へ",
+    "skip": "スキップ",
+    "start": "はじめる",
+    "replay": "紹介を見る"
+  },
+  "resolution": {
+    "title": "解像度",
+    "prepared": "準備したコピー",
+    "original": "元の解像度",
+    "note": "元の解像度の結果はPNG形式です。上限は6400万画素、各辺16384 pxです。",
+    "limit": "出力が上限を超えます。準備したコピーか低い倍率を選んでください。"
+  }
 }

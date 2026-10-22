@@ -101,10 +101,7 @@ export function SettingsScreen({
                   }}
                 />
                 {privacyLinkError && (
-                  <Text
-                    style={s.errorText}
-                    accessibilityLiveRegion="polite"
-                  >
+                  <Text style={s.errorText} accessibilityLiveRegion="polite">
                     {t.privacyPolicyOpenFailed}
                   </Text>
                 )}
@@ -296,6 +293,13 @@ export function SettingsScreen({
                 {t.title} · {caps?.version ?? '0.1.0'}
               </Text>
               <HelpLink />
+              <Button
+                title={t.onboarding.replay}
+                secondary
+                onPress={() =>
+                  navigation.navigate('Onboarding', { replay: true })
+                }
+              />
               <Button
                 title={t.privacy}
                 secondary

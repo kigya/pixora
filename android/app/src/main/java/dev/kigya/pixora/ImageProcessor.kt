@@ -18,6 +18,7 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
         try {
             if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure("CANCELLED")
             SessionStore.update{it.put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0)}
+            if(snapshot.optString("resolution")=="original"){OriginalProcessor(context,backend,notice,timedOut).process(snapshot);return}
             val prepareStart=SystemClock.elapsedRealtime()
             val work=files.prepare(image)
             input=files.decode(work) ?: throw AppFailure("DECODE_FAILED")

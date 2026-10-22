@@ -13,6 +13,7 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../ui/theme';
 import { FeedbackScreen } from '../screens/Feedback';
+import { Onboarding } from '../screens/Onboarding';
 import { Home } from '../screens/Home';
 import { SettingsScreen } from '../screens/Settings';
 import { useApp } from '../application/AppProvider';
@@ -22,7 +23,7 @@ const Stack = createNativeStackNavigator<Routes>();
 
 export function AppNavigation() {
   const { colors, dark } = useTheme();
-  const { loading } = useApp();
+  const { loading, settings } = useApp();
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -62,13 +63,20 @@ export function AppNavigation() {
         }}
       >
         <Stack.Navigator
-          initialRouteName="Home"
+          initialRouteName={
+            settings.onboardingVersion === 0 ? 'Onboarding' : 'Home'
+          }
           screenOptions={{
             headerShown: false,
             animation: reduceMotion ? 'none' : 'fade',
             contentStyle: { backgroundColor: colors.bg },
           }}
         >
+          <Stack.Screen
+            name="Onboarding"
+            component={Onboarding}
+            initialParams={{ replay: false }}
+          />
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Feedback" component={FeedbackScreen} />

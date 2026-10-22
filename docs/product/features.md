@@ -12,3 +12,13 @@ Authority: [workflow PRD](prd.md), [primary PRD](../PRD.md) and explicit ADR-801
 TEST-807 covers manual-review clarifications and splash max(loading, 1500 ms), the iOS attachment clock, Android readiness/deadline and cleanup. Shared navigation/splash lessons are stored only in the private local database. ADR-814 permits automatic checks and fixes without a new Samsung installation/UI check. Unit/build PASS never substitutes for physical PASS; release readiness remains bounded by explicitly deferred gates.
 
 - FEAT-807 — implemented for0.8.6: fixed full-policy URL button with localized label/error in34 active locales plus legacy Portuguese; existing summary retained. Privacy website updated against Android/iOS source and observed Analytics settings. TEST-808 scenarios are documented but NOT RUN under explicit build-only scope. Build/publication evidence is recorded separately and does not establish runtime acceptance.
+
+
+## Quality and introduction work — 2026-10-22
+
+- FEAT-901 — three local onboarding scenes, durable Android/iOS completion, upgrade bypass, replay in Settings, 34 locales plus compatibility Portuguese; verification recorded in the [quality summary](../engineering/quality-onboarding.md).
+- FEAT-902 — eight Before assets degraded deterministically; all After hashes preserved; manifest records the source Git revision and transformation. No new caption.
+- FEAT-903 — explicit prepared/original resolution choice; original output bounded to 64 MP / 16384 px, source-region processing, raw RGBA staging and scanline PNG assembly/export. PNG-only original-resolution export is displayed explicitly. Mobile memory/latency acceptance remains unverified.
+- FEAT-904 — real host inference, candidate metrics and a separate TinySR feasibility decision. Production weights, IDs, finishers, compact-network padding and Pixel Art semantics are preserved; RRDB context changes are evidence-bound.
+
+FEAT-801 verification update,2026-10-22: the host classifier coverage blocker is resolved with227/227 lines and266/266 branches. Feature/vote/grid boundaries, allocation failure and pre-refactor regression fixtures are covered without weaker thresholds or source exclusions. TEST-801 records the bounded behavior comparison and sanitizer evidence. This does not revise the uncalibrated recommendation-accuracy claim or previously excluded device/iOS runtime acceptance.

@@ -13,7 +13,7 @@ struct Scratch {
     std::vector<uint8_t> rgb,known;
     std::vector<int> queue;
 };
-Tile tileBounds(int width,int height,int tile,int tx,int ty);
+Tile tileBounds(int width,int height,int tile,int tx,int ty,int padding=32);
 void prepareRGB(PixelsView input,Tile tile,Scratch& scratch);
 bool assemble(PixelsView input,PixelsView output,Tile tile,const float* channels[3],int tensorWidth);
 }

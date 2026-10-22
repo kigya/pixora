@@ -253,5 +253,24 @@
   "preparationDetailLoss": "I dettagli fini possono cambiare o andare persi.",
   "preparationFast": "La modalità veloce limita anche il lato lungo dell'input AI a 512 px. È un limite distinto dalla copia di lavoro.",
   "privacyPolicyLink": "Apri l’informativa completa sulla privacy",
-  "privacyPolicyOpenFailed": "Impossibile aprire l’informativa sulla privacy. Controlla la connessione internet e riprova."
+  "privacyPolicyOpenFailed": "Impossibile aprire l’informativa sulla privacy. Controlla la connessione internet e riprova.",
+  "onboarding": {
+    "detailTitle": "Più dettagli",
+    "modesTitle": "Per la tua immagine",
+    "offlineTitle": "Le foto restano sul telefono",
+    "detailBody": "Ingrandisci le foto e confronta il risultato.",
+    "modesBody": "Scegli l’elaborazione per foto e illustrazioni.",
+    "offlineBody": "L’elaborazione delle immagini funziona senza internet.",
+    "next": "Avanti",
+    "skip": "Salta",
+    "start": "Inizia",
+    "replay": "Mostra introduzione"
+  },
+  "resolution": {
+    "title": "Risoluzione",
+    "prepared": "Copia preparata",
+    "original": "Risoluzione originale",
+    "note": "Il risultato a risoluzione originale usa PNG. Limite: 64 MP e 16384 px per lato.",
+    "limit": "Il risultato supera il limite. Scegli la copia preparata o una scala inferiore."
+  }
 }

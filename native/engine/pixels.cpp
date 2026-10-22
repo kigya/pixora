@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <cmath>
 namespace upscale {
-Tile tileBounds(int w,int h,int tile,int tx,int ty) {
+Tile tileBounds(int w,int h,int tile,int tx,int ty,int padding) {
     const int x0=tx*tile,y0=ty*tile,x1=std::min(w,x0+tile),y1=std::min(h,y0+tile);
-    return {x0,y0,x1,y1,std::max(0,x0-32),std::max(0,y0-32),std::min(w,x1+32),std::min(h,y1+32)};
+    return {x0,y0,x1,y1,std::max(0,x0-padding),std::max(0,y0-padding),std::min(w,x1+padding),std::min(h,y1+padding)};
 }
 void prepareRGB(PixelsView input,Tile region,Scratch& scratch) {
     const int l=region.left,t=region.top,tw=region.right-l,th=region.bottom-t;

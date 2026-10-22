@@ -307,7 +307,7 @@ void availabilityIsSharedAndNeverAddsSharpening() {
 
 }  // namespace
 
-int main() {
+void recommendationPublicApiTests() {
   grayscaleSmoothContentUsesNatural();
   shiftedGridKeepsNativeResolution();
   compressionAndOneAxisAreNotPixelArt();

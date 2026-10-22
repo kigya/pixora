@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <new>
 using jobject=void*;using jstring=const char*;using jclass=void*;using jmethodID=int;using jint=int;using jsize=int;using jboolean=bool;
 struct FakeJIntArray { std::vector<jint> values; };
 using jintArray=FakeJIntArray*;
@@ -12,6 +14,9 @@ struct JavaVM{};
 constexpr jint JNI_ABORT=2;
 struct JNIEnv {
     std::string returnedString;
+    bool failString=false;int throwString=0;
+    const char* GetStringUTFChars(jstring value,jboolean*){if(throwString==1)throw std::bad_alloc();if(throwString==2)throw std::runtime_error("string failure");return failString?nullptr:value;}
+    void ReleaseStringUTFChars(jstring,const char*){}
     std::string missing;
     int calls=0,throwAt=-1;
     bool exception=false,proceed=true;

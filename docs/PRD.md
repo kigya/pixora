@@ -207,3 +207,14 @@ The shared Android/iOS C++ policy analyzes a working-equivalent image up to 1024
 Disabled recommendations fall back in order Standard → Balanced → Natural → Lite, with an explicit alternative explanation. If no suitable profile is enabled the card is hidden. Generic analysis failure suggests Balanced through the same availability policy. Pixels stay native and no classification/recommendation event is added to telemetry.
 
 The owner requested no checks for this change. Updated tests remain unexecuted; binary size, performance and recommendation quality are unmeasured. USB installation and GitHub delivery require the owner's later request. Existing test/build/device receipts do not verify this revision.
+
+
+## Approved quality / introduction revision — 2026-10-22
+
+Explicit owner-approved implementation: [workflow requirements FEAT-901–904](product/prd.md). New installations now open a skippable three-screen product introduction with replay in Settings; upgrades with existing-install evidence retain Home. Language remains system-default and is selected only in Settings. Startup still ends at max(readiness, 1500 ms).
+
+Prepared copy remains the compatible default (1024 px working input, Fast capped at512). Original resolution is an explicit Quality option with tiled source reads, disk-backed assembly, at most64000000 output pixels and16384 px per side. Exceeding those limits requires choosing Prepared copy or a smaller scale; no silent reduction. The first original-resolution path saves/shares PNG without whole-image transcoding; this restriction is visible before starting. Prepared results retain PNG/JPEG/WebP.
+
+Host whole-image comparisons justify64px context for Standard/Details/Balanced/Sharp, Natural and Art. Lite and legacy animevideov3 retain32px. Model weights, model provenance, arithmetic, final sharpening/blending parameters, Pixel Art scaling and model IDs remain unchanged. New candidates are research-only; no Recreate control or cloud inference is added.
+
+Xiaomi and all emulators/simulators are excluded from this task. No source/build/host-test receipt closes physical acceptance, iOS runtime coverage or release readiness. See the current [quality implementation summary](engineering/quality-onboarding.md).

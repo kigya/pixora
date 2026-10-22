@@ -253,5 +253,24 @@
   "preparationDetailLoss": "Små detaljer kan ändras eller försvinna.",
   "preparationFast": "Snabbt läge begränsar också AI-indata till 512 px på den längsta sidan. Det är separat från arbetskopian.",
   "privacyPolicyLink": "Öppna hela integritetspolicyn",
-  "privacyPolicyOpenFailed": "Det gick inte att öppna integritetspolicyn. Kontrollera internetanslutningen och försök igen."
+  "privacyPolicyOpenFailed": "Det gick inte att öppna integritetspolicyn. Kontrollera internetanslutningen och försök igen.",
+  "onboarding": {
+    "detailTitle": "Fler detaljer",
+    "modesTitle": "För din bild",
+    "offlineTitle": "Bilderna stannar på telefonen",
+    "detailBody": "Förstora foton och jämför resultatet.",
+    "modesBody": "Välj bearbetning för foton och illustrationer.",
+    "offlineBody": "Bildbearbetningen fungerar utan internet.",
+    "next": "Nästa",
+    "skip": "Hoppa över",
+    "start": "Kom igång",
+    "replay": "Visa introduktion"
+  },
+  "resolution": {
+    "title": "Upplösning",
+    "prepared": "Förberedd kopia",
+    "original": "Ursprunglig upplösning",
+    "note": "Resultat i ursprunglig upplösning använder PNG. Gräns: 64 MP och 16384 px per sida.",
+    "limit": "Resultatet överskrider gränsen. Välj förberedd kopia eller mindre skala."
+  }
 }
