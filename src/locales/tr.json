@@ -18,7 +18,8 @@
     "loading_model": "Yapay zekâ modelini hazırlıyoruz.",
     "upscaling": "Görüntüyü parça parça büyütüyoruz.",
     "building_result": "Görüntüyü seçilen boyutta birleştiriyoruz.",
-    "writing_result": "Sonucu telefonunuza yazıyoruz."
+    "writing_result": "Sonucu telefonunuza yazıyoruz.",
+    "recreating": "Yeniden oluştur"
   },
   "settings": "Ayarlar",
   "local": "Yapay zekâ ile büyütme",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Dosya kaydedilemedi veya açılamadı. Sonuç uygulamada kalır.",
     "SHARE_FAILED": "Dosya paylaşılamadı. Sonuç uygulamada kalır.",
     "BUSY": "İşlemin bitmesini bekleyin veya geçerli görevi iptal edin.",
-    "PROFILE_UNAVAILABLE": "İşleme modları geçici olarak kullanılamıyor. Son sonucunuzu yine de kaydedebilirsiniz."
+    "PROFILE_UNAVAILABLE": "İşleme modları geçici olarak kullanılamıyor. Son sonucunuzu yine de kaydedebilirsiniz.",
+    "RECREATE_MODEL_MISSING": "Modeli indir",
+    "RECREATE_MODEL_INVALID": "Yapay zekâ modeli kullanılamıyor. APK'yi yeniden yükleyin.",
+    "RECREATE_DOWNLOAD_FAILED": "İşleme başarısız oldu",
+    "RECREATE_LOW_STORAGE": "Yeterli depolama alanı yok.",
+    "RECREATE_LOW_MEMORY": "Yeterli bellek yok. Diğer uygulamaları kapatıp tekrar deneyin.",
+    "MODEL_DOWNLOAD_FAILED": "Modeli indir — Bu işlem tamamlanamadı. Tekrar dene.",
+    "MODEL_INTEGRITY_FAILED": "Modeli indir.",
+    "MODEL_DELETE_FAILED": "Modeli sil — Bu işlem tamamlanamadı. Tekrar dene.",
+    "CACHE_CLEAR_FAILED": "Geçici dosyaları temizle — Bu işlem tamamlanamadı. Tekrar dene.",
+    "RECREATE_MODEL_LOAD_FAILED": "Modeli indir.",
+    "RECREATE_INVALID_INPUT": "Bu görüntü okunamıyor. Başka bir dosya deneyin.",
+    "RECREATE_GENERATION_FAILED": "İşleme başarısız oldu. Tekrar deneyin veya başka bir dosya seçin.",
+    "RECREATE_INTERNAL_ERROR": "İşleme başarısız oldu. Tekrar deneyin veya başka bir dosya seçin."
   },
   "free": "Ücretsiz",
   "offline": "İnternet gerekmez",
@@ -264,7 +278,11 @@
     "next": "İleri",
     "skip": "Atla",
     "start": "Başla",
-    "replay": "Tanıtımı göster"
+    "replay": "Tanıtımı göster",
+    "detailsTitle": "Daha fazla ayrıntı",
+    "recreateTitle": "Görüntüleri yeniden oluştur",
+    "privacyTitle": "Fotoğraflar telefonunda kalır",
+    "step": "Adım {current} / {total}"
   },
   "resolution": {
     "title": "Çözünürlük",
@@ -272,5 +290,42 @@
     "original": "Özgün çözünürlük",
     "note": "Özgün çözünürlükte sonuç PNG kullanır. Sınır: 64 MP ve kenar başına 16384 px.",
     "limit": "Sonuç sınırı aşıyor. Hazırlanmış kopyayı veya daha küçük ölçeği seç."
-  }
+  },
+  "recreate": {
+    "title": "Yeniden oluştur",
+    "enhance": "İyileştir",
+    "download": "Modeli indir",
+    "delete": "Modeli sil",
+    "ready": "Hazır",
+    "downloading": "İndiriliyor",
+    "prompt": "Açıklama (isteğe bağlı)",
+    "experimental": "Deneysel",
+    "paused": "Duraklatıldı",
+    "verifying": "Doğrulanıyor",
+    "model": "Model",
+    "storage": "Depolama",
+    "terms": "Modeli indirerek kullanım koşullarını kabul edersiniz.",
+    "acceptDownload": "Kabul et ve indir",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "İşleme hızı",
+    "steps": "Tamamlanan parçalar: {done} / {total}",
+    "missing": "Cihaz desteklenmiyor",
+    "failed": "Bu işlem tamamlanamadı",
+    "cancelDownload": "Vazgeç",
+    "retry": "Tekrar dene",
+    "clearCache": "Geçici dosyaları temizle",
+    "followsSystem": "Sistem",
+    "language": "Dil",
+    "deleteConfirm": "Modeli sil?",
+    "downloadFailed": "İşleme başarısız oldu",
+    "notEnoughSpace": "Yeterli depolama alanı yok.",
+    "notEnoughMemory": "Yeterli bellek yok. Diğer uygulamaları kapatıp tekrar deneyin.",
+    "licenses": "Lisanslar",
+    "languageSearch": "Dil"
+  },
+  "notice": {
+    "aiDetailsMayChange": "Yapay zekâ küçük ayrıntıları değiştirebilir"
+  },
+  "selectModel": "Seç"
 }

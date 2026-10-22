@@ -18,20 +18,12 @@ export function RecommendationCard({
   return (
     <View
       style={{
-        gap: 12,
-        padding: 16,
-        borderRadius: 20,
-        borderWidth: 1,
+        gap: 8,
+        paddingVertical: 8,
         borderColor: colors.border,
-        backgroundColor: colors.surface,
       }}
-      accessibilityLabel={copy.recommendationTitle}
     >
-      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>
-        {copy.recommendationTitle}
-      </Text>
-      <Text style={{ color: colors.muted, lineHeight: 21 }}>
-        {copy.recommendationReason[value.reasonId]} ·{' '}
+      <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }} accessibilityRole="header">
         {copy.presets[value.profileId].title}
       </Text>
       <Button

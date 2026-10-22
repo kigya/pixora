@@ -18,7 +18,8 @@
     "loading_model": "Wir bereiten das KI-Modell vor.",
     "upscaling": "Wir vergrößern das Bild Stück für Stück.",
     "building_result": "Wir setzen das Bild in der gewählten Größe zusammen.",
-    "writing_result": "Wir schreiben das Ergebnis auf Ihr Telefon."
+    "writing_result": "Wir schreiben das Ergebnis auf Ihr Telefon.",
+    "recreating": "Neu erstellen"
   },
   "settings": "Einstellungen",
   "local": "KI-Vergrößerung",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Datei konnte nicht gespeichert oder geöffnet werden. Das Ergebnis bleibt in der App.",
     "SHARE_FAILED": "Datei konnte nicht geteilt werden. Das Ergebnis bleibt in der App.",
     "BUSY": "Warten Sie auf den Abschluss oder brechen Sie die Verarbeitung ab.",
-    "PROFILE_UNAVAILABLE": "Die Modi sind vorübergehend nicht verfügbar. Das letzte Ergebnis lässt sich weiterhin speichern."
+    "PROFILE_UNAVAILABLE": "Die Modi sind vorübergehend nicht verfügbar. Das letzte Ergebnis lässt sich weiterhin speichern.",
+    "RECREATE_MODEL_MISSING": "Modell herunterladen",
+    "RECREATE_MODEL_INVALID": "KI-Modell nicht verfügbar. APK neu installieren.",
+    "RECREATE_DOWNLOAD_FAILED": "Verarbeitung fehlgeschlagen",
+    "RECREATE_LOW_STORAGE": "Nicht genügend Speicherplatz.",
+    "RECREATE_LOW_MEMORY": "Zu wenig Arbeitsspeicher. Andere Apps schließen und erneut versuchen.",
+    "MODEL_DOWNLOAD_FAILED": "Modell herunterladen — Aktion konnte nicht abgeschlossen werden. Erneut versuchen.",
+    "MODEL_INTEGRITY_FAILED": "Modell herunterladen.",
+    "MODEL_DELETE_FAILED": "Modell löschen — Aktion konnte nicht abgeschlossen werden. Erneut versuchen.",
+    "CACHE_CLEAR_FAILED": "Temporäre Dateien löschen — Aktion konnte nicht abgeschlossen werden. Erneut versuchen.",
+    "RECREATE_MODEL_LOAD_FAILED": "Modell herunterladen.",
+    "RECREATE_INVALID_INPUT": "Bild kann nicht gelesen werden. Versuchen Sie eine andere Datei.",
+    "RECREATE_GENERATION_FAILED": "Verarbeitung fehlgeschlagen. Erneut versuchen oder andere Datei wählen.",
+    "RECREATE_INTERNAL_ERROR": "Verarbeitung fehlgeschlagen. Erneut versuchen oder andere Datei wählen."
   },
   "free": "Kostenlos",
   "offline": "Ohne Internet",
@@ -264,7 +278,11 @@
     "next": "Weiter",
     "skip": "Überspringen",
     "start": "Loslegen",
-    "replay": "Einführung ansehen"
+    "replay": "Einführung ansehen",
+    "detailsTitle": "Mehr Details",
+    "recreateTitle": "Bilder neu erstellen",
+    "privacyTitle": "Fotos bleiben auf deinem Smartphone",
+    "step": "Schritt {current} von {total}"
   },
   "resolution": {
     "title": "Auflösung",
@@ -272,5 +290,42 @@
     "original": "Originalauflösung",
     "note": "Ergebnisse in Originalauflösung nutzen PNG. Grenze: 64 MP und 16384 px je Seite.",
     "limit": "Das Ergebnis überschreitet die Grenze. Wähle die vorbereitete Kopie oder einen kleineren Faktor."
-  }
+  },
+  "recreate": {
+    "title": "Neu erstellen",
+    "enhance": "Verbessern",
+    "download": "Modell herunterladen",
+    "delete": "Modell löschen",
+    "ready": "Bereit",
+    "downloading": "Wird heruntergeladen",
+    "prompt": "Beschreibung (optional)",
+    "experimental": "Experimentell",
+    "paused": "Pausiert",
+    "verifying": "Wird überprüft",
+    "model": "Modell",
+    "storage": "Speicher",
+    "terms": "Mit dem Download akzeptierst du die Nutzungsbedingungen des Modells.",
+    "acceptDownload": "Akzeptieren und herunterladen",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Verarbeitungstempo",
+    "steps": "Fertige Teile: {done} / {total}",
+    "missing": "Gerät nicht unterstützt",
+    "failed": "Aktion konnte nicht abgeschlossen werden",
+    "cancelDownload": "Abbrechen",
+    "retry": "Erneut versuchen",
+    "clearCache": "Temporäre Dateien löschen",
+    "followsSystem": "System",
+    "language": "Sprache",
+    "deleteConfirm": "Modell löschen?",
+    "downloadFailed": "Verarbeitung fehlgeschlagen",
+    "notEnoughSpace": "Nicht genügend Speicherplatz.",
+    "notEnoughMemory": "Zu wenig Arbeitsspeicher. Andere Apps schließen und erneut versuchen.",
+    "licenses": "Lizenzen",
+    "languageSearch": "Sprache"
+  },
+  "notice": {
+    "aiDetailsMayChange": "KI kann kleine Details verändern"
+  },
+  "selectModel": "Auswählen"
 }

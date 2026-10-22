@@ -20,3 +20,11 @@ Canonical public policy: https://kigya.github.io/pixora/privacy/ (GitHub Pages, 
 Live Analytics property pixora-1dc08: event retention2months, user retention14months, reset on activity enabled. Account Google products/services sharing disabled; aggregated/de-identified modelling contributions, technical support access and account business recommendations enabled. No provider setting was changed. The UI states Data Processing Terms have not been accepted; applicability and agreement remain an owner/legal decision, not a completed compliance gate.
 
 Policy now covers both implemented platforms, independent collection controls and Remote Config, optional support payloads, actual observed retention and GitHub Pages visitor-IP security logging. Full backend deletion, linked-product account auditing and applicable regional consent/legal compliance remain unverified. No test messages, crashes or device scenarios were executed.
+
+## 0.9 explicit model download — 2026-10-22
+
+Recreation is CPU-only local img2img. Photos, descriptions, seed, paths and model inputs are never added to telemetry. The optional 1,881,812,340-byte SD 1.5/LCM package is requested only by the Download model action after the local terms dialog. Fixed HTTPS Hugging Face revision URLs may redirect to the provider's content delivery service. Providers see IP/ordinary HTTP metadata and the model request; no image, local URI, description, account token or custom user identifier is sent. These download connections are independent of Firebase switches.
+
+Private model storage is separate from cache and sessions, excluded from iOS backup, and removed only by Delete model or app removal. Resumable partials are kept on cancellation. Ordinary cache cleanup excludes downloaded weights, active/session files, gallery items and settings. Hash verification is required before install and before inference.
+
+`privacy/index.html` contains the revised policy source. This task does not publish gh-pages; the currently hosted policy is an older revision until a separately authorized publication. Local model terms and the download size are available before download. Store disclosures, legal review and all new privacy/runtime checks remain `not_run`. No prior policy verification is attributed to this revision.

@@ -46,6 +46,11 @@ export type ImageRecommendation = {
     | 'unavailable';
 };
 export type Session = {
+  processingKind?: string;
+  recreateSeed?: number;
+  recreateModelRevision?: string;
+  recreatePrompt?: string;
+  recreateSteps?: number;
   resolution?: string;
   profileId?: string;
   speed?: string;
@@ -90,6 +95,7 @@ export type Session = {
   exports: ReadonlyArray<ExportInfo>;
 };
 export type Settings = {
+  aiDetailNoticeSeen: boolean;
   onboardingVersion: number;
   cacheLimitMiB: number;
   notificationHintCount: number;
@@ -137,7 +143,30 @@ export type TelemetrySettings = {
   noticeSeen: boolean;
   consentVersion: number;
 };
+export type RecreateModelState = {
+  state: string;
+  downloadedBytes: number;
+  totalBytes: number;
+  installedBytes: number;
+  error: string;
+};
+export type StorageUsage = {
+  cacheBytes: number;
+  sessionBytes: number;
+  temporaryBytes: number;
+  recreateModelBytes: number;
+  freeBytes: number;
+};
 export interface Spec extends TurboModule {
+  getRecreateModelState(): Promise<RecreateModelState>;
+  downloadRecreateModel(): Promise<RecreateModelState>;
+  cancelRecreateDownload(): Promise<RecreateModelState>;
+  deleteRecreateModel(): Promise<RecreateModelState>;
+  readonly onRecreateModelChanged: CodegenTypes.EventEmitter<RecreateModelState>;
+  startRecreateJob(id: string, scale: number, speed: string, prompt: string, preparationConfirmed: boolean): Promise<Session>;
+  markAiDetailNoticeSeen(): Promise<Settings>;
+  getStorageUsage(): Promise<StorageUsage>;
+  clearCache(): Promise<number>;
   finishStartup(): void;
   getProfileAvailability(): Promise<ProfileAvailability>;
   readonly onProfileAvailabilityChanged: CodegenTypes.EventEmitter<ProfileAvailability>;

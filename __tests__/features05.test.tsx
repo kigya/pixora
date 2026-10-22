@@ -111,7 +111,7 @@ test('feedback config failure is a local unavailable state', async () => {
   );
   expect(await screen.findByText(t.feedbackUnavailable)).toBeOnTheScreen();
 });
-test('all processing choices use native capability IDs and real examples', async () => {
+test('collapsed model cards select independently and keep one expanded comparison', async () => {
   capabilities.modes = [
     'quality',
     'fast',
@@ -125,23 +125,15 @@ test('all processing choices use native capability IDs and real examples', async
       <ProcessingPicker value="quality" onChange={change} />
     </AppProvider>,
   );
-  await userEvent.press(
-    await screen.findByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await userEvent.press(
-    screen.getByRole('button', { name: t.presets.art.title }),
-  );
+  await screen.findByTestId('select-model-standard');
+  await userEvent.press(screen.getByTestId('select-model-art'));
   expect(change).toHaveBeenCalledWith('art');
-  await userEvent.press(
-    screen.getByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await userEvent.press(
-    screen.getByRole('button', { name: t.presets.pixel.title }),
-  );
+  await userEvent.press(screen.getByRole('button', { name: t.presets.standard.title }));
+  expect(screen.getByRole('button', { name: t.presets.standard.title })).toBeExpanded();
+  await userEvent.press(screen.getByRole('button', { name: t.presets.pixel.title }));
+  expect(screen.getByRole('button', { name: t.presets.pixel.title })).toBeExpanded();
+  expect(screen.getByRole('button', { name: t.presets.standard.title })).toBeCollapsed();
+  await userEvent.press(screen.getByTestId('select-model-pixel'));
   expect(change).toHaveBeenCalledWith('pixel');
 });
 test('storage slider is bounded, accessible and has no numeric input', async () => {

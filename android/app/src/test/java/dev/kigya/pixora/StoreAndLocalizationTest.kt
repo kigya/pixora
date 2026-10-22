@@ -138,8 +138,11 @@ class StoreAndLocalizationTest {
     @Test fun migrationInterruptionAndInvalidJournals() {
         journal(base("RUNNING"));SessionStore.init(ctx)
         assertEquals("INTERRUPTED",SessionStore.snapshot().getString("state"));assertEquals("quality",SessionStore.snapshot().getString("mode"))
+        assertEquals(3,SessionStore.snapshot().getInt("schemaVersion"));assertEquals("enhance",SessionStore.snapshot().getString("processingKind"))
+        assertEquals(0L,SessionStore.snapshot().getLong("recreateSeed"));assertEquals("",SessionStore.snapshot().getString("recreateModelRevision"))
+        assertEquals("",SessionStore.snapshot().getString("recreatePrompt"));assertEquals(0,SessionStore.snapshot().getInt("recreateSteps"))
         reset();journal(base().put("schemaVersion",0));SessionStore.init(ctx);assertEquals("EMPTY",SessionStore.snapshot().getString("state"))
-        reset();journal(base().put("schemaVersion",2));SessionStore.init(ctx);assertEquals(2,SessionStore.snapshot().getInt("schemaVersion"))
+        reset();journal(base().put("schemaVersion",2));SessionStore.init(ctx);assertEquals(3,SessionStore.snapshot().getInt("schemaVersion"))
         reset();journal(base().put("schemaVersion",99));SessionStore.init(ctx);assertEquals("EMPTY",SessionStore.snapshot().getString("state"))
         reset();val available=File(ctx.filesDir,"available").apply{writeText("source")};journal(base().put("image",JSONObject().put("sourcePath",available.path)));SessionStore.init(ctx);assertEquals("READY",SessionStore.snapshot().getString("state"))
         reset();journal(base().put("image",JSONObject().put("sourcePath","/missing")));SessionStore.init(ctx);assertEquals("EMPTY",SessionStore.snapshot().getString("state"))

@@ -18,7 +18,8 @@
     "loading_model": "Előkészítjük az AI-modellt.",
     "upscaling": "Részenként nagyítjuk a képet.",
     "building_result": "Összeállítjuk a képet a kiválasztott méretben.",
-    "writing_result": "A telefonra mentjük az eredményt."
+    "writing_result": "A telefonra mentjük az eredményt.",
+    "recreating": "Újraalkotás"
   },
   "settings": "Beállítások",
   "local": "AI-nagyítás",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "A fájl nem menthető vagy nem nyitható meg. Az eredmény az alkalmazásban marad.",
     "SHARE_FAILED": "A fájl nem osztható meg. Az eredmény az alkalmazásban marad.",
     "BUSY": "Várd meg a befejezést, vagy szakítsd meg a jelenlegi feladatot.",
-    "PROFILE_UNAVAILABLE": "A feldolgozási módok átmenetileg nem érhetők el. Az utolsó eredményt továbbra is elmentheted."
+    "PROFILE_UNAVAILABLE": "A feldolgozási módok átmenetileg nem érhetők el. Az utolsó eredményt továbbra is elmentheted.",
+    "RECREATE_MODEL_MISSING": "Modell letöltése",
+    "RECREATE_MODEL_INVALID": "Az AI-modell nem érhető el. Telepítsd újra az APK-t.",
+    "RECREATE_DOWNLOAD_FAILED": "A feldolgozás sikertelen",
+    "RECREATE_LOW_STORAGE": "Nincs elég tárhely.",
+    "RECREATE_LOW_MEMORY": "Nincs elég memória. Zárj be más alkalmazásokat, majd próbáld újra.",
+    "MODEL_DOWNLOAD_FAILED": "Modell letöltése — A műveletet nem sikerült befejezni. Újrapróbálás.",
+    "MODEL_INTEGRITY_FAILED": "Modell letöltése.",
+    "MODEL_DELETE_FAILED": "Modell törlése — A műveletet nem sikerült befejezni. Újrapróbálás.",
+    "CACHE_CLEAR_FAILED": "Ideiglenes fájlok törlése — A műveletet nem sikerült befejezni. Újrapróbálás.",
+    "RECREATE_MODEL_LOAD_FAILED": "Modell letöltése.",
+    "RECREATE_INVALID_INPUT": "A kép nem olvasható. Próbálj másik fájlt.",
+    "RECREATE_GENERATION_FAILED": "A feldolgozás sikertelen. Próbáld újra, vagy válassz másik fájlt.",
+    "RECREATE_INTERNAL_ERROR": "A feldolgozás sikertelen. Próbáld újra, vagy válassz másik fájlt."
   },
   "free": "Ingyenes",
   "offline": "Internet nélkül",
@@ -264,7 +278,11 @@
     "next": "Tovább",
     "skip": "Kihagyás",
     "start": "Kezdés",
-    "replay": "Bevezető megtekintése"
+    "replay": "Bevezető megtekintése",
+    "detailsTitle": "Több részlet",
+    "recreateTitle": "Alkosd újra a képeket",
+    "privacyTitle": "A fotók a telefonodon maradnak",
+    "step": "{current}. lépés, összesen {total}"
   },
   "resolution": {
     "title": "Felbontás",
@@ -272,5 +290,42 @@
     "original": "Eredeti felbontás",
     "note": "Az eredeti felbontású eredmény PNG formátumú. Határ: 64 MP és oldalanként 16384 px.",
     "limit": "Az eredmény túllépi a határt. Válaszd az előkészített másolatot vagy a kisebb léptéket."
-  }
+  },
+  "recreate": {
+    "title": "Újraalkotás",
+    "enhance": "Javítás",
+    "download": "Modell letöltése",
+    "delete": "Modell törlése",
+    "ready": "Kész",
+    "downloading": "Letöltés",
+    "prompt": "Leírás (nem kötelező)",
+    "experimental": "Kísérleti",
+    "paused": "Szüneteltetve",
+    "verifying": "Ellenőrzés",
+    "model": "Modell",
+    "storage": "Tárhely",
+    "terms": "A modell letöltésével elfogadod a használati feltételeit.",
+    "acceptDownload": "Elfogadás és letöltés",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Feldolgozási sebesség",
+    "steps": "Elkészült részek: {done} / {total}",
+    "missing": "Az eszköz nem támogatott",
+    "failed": "A műveletet nem sikerült befejezni",
+    "cancelDownload": "Mégse",
+    "retry": "Újrapróbálás",
+    "clearCache": "Ideiglenes fájlok törlése",
+    "followsSystem": "Rendszernyelv",
+    "language": "Nyelv",
+    "deleteConfirm": "Modell törlése?",
+    "downloadFailed": "A feldolgozás sikertelen",
+    "notEnoughSpace": "Nincs elég tárhely.",
+    "notEnoughMemory": "Nincs elég memória. Zárj be más alkalmazásokat, majd próbáld újra.",
+    "licenses": "Licencek",
+    "languageSearch": "Nyelv"
+  },
+  "notice": {
+    "aiDetailsMayChange": "Az MI apró részleteket módosíthat"
+  },
+  "selectModel": "Kiválasztás"
 }

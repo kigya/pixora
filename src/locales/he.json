@@ -18,7 +18,8 @@
     "loading_model": "אנחנו מכינים את מודל ה-AI.",
     "upscaling": "אנחנו מגדילים את התמונה חלק אחר חלק.",
     "building_result": "אנחנו מרכיבים את התמונה בגודל שנבחר.",
-    "writing_result": "אנחנו שומרים את התוצאה בטלפון שלך."
+    "writing_result": "אנחנו שומרים את התוצאה בטלפון שלך.",
+    "recreating": "יצירה מחדש"
   },
   "settings": "הגדרות",
   "local": "הגדלת תמונה בעזרת AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "לא ניתן לשמור או לפתוח את הקובץ. התוצאה נשארה באפליקציה.",
     "SHARE_FAILED": "לא ניתן לשתף את הקובץ. התוצאה נשארה באפליקציה.",
     "BUSY": "יש להמתין לסיום או לבטל את המשימה הנוכחית.",
-    "PROFILE_UNAVAILABLE": "מצבי העיבוד אינם זמינים כרגע. עדיין אפשר לשמור את התוצאה האחרונה."
+    "PROFILE_UNAVAILABLE": "מצבי העיבוד אינם זמינים כרגע. עדיין אפשר לשמור את התוצאה האחרונה.",
+    "RECREATE_MODEL_MISSING": "הורדת מודל",
+    "RECREATE_MODEL_INVALID": "מודל ה-AI לא זמין. יש להתקין מחדש את ה-APK.",
+    "RECREATE_DOWNLOAD_FAILED": "העיבוד נכשל",
+    "RECREATE_LOW_STORAGE": "אין מספיק שטח אחסון.",
+    "RECREATE_LOW_MEMORY": "אין מספיק זיכרון. יש לסגור אפליקציות אחרות ולנסות שוב.",
+    "MODEL_DOWNLOAD_FAILED": "הורדת מודל — לא ניתן להשלים את הפעולה. ניסיון נוסף.",
+    "MODEL_INTEGRITY_FAILED": "הורדת מודל.",
+    "MODEL_DELETE_FAILED": "מחיקת מודל — לא ניתן להשלים את הפעולה. ניסיון נוסף.",
+    "CACHE_CLEAR_FAILED": "מחיקת קבצים זמניים — לא ניתן להשלים את הפעולה. ניסיון נוסף.",
+    "RECREATE_MODEL_LOAD_FAILED": "הורדת מודל.",
+    "RECREATE_INVALID_INPUT": "אי אפשר לקרוא את התמונה. יש לנסות תמונה אחרת.",
+    "RECREATE_GENERATION_FAILED": "העיבוד נכשל. יש לנסות שוב או לבחור תמונה אחרת.",
+    "RECREATE_INTERNAL_ERROR": "העיבוד נכשל. יש לנסות שוב או לבחור תמונה אחרת."
   },
   "free": "חינם",
   "offline": "ללא אינטרנט",
@@ -264,7 +278,11 @@
     "next": "הבא",
     "skip": "דילוג",
     "start": "מתחילים",
-    "replay": "הצגת המבוא"
+    "replay": "הצגת המבוא",
+    "detailsTitle": "יותר פרטים",
+    "recreateTitle": "צרו תמונות מחדש",
+    "privacyTitle": "התמונות נשארות בטלפון",
+    "step": "שלב {current} מתוך {total}"
   },
   "resolution": {
     "title": "רזולוציה",
@@ -272,5 +290,42 @@
     "original": "רזולוציה מקורית",
     "note": "תוצאות ברזולוציה מקורית נשמרות ב־PNG. המגבלה היא 64 מגה־פיקסל ו־16384 px לכל צד.",
     "limit": "התוצאה חורגת מהמגבלה. בחרו עותק מוכן או קנה מידה קטן יותר."
-  }
+  },
+  "recreate": {
+    "title": "יצירה מחדש",
+    "enhance": "שיפור",
+    "download": "הורדת מודל",
+    "delete": "מחיקת מודל",
+    "ready": "מוכן",
+    "downloading": "בהורדה",
+    "prompt": "תיאור (לא חובה)",
+    "experimental": "ניסיוני",
+    "paused": "מושהה",
+    "verifying": "באימות",
+    "model": "מודל",
+    "storage": "אחסון",
+    "terms": "הורדת המודל מהווה הסכמה לתנאי השימוש בו.",
+    "acceptDownload": "אישור והורדה",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "מהירות עיבוד",
+    "steps": "חלקים שהושלמו: {done} / {total}",
+    "missing": "המכשיר אינו נתמך",
+    "failed": "לא ניתן להשלים את הפעולה",
+    "cancelDownload": "ביטול",
+    "retry": "ניסיון נוסף",
+    "clearCache": "מחיקת קבצים זמניים",
+    "followsSystem": "מערכת",
+    "language": "שפה",
+    "deleteConfirm": "מחיקת מודל?",
+    "downloadFailed": "העיבוד נכשל",
+    "notEnoughSpace": "אין מספיק שטח אחסון.",
+    "notEnoughMemory": "אין מספיק זיכרון. יש לסגור אפליקציות אחרות ולנסות שוב.",
+    "licenses": "רישיונות",
+    "languageSearch": "שפה"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI עשויה לשנות פרטים קטנים"
+  },
+  "selectModel": "בחירה"
 }

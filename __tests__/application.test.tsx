@@ -118,12 +118,26 @@ test.each(['en','ar'] as const)('icons support locale %s and explicit/default co
  await userEvent.press(screen.getByRole('button',{name:'Go'}));
 });
 
-test.each(['light','dark','system'])('settings edits %s theme and export defaults', async theme => {
+test('settings changes theme, follows system, and preserves export defaults', async () => {
+ seed({}, {theme:'light'});
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
- await userEvent.press(await screen.findByRole('radio',{name:t[theme as 'light'|'dark'|'system']}));
- expect(Native.updateSettings).toHaveBeenCalledWith('en','png',theme);
- await userEvent.press(screen.getByRole('radio',{name:'JPEG'}));expect(Native.updateSettings).toHaveBeenLastCalledWith('en','jpeg',theme);
- await userEvent.press(screen.getByRole('button',{name:t.notificationSettings}));expect(Native.openNotificationSettings).toHaveBeenCalled();
+ await userEvent.press(await screen.findByRole('switch',{name:t.light}));
+ expect(Native.updateSettings).toHaveBeenCalledWith('en','png','dark');
+ await userEvent.press(screen.getByRole('switch',{name:t.system}));
+ expect(Native.updateSettings).toHaveBeenLastCalledWith('en','png','system');
+ await userEvent.press(screen.getByRole('radio',{name:'JPEG'}));
+ expect(Native.updateSettings).toHaveBeenLastCalledWith('en','jpeg','system');
+ await userEvent.press(screen.getByRole('button',{name:t.notificationSettings}));
+ expect(Native.openNotificationSettings).toHaveBeenCalled();
+});
+test('system theme switch reflects the effective dark palette without profile identity', async () => {
+ seed({}, {theme:'system'});
+ const scheme = jest.spyOn(require('react-native'),'useColorScheme').mockReturnValue('dark');
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ expect(screen.getByRole('switch',{name:t.dark})).toBeChecked();
+ expect(screen.queryByText('Account')).not.toBeOnTheScreen();
+ expect(screen.queryByText('On')).not.toBeOnTheScreen();
+ scheme.mockRestore();
 });
 test('settings selects every language and preserves session', async () => {
  seed({state:'READY',image});await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);

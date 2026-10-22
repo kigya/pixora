@@ -209,7 +209,7 @@ test.each([false, true])(
     spy.mockRestore();
   },
 );
-test('picker waits for capabilities and exposes eight separate selection buttons', async () => {
+test('picker waits for capabilities and exposes collapsed model cards with selection actions', async () => {
   const { ProcessingPicker } = require('../src/ui/processingPicker');
   let resolve!: (v: any) => void;
   Native.getCapabilities.mockImplementationOnce(
@@ -223,18 +223,11 @@ test('picker waits for capabilities and exposes eight separate selection buttons
       <ProcessingPicker value="standard" onChange={() => {}} />
     </AppProvider>,
   );
-  await userEvent.press(
-    screen.getByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  expect(screen.queryAllByRole('radio')).toHaveLength(0);
   const { capabilities } = require('../tests/nativeMock');
   await act(async () => resolve({ ...capabilities, modes: profileIds }));
-  for (const profile of profileIds) expect(screen.getByRole('button', { name: t.presets[profile].title })).toBeOnTheScreen();
-  await userEvent.press(
-    screen.getByRole('button', { name: t.presets.sharp.title }),
-  );
+  for (const profile of profileIds) expect(screen.getByTestId(`select-model-${profile}`)).toBeOnTheScreen();
+  expect(screen.queryAllByRole('radio')).toHaveLength(0);
+  await userEvent.press(screen.getByTestId('select-model-sharp'));
 });
 
 test('retry of an interrupted legacy illustration keeps its old network until the user selects a new profile', async () => {

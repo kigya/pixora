@@ -112,6 +112,17 @@ class ModuleUnitTest {
     @After fun cleanup(){module.invalidate();Shadows.shadowOf(Looper.getMainLooper()).idle();resetStore()}
     private fun call(action:(Promise)->Unit):Any?=Reply().also{action(it.promise)}.await()
     private fun fails(code:String,action:(Promise)->Unit){try{call(action);fail("Expected $code")}catch(error:AppFailure){assertEquals(code,error.code)}}
+    @Test fun clearCacheReturnsDeletedBytesAndPreservesSessionAndRecreateModel() {
+        val payload="cache-payload".toByteArray()
+        val cached=File(ctx.cacheDir,"preview/cache.tmp").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        val session=File(ctx.filesDir,"sessions/keep/source.png").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        val model=File(ctx.filesDir,"recreate-model/keep.gguf").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        assertEquals(payload.size.toDouble(),call(module::clearCache))
+        assertFalse(cached.exists());assertTrue(session.exists());assertTrue(model.exists())
+        assertEquals(0.0,call(module::clearCache))
+        SessionStore.update{it.put("state","RUNNING")}
+        fails("BUSY",module::clearCache)
+    }
     private fun image():String {
         val b=Bitmap.createBitmap(8,8,Bitmap.Config.ARGB_8888)
         val file=File(ctx.cacheDir,"input.png");ImageFiles.write(b,file,"png");b.recycle()

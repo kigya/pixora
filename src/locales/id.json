@@ -18,7 +18,8 @@
     "loading_model": "Kami menyiapkan model AI.",
     "upscaling": "Kami memperbesar gambar bagian demi bagian.",
     "building_result": "Kami menyusun gambar sesuai ukuran yang dipilih.",
-    "writing_result": "Kami menyimpan hasil di ponsel Anda."
+    "writing_result": "Kami menyimpan hasil di ponsel Anda.",
+    "recreating": "Buat ulang"
   },
   "settings": "Pengaturan",
   "local": "Pembesaran dengan AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "File tidak dapat disimpan atau dibuka. Hasil tetap ada di aplikasi.",
     "SHARE_FAILED": "File tidak dapat dibagikan. Hasil tetap ada di aplikasi.",
     "BUSY": "Tunggu sampai selesai atau batalkan tugas saat ini.",
-    "PROFILE_UNAVAILABLE": "Mode pemrosesan sedang tidak tersedia. Anda masih dapat menyimpan hasil terakhir."
+    "PROFILE_UNAVAILABLE": "Mode pemrosesan sedang tidak tersedia. Anda masih dapat menyimpan hasil terakhir.",
+    "RECREATE_MODEL_MISSING": "Unduh model",
+    "RECREATE_MODEL_INVALID": "Model AI tidak tersedia. Instal ulang APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Pemrosesan gagal",
+    "RECREATE_LOW_STORAGE": "Ruang penyimpanan tidak cukup.",
+    "RECREATE_LOW_MEMORY": "Memori tidak cukup. Tutup aplikasi lain dan coba lagi.",
+    "MODEL_DOWNLOAD_FAILED": "Unduh model — Tindakan ini tidak dapat diselesaikan. Coba lagi.",
+    "MODEL_INTEGRITY_FAILED": "Unduh model.",
+    "MODEL_DELETE_FAILED": "Hapus model — Tindakan ini tidak dapat diselesaikan. Coba lagi.",
+    "CACHE_CLEAR_FAILED": "Hapus file sementara — Tindakan ini tidak dapat diselesaikan. Coba lagi.",
+    "RECREATE_MODEL_LOAD_FAILED": "Unduh model.",
+    "RECREATE_INVALID_INPUT": "Gambar ini tidak dapat dibaca. Coba file lain.",
+    "RECREATE_GENERATION_FAILED": "Pemrosesan gagal. Coba lagi atau pilih file lain.",
+    "RECREATE_INTERNAL_ERROR": "Pemrosesan gagal. Coba lagi atau pilih file lain."
   },
   "free": "Gratis",
   "offline": "Tanpa internet",
@@ -264,7 +278,11 @@
     "next": "Lanjut",
     "skip": "Lewati",
     "start": "Mulai",
-    "replay": "Lihat pengantar"
+    "replay": "Lihat pengantar",
+    "detailsTitle": "Lebih banyak detail",
+    "recreateTitle": "Buat ulang gambar",
+    "privacyTitle": "Foto tetap di ponselmu",
+    "step": "Langkah {current} dari {total}"
   },
   "resolution": {
     "title": "Resolusi",
@@ -272,5 +290,42 @@
     "original": "Resolusi asli",
     "note": "Hasil resolusi asli memakai PNG. Batasnya 64 MP dan 16384 px per sisi.",
     "limit": "Hasil melebihi batas. Pilih salinan yang disiapkan atau skala lebih kecil."
-  }
+  },
+  "recreate": {
+    "title": "Buat ulang",
+    "enhance": "Tingkatkan",
+    "download": "Unduh model",
+    "delete": "Hapus model",
+    "ready": "Siap",
+    "downloading": "Mengunduh",
+    "prompt": "Deskripsi (opsional)",
+    "experimental": "Eksperimental",
+    "paused": "Dijeda",
+    "verifying": "Memverifikasi",
+    "model": "Model",
+    "storage": "Penyimpanan",
+    "terms": "Dengan mengunduh model, Anda menerima ketentuan penggunaannya.",
+    "acceptDownload": "Setuju dan unduh",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Kecepatan pemrosesan",
+    "steps": "Bagian selesai: {done} / {total}",
+    "missing": "Perangkat tidak didukung",
+    "failed": "Tindakan ini tidak dapat diselesaikan",
+    "cancelDownload": "Batal",
+    "retry": "Coba lagi",
+    "clearCache": "Hapus file sementara",
+    "followsSystem": "Sistem",
+    "language": "Bahasa",
+    "deleteConfirm": "Hapus model?",
+    "downloadFailed": "Pemrosesan gagal",
+    "notEnoughSpace": "Ruang penyimpanan tidak cukup.",
+    "notEnoughMemory": "Memori tidak cukup. Tutup aplikasi lain dan coba lagi.",
+    "licenses": "Lisensi",
+    "languageSearch": "Bahasa"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI dapat mengubah detail kecil"
+  },
+  "selectModel": "Pilih"
 }

@@ -7,8 +7,17 @@ jest.mock('react-native-reanimated', () => ({
     Text: require('react-native').Text,
     createAnimatedComponent: component => component,
   },
-  ReduceMotion: { System: 'system' },
-  useSharedValue: value => require('react').useRef({ value }).current,
+  ReduceMotion: { System: 'system', Always: 'always', Never: 'never' },
+  useSharedValue: value => require('react').useRef({value, get() {return this.value;}, set(next) {this.value = typeof next === 'function' ? next(this.value) : next;}, modify(fn) {this.value = fn(this.value);}}).current,
+  useDerivedValue: fn => ({get:fn, value:fn()}),
+  useFrameCallback: () => ({setActive: jest.fn()}),
+  useAnimatedRef: () => require('react').useRef(null),
+  runOnJS: fn => fn,
+  withSpring: (value, _config, callback) => {callback?.(true);return value;},
+  withSequence: (...values) => values[values.length - 1],
+  withDelay: (_delay,value) => value,
+  interpolate: (value,input,output) => output[0] + (output[output.length-1]-output[0]) * (value-input[0])/(input[input.length-1]-input[0]),
+  Extrapolation: {CLAMP:'clamp'},
   useAnimatedStyle: callback => callback(),
   useAnimatedProps: callback => callback(),
   withTiming: (value, _config, callback) => {
@@ -24,7 +33,7 @@ jest.mock('react-native-reanimated', () => ({
   FadeOutUp: { duration: () => ({ reduceMotion: () => undefined }) },
   withRepeat: value => value,
   cancelAnimation: jest.fn(),
-  Easing: { linear: value => value },
+  Easing: { linear: value => value, bezier: () => value => value, sin: value => value, inOut: fn => fn, quad: value => value, out: fn => fn },
 }));
 jest.mock(
   'react-native-safe-area-context',
@@ -44,6 +53,9 @@ jest.mock('react-native-gesture-handler', () => {
       'onUpdate',
       'onEnd',
       'onFinalize',
+      'onBegin', 'onStart', 'onTouchesDown', 'onTouchesUp', 'onTouchesCancelled',
+      'withTestId', 'maxDistance', 'enabled', 'runOnJS', 'hitSlop', 'minDistance',
+      'shouldCancelWhenOutside', 'simultaneousWithExternalGesture', 'requireExternalGestureToFail',
     ]) {
       result[method] = value => {
         result.handlers[method] = value;

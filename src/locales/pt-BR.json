@@ -18,7 +18,8 @@
     "loading_model": "Preparamos o modelo de IA.",
     "upscaling": "Ampliamos a imagem por partes.",
     "building_result": "Montamos a imagem no tamanho escolhido.",
-    "writing_result": "Gravamos o resultado no celular."
+    "writing_result": "Gravamos o resultado no celular.",
+    "recreating": "Recriar"
   },
   "settings": "Configurações",
   "local": "Ampliação com IA",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Não foi possível salvar ou abrir. O resultado continua no app.",
     "SHARE_FAILED": "Não foi possível compartilhar. O resultado continua no app.",
     "BUSY": "Espere concluir ou cancele o processamento.",
-    "PROFILE_UNAVAILABLE": "Os modos estão indisponíveis no momento. Você ainda pode salvar o último resultado."
+    "PROFILE_UNAVAILABLE": "Os modos estão indisponíveis no momento. Você ainda pode salvar o último resultado.",
+    "RECREATE_MODEL_MISSING": "Baixar modelo",
+    "RECREATE_MODEL_INVALID": "Modelo de IA indisponível. Reinstale o APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Falha no processamento",
+    "RECREATE_LOW_STORAGE": "Espaço de armazenamento insuficiente.",
+    "RECREATE_LOW_MEMORY": "Memória insuficiente. Feche outros apps e tente novamente.",
+    "MODEL_DOWNLOAD_FAILED": "Baixar modelo — Não foi possível concluir a ação. Tentar novamente.",
+    "MODEL_INTEGRITY_FAILED": "Baixar modelo.",
+    "MODEL_DELETE_FAILED": "Excluir modelo — Não foi possível concluir a ação. Tentar novamente.",
+    "CACHE_CLEAR_FAILED": "Limpar arquivos temporários — Não foi possível concluir a ação. Tentar novamente.",
+    "RECREATE_MODEL_LOAD_FAILED": "Baixar modelo.",
+    "RECREATE_INVALID_INPUT": "Não foi possível ler a imagem. Tente outro arquivo.",
+    "RECREATE_GENERATION_FAILED": "Falha no processamento. Tente novamente ou escolha outro arquivo.",
+    "RECREATE_INTERNAL_ERROR": "Falha no processamento. Tente novamente ou escolha outro arquivo."
   },
   "free": "Grátis",
   "offline": "Sem internet",
@@ -264,7 +278,11 @@
     "next": "Próximo",
     "skip": "Pular",
     "start": "Começar",
-    "replay": "Ver introdução"
+    "replay": "Ver introdução",
+    "detailsTitle": "Mais detalhes",
+    "recreateTitle": "Recrie imagens",
+    "privacyTitle": "As fotos ficam no celular",
+    "step": "Etapa {current} de {total}"
   },
   "resolution": {
     "title": "Resolução",
@@ -272,5 +290,42 @@
     "original": "Resolução original",
     "note": "O resultado em resolução original usa PNG. Limite: 64 MP e 16384 px por lado.",
     "limit": "O resultado excede o limite. Escolha Cópia preparada ou uma escala menor."
-  }
+  },
+  "recreate": {
+    "title": "Recriar",
+    "enhance": "Melhorar",
+    "download": "Baixar modelo",
+    "delete": "Excluir modelo",
+    "ready": "Pronto",
+    "downloading": "Baixando",
+    "prompt": "Descrição (opcional)",
+    "experimental": "Experimental",
+    "paused": "Pausado",
+    "verifying": "Verificando",
+    "model": "Modelo",
+    "storage": "Armazenamento",
+    "terms": "Ao baixar o modelo, você aceita seus termos de uso.",
+    "acceptDownload": "Aceitar e baixar",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Velocidade",
+    "steps": "Partes prontas: {done} / {total}",
+    "missing": "Aparelho não compatível",
+    "failed": "Não foi possível concluir a ação",
+    "cancelDownload": "Cancelar",
+    "retry": "Tentar novamente",
+    "clearCache": "Limpar arquivos temporários",
+    "followsSystem": "Sistema",
+    "language": "Idioma",
+    "deleteConfirm": "Excluir modelo?",
+    "downloadFailed": "Falha no processamento",
+    "notEnoughSpace": "Espaço de armazenamento insuficiente.",
+    "notEnoughMemory": "Memória insuficiente. Feche outros apps e tente novamente.",
+    "licenses": "Licenças",
+    "languageSearch": "Idioma"
+  },
+  "notice": {
+    "aiDetailsMayChange": "A IA pode alterar pequenos detalhes"
+  },
+  "selectModel": "Selecionar"
 }

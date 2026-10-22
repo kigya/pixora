@@ -18,7 +18,8 @@
     "loading_model": "AIモデルを準備しています。",
     "upscaling": "画像を部分ごとに拡大します。",
     "building_result": "選んだサイズで画像を組み立てています。",
-    "writing_result": "結果を端末に書き込んでいます。"
+    "writing_result": "結果を端末に書き込んでいます。",
+    "recreating": "再生成"
   },
   "settings": "設定",
   "local": "AI拡大",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "保存または表示できませんでした。結果はアプリに残っています。",
     "SHARE_FAILED": "共有できませんでした。結果はアプリに残っています。",
     "BUSY": "完了まで待つか、現在の処理をキャンセルしてください。",
-    "PROFILE_UNAVAILABLE": "処理モードは一時的に利用できません。前回の結果は保存できます。"
+    "PROFILE_UNAVAILABLE": "処理モードは一時的に利用できません。前回の結果は保存できます。",
+    "RECREATE_MODEL_MISSING": "モデルをダウンロード",
+    "RECREATE_MODEL_INVALID": "AIモデルを使えません。APKを再インストールしてください。",
+    "RECREATE_DOWNLOAD_FAILED": "処理に失敗しました",
+    "RECREATE_LOW_STORAGE": "ストレージの空き容量が不足しています。",
+    "RECREATE_LOW_MEMORY": "メモリが不足しています。他のアプリを閉じて再試行してください。",
+    "MODEL_DOWNLOAD_FAILED": "モデルをダウンロード — 操作を完了できませんでした. 再試行.",
+    "MODEL_INTEGRITY_FAILED": "モデルをダウンロード.",
+    "MODEL_DELETE_FAILED": "モデルを削除 — 操作を完了できませんでした. 再試行.",
+    "CACHE_CLEAR_FAILED": "一時ファイルを削除 — 操作を完了できませんでした. 再試行.",
+    "RECREATE_MODEL_LOAD_FAILED": "モデルをダウンロード.",
+    "RECREATE_INVALID_INPUT": "画像を読み込めません。別のファイルを試してください。",
+    "RECREATE_GENERATION_FAILED": "処理に失敗しました。再試行するか別のファイルを選んでください。",
+    "RECREATE_INTERNAL_ERROR": "処理に失敗しました。再試行するか別のファイルを選んでください。"
   },
   "free": "無料",
   "offline": "ネット不要",
@@ -264,7 +278,11 @@
     "next": "次へ",
     "skip": "スキップ",
     "start": "はじめる",
-    "replay": "紹介を見る"
+    "replay": "紹介を見る",
+    "detailsTitle": "もっと細かく",
+    "recreateTitle": "画像を再生成",
+    "privacyTitle": "写真はスマートフォン内に",
+    "step": "ステップ {current} / {total}"
   },
   "resolution": {
     "title": "解像度",
@@ -272,5 +290,42 @@
     "original": "元の解像度",
     "note": "元の解像度の結果はPNG形式です。上限は6400万画素、各辺16384 pxです。",
     "limit": "出力が上限を超えます。準備したコピーか低い倍率を選んでください。"
-  }
+  },
+  "recreate": {
+    "title": "再生成",
+    "enhance": "高画質化",
+    "download": "モデルをダウンロード",
+    "delete": "モデルを削除",
+    "ready": "準備完了",
+    "downloading": "ダウンロード中",
+    "prompt": "説明（任意）",
+    "experimental": "試験機能",
+    "paused": "一時停止中",
+    "verifying": "検証中",
+    "model": "モデル",
+    "storage": "ストレージ",
+    "terms": "ダウンロードするとモデルの利用規約に同意したことになります。",
+    "acceptDownload": "同意してダウンロード",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "処理速度",
+    "steps": "完了した部分：{done} / {total}",
+    "missing": "対応していない端末です",
+    "failed": "操作を完了できませんでした",
+    "cancelDownload": "キャンセル",
+    "retry": "再試行",
+    "clearCache": "一時ファイルを削除",
+    "followsSystem": "システム",
+    "language": "言語",
+    "deleteConfirm": "モデルを削除?",
+    "downloadFailed": "処理に失敗しました",
+    "notEnoughSpace": "ストレージの空き容量が不足しています。",
+    "notEnoughMemory": "メモリが不足しています。他のアプリを閉じて再試行してください。",
+    "licenses": "ライセンス",
+    "languageSearch": "言語"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AIが細部を変更する場合があります"
+  },
+  "selectModel": "選択"
 }

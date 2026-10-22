@@ -337,11 +337,14 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
     backend: 'GPU',
   };
   const { rerender } = await render(<ProcessingCard session={job} />);
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
+  const progressbars = screen.getAllByRole('progressbar');
+  expect(progressbars).toHaveLength(2);
+  expect(progressbars[0]).toHaveAccessibilityValue({
     min: 0,
     max: 100,
     now: 54,
   });
+  expect(progressbars[1]).toHaveAccessibilityValue({ min: 0, max: 100, now: 54 });
   expect(screen.queryByText(strings.en.estimatingTime)).not.toBeOnTheScreen();
   expect(screen.queryByText('GPU')).not.toBeOnTheScreen();
   expect(screen.queryByText(strings.en.remainingLabel)).not.toBeOnTheScreen();
@@ -374,9 +377,8 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
       }}
     />,
   );
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
-    text: strings.en.finalizing,
-  });
+  expect(screen.getByRole('progressbar', { name: strings.en.finalizing })).toBeOnTheScreen();
+  expect(screen.getByRole('progressbar', { name: strings.en.finalizing }).props.accessibilityValue).toBeUndefined();
   await rerender(
     <ProcessingCard
       session={{ ...job, phase: 'unknown', backend: 'CPU', elapsedMs: 301000 }}
@@ -487,7 +489,7 @@ test('processing layout adapts to large type and RTL while keeping values LTR', 
       <ProcessingCard session={job} />
     </LocaleContext.Provider>,
   );
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
+  expect(screen.getAllByRole('progressbar')[0]).toHaveAccessibilityValue({
     min: 0,
     max: 100,
     now: 30,

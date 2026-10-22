@@ -18,7 +18,8 @@
     "loading_model": "Przygotowujemy model AI.",
     "upscaling": "Powiększamy obraz po jednej części.",
     "building_result": "Składamy obraz w wybranym rozmiarze.",
-    "writing_result": "Zapisujemy wynik na telefonie."
+    "writing_result": "Zapisujemy wynik na telefonie.",
+    "recreating": "Odtwórz"
   },
   "settings": "Ustawienia",
   "local": "Powiększanie z AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Nie udało się zapisać lub otworzyć pliku. Wynik pozostaje w aplikacji.",
     "SHARE_FAILED": "Nie udało się udostępnić pliku. Wynik pozostaje w aplikacji.",
     "BUSY": "Poczekaj na zakończenie lub anuluj bieżące zadanie.",
-    "PROFILE_UNAVAILABLE": "Tryby przetwarzania są chwilowo niedostępne. Nadal możesz zapisać ostatni wynik."
+    "PROFILE_UNAVAILABLE": "Tryby przetwarzania są chwilowo niedostępne. Nadal możesz zapisać ostatni wynik.",
+    "RECREATE_MODEL_MISSING": "Pobierz model",
+    "RECREATE_MODEL_INVALID": "Model AI jest niedostępny. Zainstaluj ponownie APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Przetwarzanie nie powiodło się",
+    "RECREATE_LOW_STORAGE": "Za mało miejsca.",
+    "RECREATE_LOW_MEMORY": "Za mało pamięci. Zamknij inne aplikacje i spróbuj ponownie.",
+    "MODEL_DOWNLOAD_FAILED": "Pobierz model — Nie udało się wykonać tej czynności. Spróbuj ponownie.",
+    "MODEL_INTEGRITY_FAILED": "Pobierz model.",
+    "MODEL_DELETE_FAILED": "Usuń model — Nie udało się wykonać tej czynności. Spróbuj ponownie.",
+    "CACHE_CLEAR_FAILED": "Usuń pliki tymczasowe — Nie udało się wykonać tej czynności. Spróbuj ponownie.",
+    "RECREATE_MODEL_LOAD_FAILED": "Pobierz model.",
+    "RECREATE_INVALID_INPUT": "Nie można odczytać obrazu. Wypróbuj inny plik.",
+    "RECREATE_GENERATION_FAILED": "Przetwarzanie nie powiodło się. Spróbuj ponownie lub wybierz inny plik.",
+    "RECREATE_INTERNAL_ERROR": "Przetwarzanie nie powiodło się. Spróbuj ponownie lub wybierz inny plik."
   },
   "free": "Bezpłatnie",
   "offline": "Bez internetu",
@@ -264,7 +278,11 @@
     "next": "Dalej",
     "skip": "Pomiń",
     "start": "Zacznij",
-    "replay": "Pokaż wprowadzenie"
+    "replay": "Pokaż wprowadzenie",
+    "detailsTitle": "Więcej szczegółów",
+    "recreateTitle": "Odtwarzaj obrazy",
+    "privacyTitle": "Zdjęcia zostają na telefonie",
+    "step": "Krok {current} z {total}"
   },
   "resolution": {
     "title": "Rozdzielczość",
@@ -272,5 +290,42 @@
     "original": "Oryginalna rozdzielczość",
     "note": "Wynik w oryginalnej rozdzielczości używa PNG. Limit: 64 MP i 16384 px na bok.",
     "limit": "Wynik przekracza limit. Wybierz przygotowaną kopię lub mniejszą skalę."
-  }
+  },
+  "recreate": {
+    "title": "Odtwórz",
+    "enhance": "Ulepsz",
+    "download": "Pobierz model",
+    "delete": "Usuń model",
+    "ready": "Gotowe",
+    "downloading": "Pobieranie",
+    "prompt": "Opis (opcjonalnie)",
+    "experimental": "Eksperymentalne",
+    "paused": "Wstrzymano",
+    "verifying": "Weryfikacja",
+    "model": "Model",
+    "storage": "Pamięć",
+    "terms": "Pobierając model, akceptujesz jego warunki użytkowania.",
+    "acceptDownload": "Zaakceptuj i pobierz",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Szybkość przetwarzania",
+    "steps": "Gotowe części: {done} / {total}",
+    "missing": "Urządzenie nie jest obsługiwane",
+    "failed": "Nie udało się wykonać tej czynności",
+    "cancelDownload": "Anuluj",
+    "retry": "Spróbuj ponownie",
+    "clearCache": "Usuń pliki tymczasowe",
+    "followsSystem": "Systemowy",
+    "language": "Język",
+    "deleteConfirm": "Usuń model?",
+    "downloadFailed": "Przetwarzanie nie powiodło się",
+    "notEnoughSpace": "Za mało miejsca.",
+    "notEnoughMemory": "Za mało pamięci. Zamknij inne aplikacje i spróbuj ponownie.",
+    "licenses": "Licencje",
+    "languageSearch": "Język"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI może zmieniać drobne szczegóły"
+  },
+  "selectModel": "Wybierz"
 }

@@ -1,6 +1,6 @@
-# Verification matrix 0.8.x
+# Verification matrix — historical 0.8.x and Pixora 0.9
 
-Current 2026-10-16 instruction (ADR-814): automatic checks/fixes are authorized; Samsung UI and update installation are deferred. Fresh automatic results remain separate from historical physical checks.
+The 0.8.x sections below retain results and scenarios for their recorded revisions. They do not establish acceptance for 0.9. The owner requested updating tests but not running them for 0.9; all new/changed 0.9 scenarios are **NOT RUN**. Xiaomi, emulators and simulators remain excluded by explicit instruction.
 
 The matrix links PRD criteria to executable checks. Test presence is not PASS; final outcomes and revisions are recorded in private coverage/build/device evidence.
 
@@ -73,22 +73,38 @@ TEST-808 also verifies ADR-817: both iOS scripts explicitly select the Xcode def
 
 Requirement FEAT-807, explicit owner instruction on2026-10-17. Scenarios: Settings→Privacy preserves the local summary; explicit press opens the fixed HTTPS URL once without user-data parameters; browser rejection shows the localized failure message; offline keeps the summary available; navigation, all34 locales/legacy pt, RTL and long labels remain usable. Status: NOT RUN by explicit owner build-only decision; no device or automated runtime evidence is claimed.
 
-## TEST-901 — product introduction (FEAT-901)
+## TEST-901 — Kinetik product introduction (FEAT-901)
 
-Host component tests cover fresh/upgrade navigation, skip/completion/replay, native-save rejection/retry, duplicate completion, page/back actions, category demo, draggable bounds, Reduce Motion and app focus/background. OnboardingAndResolutionTest covers the independent Android marker, old preference/session/update evidence and failed writes; ApplicationStartupTest covers startup after marker failure. Language remains system-default. Locale schema/placeholder/hash validation covers34 active dictionaries plus the authored compatibility dictionary. These checks do not establish rendered phone layout, motion smoothness, TalkBack or native-speaker quality; the full light/dark/RTL/large-font matrix and iOS runtime are NOT RUN.
+Required component/native scenarios: three horizontal slides only; no vertical paging; before/after previews do not capture input; fresh install, upgrade bypass, skip, completion persistence, Settings replay, completion write failure, rotation/navigation, Reduce Motion, app background/foreground, large font, RTL and all 35 locale dictionaries. The first slide uses the bridge pair, the second the generated cat pair and the third a device/privacy illustration. **0.9 scenario sources updated; NOT RUN.** This does not establish actual phone layout, VoiceOver/TalkBack, motion smoothness or native-speaker quality.
 
 ## TEST-902 — presentation comparisons (FEAT-902)
 
-The deterministic developer script checks untouched After hashes and records Before transforms/provenance. Compare all eight before/after bytes and geometry against the source Git revision. Presentation assets are never quality-ground-truth data. Physical visual acceptance is NOT RUN.
+Required: verify all eight Before transforms and provenance while confirming After hashes, dimensions, alignment and transparency remain exact. Presentation pairs are not quality-ground-truth data. Source/manifest scenarios for the current revision are **NOT RUN**; physical visual acceptance is **NOT RUN**.
 
-## TEST-903 — bounded original resolution (FEAT-903)
+## TEST-903 — prepared inputs and no Original resolution choice (FEAT-903)
 
-JS resolution tests and native bridge tests cover explicit choice, same caps, no silent reduction, Quality-only original launch, notification gate and PNG-only export/share. OriginalProcessorTest covers region assembly, both scales, finishing profiles, transform/crop pixels with a controlled host region reader, real streamed PNG, CPU/GPU/allocation fallback, failures, timeout, cancellation and cleanup. MediaExportTest verifies original PNG bytes survive export/share without full-image transcoding. Shared raster/JNI tests cover alpha, scanline compression/CRC, bounds and IO/cancellation failures. Host tests do not replace real decoder/inference/memory/device acceptance. iOS is compile-verified only in this task; its new runtime coverage is NOT RUN.
+Required: new-job UI never offers Original resolution; newly started jobs use the prepared copy; previous results remain viewable/exportable. Verify enhancement input policy and Recreate's 512 px long-edge generation cap, aspect padding/cropping, expected 2×/4× output dimensions, cancellation and invalid bounds. Updated UI/native test scenarios are **NOT RUN**. Old Original-resolution checks belong to their historical version only and must not be presented as 0.9 behavior.
 
 ## TEST-904 — model candidates and context (FEAT-904)
 
-The research harness uses real bundled ncnn inference for whole-image/tile comparisons, candidates, PSNR/SSIM and optional LPIPS; it accepts a licensed calibration/holdout manifest. Separate candidate evaluation includes official2x, general/WDN, Natural/GAN interpolation and pinned SwinIR. Only measured RRDB context changes ship; current weights/finishers remain. Representative faces/fur/severe-damage holdout, independent blind review and all phone speed/memory comparisons are NOT RUN. TinySR export/inference is NOT RUN because full checkpoint licensing and offline export integration remain unresolved; no product reconstruction mode is enabled.
+The host research harness compares current bundled ncnn inference, tile/context behavior and candidates under a licensed calibration/holdout manifest. This is separate from the product Recreate mode. Representative quality evaluation and phone speed/memory comparisons are **NOT RUN** for 0.9. Existing weights/IDs/finishers remain intact unless separately approved by quality evidence.
 
-## TEST-801 host classifier coverage repair — 2026-10-22
+## TEST-801 host classifier coverage repair — 2026-10-22 (historical)
 
-`test-recommendation-core.sh` runs the preserved public image cases, private feature/vote/grid boundary cases and frozen pre-refactor regression fixtures against one real production implementation. Classifier:227/227 lines and266/266 branches,100%; no exclusions or threshold changes. Golden results match the independently compiled pre-refactor classifier for60 inputs and3840 profile-availability combinations, including padded RGBA strides and alpha. Allocation-failure fallback and unavailable-profile behavior are covered. The same suites pass ASan/UBSan. Recommendation JNI remains57/57 lines and34/34 branches. Negative controls confirm the unchanged checker rejects an uncovered branch, an empty denominator and a missing owned source. This closes the previous host classifier coverage failure, not device quality/performance or iOS runtime acceptance. Xiaomi, emulators and simulators are NOT RUN by explicit owner constraint.
+`test-recommendation-core.sh` recorded the preserved public image cases, private feature/vote/grid boundary cases and frozen pre-refactor regression fixtures against the earlier production classifier. That exact historical revision reported 227/227 lines and266/266 branches,100%; no exclusions or threshold changes. Golden results matched the independently compiled pre-refactor classifier for60 inputs and3840 profile-availability combinations, including padded RGBA strides and alpha. Allocation-failure fallback and unavailable-profile behavior were covered; the same recorded suites passed ASan/UBSan. Recommendation JNI was57/57 lines and34/34 branches. This historical report does not establish 0.9 coverage or any changed-source PASS. Xiaomi, emulators and simulators are NOT RUN by explicit owner constraint.
+
+## TEST-905 — explicit Recreate model download and settings (FEAT-905)
+
+Required: no automatic model download; license terms are shown before first download; explicit acceptance starts a resumable/cancellable download; transient files never appear as installed; size, revision and both SHA-256 checks gate readiness; retry recovers safely; delete removes only the generation model; cache clear preserves it, gallery, settings and active-job files. Verify storage/network/hash errors and download progress through Android/iOS bridge and Settings. Test sources updated; **NOT RUN**. No claim is made that a 1.88 GB model has been downloaded or validated on-device.
+
+## TEST-906 — Recreate job lifecycle, privacy and output (FEAT-906)
+
+Required: only explicit Recreate selection invokes native generation; one-line prompt remains local and absent from telemetry; seed and pinned revision persist across interrupted-session recovery; 4/8 controls map to native `fast`/`quality`; generation canvas caps at 512 px long edge, pads/crops aspect ratio, then uses existing AI upscaler for 2×/4×. Cover low-memory/low-storage before launch, allocation/model/integrity failures, cancel/timeout/retry, partial-file cleanup, alpha separation, metadata removal and preservation of the original. Progress uses native stages and remains indeterminate when unknown. Test sources updated; **NOT RUN**. CPU feasibility/latency and actual inference quality are unverified.
+
+## TEST-907 — Kinetik UI, Expo integration and event-driven effects (FEAT-907/908)
+
+Required UI scenarios: closed model selection independent of expansion, at most one expanded card, Compare Slider drag does not collapse it, recommendation only shows the model/action, no Original resolution choice, 2×/4× and format controls, theme/system and locale search/flags, actual storage usage/cache deletion, one-time notice, progress and background/Reduce Motion behavior. Verify native `SUCCEEDED` opens Aperture and triggers Confetti once, while restored results and exports do not replay effects. Verify Expo SDK58/RN0.88 routing and native compatibility, package ID/signature/version 0.9.0/code18, model hashes, session/settings migration, splash readiness and Node22/JDK21 build environment. Updated/added tests are **NOT RUN**. An APK build/signature inspection, if completed, is tracked separately and does not replace runtime acceptance.
+
+## 0.9 overall status
+
+All newly added or changed 0.9 test scenarios are **NOT RUN**, including JS/TS, Kotlin, C++, Objective-C++ and component tests. No current 0.9 coverage percentage is claimed. The previous 100% C++ classifier report and all earlier Android/iOS/device results are historical for their recorded revisions. Xiaomi, emulators and simulators were not run. A successful build, if later recorded, proves only the build checks that actually ran; it does not prove visual behavior, model quality, runtime, memory, speed or physical-device acceptance.

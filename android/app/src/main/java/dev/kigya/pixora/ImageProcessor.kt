@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.os.SystemClock
 import java.io.File
 import kotlin.math.min
+import kotlin.math.max
 
 /** Owns image buffers for one job; the service owns lifetime and notifications. */
 class ImageProcessor(private val context:Context, private val notice:(Boolean)->Unit, private val timedOut:()->Boolean, private val backend:ProcessingBackend=OnDeviceBackend, private val files:WorkFiles=AndroidWorkFiles) {
@@ -25,8 +26,39 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
             original=input
             val profile=snapshot.optString("profileId")
             val speed=snapshot.optString("speed","quality")
+            val recreating=snapshot.optString("processingKind")=="recreate"
+            if(recreating) {
+                val recreateModels=RecreateModelStore(context,{})
+                if(!recreateModels.verifyInstalled())throw AppFailure("MODEL_INTEGRITY_FAILED")
+                val source=input
+                val factor=min(1.0,512.0/max(source.width,source.height))
+                val generationInput=if(factor<1.0) Bitmap.createScaledBitmap(source,max(1,(source.width*factor).toInt()),max(1,(source.height*factor).toInt()),true) else source
+                val generated=Bitmap.createBitmap(generationInput.width,generationInput.height,Bitmap.Config.ARGB_8888)
+                try {
+                    SessionStore.update{it.put("state","RUNNING").put("backend","CPU").put("phase","loading_model").put("progress",-1).put("aiInputWidth",generationInput.width).put("aiInputHeight",generationInput.height)}
+                    notice(true)
+                    val generationCode=NativeEngine.recreate(recreateModels.diffusionModel().path,recreateModels.loraModel().path,
+                        snapshot.optString("recreatePrompt"),snapshot.optInt("recreateSteps",8),snapshot.optLong("recreateSeed"),generationInput,generated,object:ProgressCallback {
+                            override fun onProgress(done:Int,total:Int):Boolean {
+                                if(timedOut() || SessionStore.snapshot().optString("state")=="CANCELLING")return false
+                                val now=SystemClock.elapsedRealtime()
+                                if(now-lastProgress>=250 || done>=total) {
+                                    lastProgress=now
+                                    SessionStore.update(false){it.put("phase","recreating").put("completedTiles",done).put("totalTiles",total).put("progress",min(99.0,done.toDouble()/total*100)).put("elapsedMs",now-start)}
+                                    notice(false)
+                                }
+                                return true
+                            }
+                        })
+                    if(generationCode==1 || timedOut() || SessionStore.snapshot().optString("state")=="CANCELLING")throw AppFailure(if(timedOut())"TIME_LIMIT" else "CANCELLED")
+                    if(generationCode!=0)throw AppFailure(when(generationCode){-4->"RECREATE_MODEL_LOAD_FAILED";-5->"LOW_MEMORY";-6->"RECREATE_INVALID_INPUT";-7->"RECREATE_GENERATION_FAILED";else->"RECREATE_INTERNAL_ERROR"})
+                    input=generated
+                } catch(error:Throwable) { generated.recycle();throw error }
+                finally { if(generationInput !== source)generationInput.recycle() }
+                SessionStore.update{it.put("phase","checking_device").put("completedTiles",0).put("totalTiles",0).put("progress",0)}
+            }
             val targetWidth=input.width*snapshot.getInt("scale");val targetHeight=input.height*snapshot.getInt("scale")
-            if(profile.isNotEmpty() && profile!="pixel" && speed=="fast") {
+            if(!recreating && profile.isNotEmpty() && profile!="pixel" && speed=="fast") {
                 val size=ProcessingProfiles.inputSize(input.width,input.height,speed)
                 if(size.first!=input.width || size.second!=input.height)input=Bitmap.createScaledBitmap(input,size.first,size.second,true)
             }
@@ -34,7 +66,7 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
             SessionStore.update{it.put("aiInputWidth",input.width).put("aiInputHeight",input.height)}
             SessionStore.update{it.put("phase","checking_device");it.getJSONObject("timings").put("prepareMs",SystemClock.elapsedRealtime()-prepareStart)}
             val pixel=snapshot.optString("mode")=="pixel"
-            var gpu=!pixel && backend.gpuAvailable()
+            var gpu=!pixel && !recreating && backend.gpuAvailable()
             if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure("CANCELLED")
             SessionStore.update{it.put("state","RUNNING").put("backend",if(gpu)"GPU" else "CPU").put("progress",0); it.getJSONObject("image").put("workPath",work.path)}
             notice(true)
@@ -118,6 +150,6 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
             }
             return true
         }
-    },SessionStore.snapshot().optString("mode","quality"),gpu)
+    },if(state.optString("processingKind")=="recreate")"standard" else state.optString("mode","quality"),gpu)
     }
 }

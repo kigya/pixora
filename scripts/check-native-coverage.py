@@ -59,7 +59,7 @@ for directory in args.source_dir:
     if not directory.is_dir():
         raise SystemExit('Missing owned native source directory: ' + str(directory))
     required.update(path.resolve() for path in directory.rglob('*')
-                    if path.suffix in {'.c', '.cpp', '.m', '.mm'})
+                    if path.suffix in {'.c', '.cpp', '.m', '.mm', '.swift'})
 absent = required - represented_llvm
 if absent:
     raise SystemExit('Owned native files missing from denominator: ' + ', '.join(map(str, sorted(absent))))

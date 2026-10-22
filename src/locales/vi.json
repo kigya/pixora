@@ -18,7 +18,8 @@
     "loading_model": "Đang chuẩn bị mô hình AI.",
     "upscaling": "Đang phóng to từng phần của ảnh.",
     "building_result": "Đang ghép ảnh theo kích thước đã chọn.",
-    "writing_result": "Đang lưu kết quả vào điện thoại."
+    "writing_result": "Đang lưu kết quả vào điện thoại.",
+    "recreating": "Tái tạo"
   },
   "settings": "Cài đặt",
   "local": "Phóng to bằng AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Không thể lưu hoặc mở tệp. Kết quả vẫn ở trong ứng dụng.",
     "SHARE_FAILED": "Không thể chia sẻ tệp. Kết quả vẫn ở trong ứng dụng.",
     "BUSY": "Đợi xử lý xong hoặc hủy tác vụ hiện tại.",
-    "PROFILE_UNAVAILABLE": "Các chế độ xử lý tạm thời không khả dụng. Bạn vẫn có thể lưu kết quả gần nhất."
+    "PROFILE_UNAVAILABLE": "Các chế độ xử lý tạm thời không khả dụng. Bạn vẫn có thể lưu kết quả gần nhất.",
+    "RECREATE_MODEL_MISSING": "Tải mô hình",
+    "RECREATE_MODEL_INVALID": "Không dùng được mô hình AI. Hãy cài lại APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Xử lý không thành công",
+    "RECREATE_LOW_STORAGE": "Không đủ dung lượng lưu trữ.",
+    "RECREATE_LOW_MEMORY": "Không đủ bộ nhớ. Đóng các ứng dụng khác rồi thử lại.",
+    "MODEL_DOWNLOAD_FAILED": "Tải mô hình — Không thể hoàn thành thao tác này. Thử lại.",
+    "MODEL_INTEGRITY_FAILED": "Tải mô hình.",
+    "MODEL_DELETE_FAILED": "Xóa mô hình — Không thể hoàn thành thao tác này. Thử lại.",
+    "CACHE_CLEAR_FAILED": "Xóa tệp tạm — Không thể hoàn thành thao tác này. Thử lại.",
+    "RECREATE_MODEL_LOAD_FAILED": "Tải mô hình.",
+    "RECREATE_INVALID_INPUT": "Không đọc được ảnh này. Hãy thử tệp khác.",
+    "RECREATE_GENERATION_FAILED": "Xử lý không thành công. Hãy thử lại hoặc chọn tệp khác.",
+    "RECREATE_INTERNAL_ERROR": "Xử lý không thành công. Hãy thử lại hoặc chọn tệp khác."
   },
   "free": "Miễn phí",
   "offline": "Không cần internet",
@@ -264,7 +278,11 @@
     "next": "Tiếp",
     "skip": "Bỏ qua",
     "start": "Bắt đầu",
-    "replay": "Xem giới thiệu"
+    "replay": "Xem giới thiệu",
+    "detailsTitle": "Thêm chi tiết",
+    "recreateTitle": "Tái tạo hình ảnh",
+    "privacyTitle": "Ảnh vẫn ở trên điện thoại",
+    "step": "Bước {current} trên {total}"
   },
   "resolution": {
     "title": "Độ phân giải",
@@ -272,5 +290,42 @@
     "original": "Độ phân giải gốc",
     "note": "Kết quả ở độ phân giải gốc dùng PNG. Giới hạn là 64 MP và 16384 px mỗi cạnh.",
     "limit": "Kết quả vượt giới hạn. Chọn bản sao đã chuẩn bị hoặc tỷ lệ nhỏ hơn."
-  }
+  },
+  "recreate": {
+    "title": "Tái tạo",
+    "enhance": "Cải thiện",
+    "download": "Tải mô hình",
+    "delete": "Xóa mô hình",
+    "ready": "Sẵn sàng",
+    "downloading": "Đang tải",
+    "prompt": "Mô tả (tùy chọn)",
+    "experimental": "Thử nghiệm",
+    "paused": "Đã tạm dừng",
+    "verifying": "Đang xác minh",
+    "model": "Mô hình",
+    "storage": "Bộ nhớ",
+    "terms": "Tải mô hình đồng nghĩa với việc chấp nhận điều khoản sử dụng.",
+    "acceptDownload": "Đồng ý và tải",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Tốc độ xử lý",
+    "steps": "Phần đã xong: {done} / {total}",
+    "missing": "Thiết bị không được hỗ trợ",
+    "failed": "Không thể hoàn thành thao tác này",
+    "cancelDownload": "Hủy",
+    "retry": "Thử lại",
+    "clearCache": "Xóa tệp tạm",
+    "followsSystem": "Theo hệ thống",
+    "language": "Ngôn ngữ",
+    "deleteConfirm": "Xóa mô hình?",
+    "downloadFailed": "Xử lý không thành công",
+    "notEnoughSpace": "Không đủ dung lượng lưu trữ.",
+    "notEnoughMemory": "Không đủ bộ nhớ. Đóng các ứng dụng khác rồi thử lại.",
+    "licenses": "Giấy phép",
+    "languageSearch": "Ngôn ngữ"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI có thể thay đổi các chi tiết nhỏ"
+  },
+  "selectModel": "Chọn"
 }

@@ -18,7 +18,8 @@
     "loading_model": "We bereiden het AI-model voor.",
     "upscaling": "We vergroten de afbeelding deel voor deel.",
     "building_result": "We voegen de afbeelding samen op het gekozen formaat.",
-    "writing_result": "We schrijven het resultaat naar je telefoon."
+    "writing_result": "We schrijven het resultaat naar je telefoon.",
+    "recreating": "Opnieuw maken"
   },
   "settings": "Instellingen",
   "local": "Vergroten met AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Het bestand kon niet worden opgeslagen of geopend. Je resultaat blijft in de app.",
     "SHARE_FAILED": "Het bestand kon niet worden gedeeld. Je resultaat blijft in de app.",
     "BUSY": "Wacht tot de verwerking klaar is of annuleer de huidige taak.",
-    "PROFILE_UNAVAILABLE": "De verwerkingsmodi zijn tijdelijk niet beschikbaar. Je kunt het laatste resultaat nog opslaan."
+    "PROFILE_UNAVAILABLE": "De verwerkingsmodi zijn tijdelijk niet beschikbaar. Je kunt het laatste resultaat nog opslaan.",
+    "RECREATE_MODEL_MISSING": "Model downloaden",
+    "RECREATE_MODEL_INVALID": "AI-model niet beschikbaar. Installeer de APK opnieuw.",
+    "RECREATE_DOWNLOAD_FAILED": "Verwerking mislukt",
+    "RECREATE_LOW_STORAGE": "Onvoldoende opslagruimte.",
+    "RECREATE_LOW_MEMORY": "Niet genoeg werkgeheugen. Sluit andere apps en probeer opnieuw.",
+    "MODEL_DOWNLOAD_FAILED": "Model downloaden — Deze actie kon niet worden voltooid. Opnieuw proberen.",
+    "MODEL_INTEGRITY_FAILED": "Model downloaden.",
+    "MODEL_DELETE_FAILED": "Model verwijderen — Deze actie kon niet worden voltooid. Opnieuw proberen.",
+    "CACHE_CLEAR_FAILED": "Tijdelijke bestanden wissen — Deze actie kon niet worden voltooid. Opnieuw proberen.",
+    "RECREATE_MODEL_LOAD_FAILED": "Model downloaden.",
+    "RECREATE_INVALID_INPUT": "Deze afbeelding kan niet worden gelezen. Probeer een ander bestand.",
+    "RECREATE_GENERATION_FAILED": "De verwerking is mislukt. Probeer opnieuw of kies een ander bestand.",
+    "RECREATE_INTERNAL_ERROR": "De verwerking is mislukt. Probeer opnieuw of kies een ander bestand."
   },
   "free": "Gratis",
   "offline": "Geen internet nodig",
@@ -264,7 +278,11 @@
     "next": "Volgende",
     "skip": "Overslaan",
     "start": "Aan de slag",
-    "replay": "Introductie bekijken"
+    "replay": "Introductie bekijken",
+    "detailsTitle": "Meer details",
+    "recreateTitle": "Maak afbeeldingen opnieuw",
+    "privacyTitle": "Foto’s blijven op je telefoon",
+    "step": "Stap {current} van {total}"
   },
   "resolution": {
     "title": "Resolutie",
@@ -272,5 +290,42 @@
     "original": "Oorspronkelijke resolutie",
     "note": "Het resultaat op oorspronkelijke resolutie gebruikt PNG. Limiet: 64 MP en 16384 px per zijde.",
     "limit": "Het resultaat is te groot. Kies de voorbereide kopie of een kleinere schaal."
-  }
+  },
+  "recreate": {
+    "title": "Opnieuw maken",
+    "enhance": "Verbeteren",
+    "download": "Model downloaden",
+    "delete": "Model verwijderen",
+    "ready": "Gereed",
+    "downloading": "Downloaden",
+    "prompt": "Beschrijving (optioneel)",
+    "experimental": "Experimenteel",
+    "paused": "Gepauzeerd",
+    "verifying": "Controleren",
+    "model": "Model",
+    "storage": "Opslag",
+    "terms": "Door het model te downloaden accepteer je de gebruiksvoorwaarden.",
+    "acceptDownload": "Accepteren en downloaden",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Verwerkingssnelheid",
+    "steps": "Delen voltooid: {done} / {total}",
+    "missing": "Apparaat niet ondersteund",
+    "failed": "Deze actie kon niet worden voltooid",
+    "cancelDownload": "Annuleren",
+    "retry": "Opnieuw proberen",
+    "clearCache": "Tijdelijke bestanden wissen",
+    "followsSystem": "Systeem",
+    "language": "Taal",
+    "deleteConfirm": "Model verwijderen?",
+    "downloadFailed": "Verwerking mislukt",
+    "notEnoughSpace": "Onvoldoende opslagruimte.",
+    "notEnoughMemory": "Niet genoeg werkgeheugen. Sluit andere apps en probeer opnieuw.",
+    "licenses": "Licenties",
+    "languageSearch": "Taal"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI kan kleine details veranderen"
+  },
+  "selectModel": "Kiezen"
 }

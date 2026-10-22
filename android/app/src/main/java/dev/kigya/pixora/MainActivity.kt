@@ -8,9 +8,10 @@ import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultReactActivityDelegate
+import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
-  private val startupDeadline = SystemClock.uptimeMillis() + 1500L
+  private val startupDeadline = SystemClock.uptimeMillis() // JS Aurora splash owns the 1500 ms minimum.
   private var startupReady = false
   private var startupContent: View? = null
   private var startupDrawCleanup: (() -> Unit)? = null
@@ -73,12 +74,12 @@ class MainActivity : ReactActivity() {
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
    */
-  override fun getMainComponentName(): String = "UpscaleImage"
+  override fun getMainComponentName(): String = "main"
 
   /**
    * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
    * which uses the pinned New Architecture template
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
-      DefaultReactActivityDelegate(this, mainComponentName)
+      ReactActivityDelegateWrapper(this, DefaultReactActivityDelegate(this, mainComponentName))
 }

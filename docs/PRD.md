@@ -1,8 +1,22 @@
 # Pixora — product specification and knowledge base
 
-Document version: 2.7 · Date: 2026-10-10 · Historical built version: 0.7.2 / versionCode 9, package dev.kigya.pixora; installed on API 36 while Xiaomi retains the previous package. Package-change checks, implemented 0.7.1 behavior and outstanding 0.7 verification remain in private historical validation records.
+Document version: 3.0 · Date: 2026-10-22 · Historical built version: 0.7.2 / versionCode 9, package dev.kigya.pixora; installed on API 36 while Xiaomi retains the previous package. Package-change checks, implemented 0.7.1 behavior and outstanding 0.7 verification remain in private historical validation records.
 
-## Product purpose
+## Approved 0.9 revision — 22 October 2026
+
+The owner explicitly requested and approved Expo SDK 58 / React Native 0.88, Expo Router, Kinetik UI throughout, and a real experimental offline Recreate mode. This supersedes older bare-stack, shader, bundled-model-only and no-model-download restrictions below. Existing enhancement, privacy, exports, cancellation and durable data remain required.
+
+Recreate uses stable-diffusion.cpp CPU img2img with pinned SD 1.5 Q4 and LCM-LoRA. Its optional two-file package totals 1,881,812,340 bytes, downloaded only after explicit acceptance of model terms. It supports cancellation, resume, integrity checks, deletion and re-download; images and prompts are never sent. The input canvas is capped to 512 px before 2×/4× AI enlargement; output dimensions must match the displayed prediction. An optional local prompt, 4/8 steps, CFG 1 and strength 0.6 are initial uncalibrated settings. Resource guards do not establish mobile suitability.
+
+The three-page Kinetik introduction demonstrates bridge enhancement, reconstruction and image privacy. It uses horizontal swipes only, passive visuals, a fixed indicator and no subtitle/vertical scrolling. Updates bypass it; replay returns to Settings. Aurora Veil (intensity 1, speed 3) runs behind the animated brand icon with the existing readiness/1500 ms rule. Inactive/background/reduced-motion behavior is required. Completion reveals the validated internal result with Aperture and one Confetti burst per newly observed job, before any optional gallery export.
+
+Model choices are collapsed Expand Cards with an independent selection action and expanded comparison/details. Use Kinetik controls for scale, speed, format, settings, flags/searchable language, cache usage and theme. Preserve 34 active locales and system defaults. Remove redundant introductory/preparation paragraphs and recommendation explanations. Show one durable detail-change notice before generation. Remove Original resolution from new-job UI; preserve compatibility with existing results. Cache clearing protects sessions, settings, gallery files, active jobs and optional weights; optional model removal is separate.
+
+The owner requested test-source updates without running tests, devices, Xiaomi, emulators or simulators. Delivery is a local signed release APK in Downloads and a source PR into release/0.9.0. Main integration, store/GitHub Release publication and release acceptance are excluded. Historical evidence below does not verify this revision.
+
+## Historical baseline (superseded where the approved 0.9 revision differs)
+
+### Product purpose
 
 Pixora enlarges a small Android photo or illustration, compares it with the original and saves or shares a new copy. AI runs on the phone. The model is bundled in the APK, so even first use needs no network. No accounts, ads, payments, credits, API keys or mandatory subscriptions. Inference uses no server. By explicit owner request, a separate feedback feature sends text through free Google Apps Script to the developer's email. Support requires developer time but no paid service.
 

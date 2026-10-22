@@ -29,9 +29,11 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     companion object{const val NAME="NativeUpscale"; const val PICK=4301;const val NOTIFY=4302}
     private val io=Executors.newSingleThreadExecutor()
     private val feedbackIo=Executors.newSingleThreadExecutor()
+    private val recreateDownloadIo=Executors.newSingleThreadExecutor()
     private val main=Handler(Looper.getMainLooper())
     private var pickerPromise:Promise?=null
     private var permissionPromise:Promise?=null
+    private val recreateModels=RecreateModelStore(ctx){json->main.post{if(ctx.hasActiveReactInstance()&&mEventEmitterCallback!=null)emitOnRecreateModelChanged(map(json))}}
     private val listener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnSessionChanged(map(json))}}
     private val windowListener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnWindowLayoutChanged(map(json))}}
     private val availabilityListener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnProfileAvailabilityChanged(map(json))}}
@@ -124,6 +126,74 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         if(profile !in ProcessingProfiles.presets || resolution !in setOf("prepared","original") || speed !in setOf("quality","fast") || (resolution=="original" && speed!="quality") || (profile=="pixel" && speed!="quality")){p.reject("INFERENCE_FAILED","Invalid processing options");return}
         launchJob(id,scale,preparationConfirmed,profile,p,speed,profile,resolution)
     }
+    override fun getRecreateModelState(p:Promise)=async(p){map(recreateModels.snapshot())}
+    override fun downloadRecreateModel(p:Promise)=async(p){
+        SessionStore.requireIdle()
+        if(!recreateModels.isDownloading()) recreateDownloadIo.execute { recreateModels.download() }
+        map(recreateModels.snapshot())
+    }
+    override fun cancelRecreateDownload(p:Promise)=async(p){recreateModels.cancel();map(recreateModels.snapshot())}
+    override fun deleteRecreateModel(p:Promise)=async(p){
+        SessionStore.requireIdle();recreateModels.delete();map(recreateModels.snapshot())
+    }
+    override fun markAiDetailNoticeSeen(p:Promise)=async(p){
+        check(ctx.getSharedPreferences("settings",Context.MODE_PRIVATE).edit().putBoolean("aiDetailNoticeSeen",true).commit()){ "SETTINGS_WRITE_FAILED" }
+        map(SessionStore.settings(ctx))
+    }
+    override fun getStorageUsage(p:Promise)=async(p){
+        fun bytes(root:File,include:(File)->Boolean={true}):Long=if(!root.exists())0L else root.walkTopDown().filter{it.isFile&&include(it)}.sumOf{it.length()}
+        fun temporary(file:File)=file.name.endsWith(".partial")||file.name.endsWith(".part")||file.name.startsWith("incoming-")
+        val sessions=File(ctx.filesDir,"sessions")
+        val model=recreateModels.modelBytes()+recreateModels.partialBytes()
+        val sessionBytes=bytes(sessions){!temporary(it)}
+        val temporaryBytes=bytes(sessions){temporary(it)}+bytes(ctx.cacheDir){temporary(it)}
+        val cacheBytes=bytes(ctx.cacheDir){!temporary(it)}
+        val stat=android.os.StatFs(ctx.filesDir.path)
+        map(JSONObject().put("cacheBytes",cacheBytes).put("sessionBytes",sessionBytes).put("temporaryBytes",temporaryBytes)
+            .put("recreateModelBytes",model).put("freeBytes",stat.availableBytes))
+    }
+    override fun clearCache(p:Promise)=async(p){
+        SessionStore.requireIdle()
+        val root=ctx.cacheDir
+        var removed=0L
+        if(root.exists()) {
+            val files=root.walkTopDown().filter{it.isFile}.toList()
+            for(file in files) {
+                val size=file.length()
+                if(file.delete()) removed+=size else throw AppFailure("CACHE_CLEAR_FAILED")
+            }
+            root.walkBottomUp().filter{it.isDirectory && it!=root}.forEach{it.delete()}
+        }
+        removed.toDouble()
+    }
+    override fun startRecreateJob(id:String,scale:Double,speed:String,prompt:String,preparationConfirmed:Boolean,p:Promise)=async(p){
+        if(scale !in setOf(2.0,4.0) || speed !in setOf("fast","quality"))throw AppFailure("INFERENCE_FAILED")
+        if(!recreateModels.isReady())throw AppFailure("RECREATE_MODEL_MISSING")
+        SessionStore.requireIdle()
+        if(!recreateModels.verifyInstalled())throw AppFailure("MODEL_INTEGRITY_FAILED")
+        synchronized(SessionStore.lock){
+            SessionStore.requireIdle()
+            val image=requireImage(id)
+            if(image.optBoolean("needsPreparation")&&!preparationConfirmed)throw AppFailure("PREPARATION_REQUIRED")
+            val mem=ActivityManager.MemoryInfo();(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(mem)
+            if(mem.totalMem<6L*1024*1024*1024 || mem.availMem<RecreateModelStore.TOTAL+1024L*1024*1024)throw AppFailure("LOW_MEMORY")
+            val factor=minOf(1.0,512.0/maxOf(image.getInt("workWidth"),image.getInt("workHeight")))
+            val w=maxOf(1,(image.getInt("workWidth")*factor).toInt());val h=maxOf(1,(image.getInt("workHeight")*factor).toInt())
+            if(ImageFiles.space(ctx)<ImageFiles.reserve(w,h,scale.toInt())+128L*1024*1024)throw AppFailure("LOW_STORAGE")
+            val activity=ctx.currentActivity?:throw AppFailure("SERVICE_START_FAILED")
+            if(activity.isFinishing||activity.isDestroyed)throw AppFailure("SERVICE_START_FAILED")
+            control.reset()
+            NativeEngine.resetRecreateCancellation()
+            val seed=java.security.SecureRandom().nextInt().toLong().and(0xffffffffL)
+            val safePrompt=prompt.replace('\n',' ').replace('\r',' ').trim().take(300)
+            SessionStore.update{it.put("processingKind","recreate").put("recreateSeed",seed).put("recreateModelRevision",RecreateModelStore.REVISION).put("recreatePrompt",safePrompt).put("recreateSteps",if(speed=="fast")4 else 8)
+                .put("resolution","prepared").put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId","standard").put("speed",speed).put("mode","recreate").put("modelId","stable-diffusion-v1-5-q4-lcm")
+                .put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
+            try{ContextCompat.startForegroundService(ctx,Intent(ctx,ProcessingService::class.java).setAction("PROCESS"))}
+            catch(_:Exception){SessionStore.update{it.put("state","FAILED").put("error","SERVICE_START_FAILED")};throw AppFailure("SERVICE_START_FAILED")}
+            map(SessionStore.publicSnapshot())
+        }
+    }
     private fun launchJob(id:String,scale:Double,preparationConfirmed:Boolean,mode:String,p:Promise,speed:String="quality",profile:String="",resolution:String="prepared")=async(p){
         if(mode !in ProcessingProfiles.modes || (!BuildConfig.FAST_MODEL_ENABLED && mode in setOf("fast","illustration-fast","lite")))throw AppFailure("INFERENCE_FAILED")
         synchronized(SessionStore.lock) {
@@ -139,7 +209,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             val activity=ctx.currentActivity ?: throw AppFailure("SERVICE_START_FAILED")
             if(activity.isFinishing || activity.isDestroyed)throw AppFailure("SERVICE_START_FAILED")
             control.reset()
-            SessionStore.update{for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("resolution",resolution).put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
+            SessionStore.update{it.put("processingKind","enhance").put("recreateSeed",0L).put("recreateModelRevision","").put("recreatePrompt","").put("recreateSteps",0);for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("resolution",resolution).put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
             try{ContextCompat.startForegroundService(ctx,Intent(ctx,ProcessingService::class.java).setAction("PROCESS"))}
             catch(_:Exception){SessionStore.update{it.put("state","FAILED").put("error","SERVICE_START_FAILED")};throw AppFailure("SERVICE_START_FAILED")}
             Telemetry.event("job_started",Telemetry.jobContext(SessionStore.snapshot()))

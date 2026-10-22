@@ -57,3 +57,23 @@ This explicitly supersedes the FEAT-801 photo/uncertainty→Lite policy. The own
 
 
 Publication clarification, 2026-10-17: after accepting the USB-installed recommendation build, the owner authorized the usual task PR → release/0.8.5 → single squash into main without additional checks. Version 0.8.5/code 15 aligns app, lockfile, both platforms, iOS generator and fallback metadata. The accepted signed USB artifact remains 0.8.4/code 14; the 0.8.5 metadata revision has not been rebuilt or retested. Main-only CI remains automatic; no outcome is presumed.
+
+## ADR-820 — Pixora 0.9.0 replaces the earlier 0.9 proposal
+
+On 2026-10-22 the owner explicitly approved the Pixora 0.9 implementation plan. It supersedes the earlier 2026-10-22 introduction/quality proposal where the two conflict. In particular, **Original resolution is removed from new-job UI** and **Recreate is a product mode**, not only a feasibility report. Preserve prior completed results and their export/share behavior.
+
+Use Expo SDK 58 / React Native 0.88.0 and Expo Router while retaining native Android/iOS project code, package IDs, signing identity, ncnn, foreground service, existing model hashes, settings, results and session recovery. Use Node 22/JDK 21. `NativeUpscale` remains the inference bridge; do not shuttle image pixels or weights through JS. Default release metadata is 0.9.0/code 18.
+
+## ADR-821 — explicit offline Recreate model and safety boundary
+
+Recreate requires a separate explicit Enhance/Recreate choice and uses `stable-diffusion.cpp` with SD 1.5 Q4_0 plus LCM-LoRA. The approximately 1.88 GB model package is never auto-downloaded. Before download, present model size and license terms; explicit acceptance initiates the download. Pin component revisions, exact sizes, hashes, provenance and licenses. Use temporary resumable/cancellable downloads and expose ready state only after integrity verification. Settings can delete the model; ordinary cache clearing retains the model and active job.
+
+The optional one-line prompt remains local and excluded from telemetry. Persist seed, revision, prompt and generation settings with the job. Use LCM, CFG 1, strength 0.6 and 4/8 steps mapped to native `fast`/`quality`; cap generation at 512 px on the long side, pad to preserve aspect, crop padding after inference, then use the existing upscaler for 2×/4× output. CPU is the first backend; do not promise speed or device feasibility. Disk/memory failures, cancellation, interrupted recovery, temporary-file cleanup, alpha retention and metadata stripping are required. Do not replace this pipeline with a cloud fallback.
+
+The owner requests test-source updates but **no test execution** for this work. Xiaomi, emulators and simulators must not run. Historical coverage numbers and device/build evidence remain scoped to their original source revisions. If the release APK and GitHub PR are completed, report build/signature/package and PR evidence separately from runtime acceptance; GitHub Release and store publication are out of scope.
+
+## ADR-822 — Kinetik interaction model and introduction motion
+
+Install the pinned Kinetik 1.4.2 sources and adapt them to the Pixora theme. Onboarding has exactly three horizontal, non-vertical pages: bridge before/after, cat reconstruction, and local privacy. Preview images are passive; there are no subtitles or automatic page advances. Existing installation evidence bypasses the onboarding; explicit completion/skip persists independently, and Settings replay returns to Settings. Reduce Motion uses static content and animations stop while backgrounded/inactive.
+
+Use collapsed selectable Expand Cards for processing models; model selection must be available without expanding, and its independent before/after comparison must remain draggable. A recommendation presents only the recommended model and selection action. Kinetik supplies the planned selectors, controls, dialogs, buttons, storage and progress. Show the AI-detail notice once before the first generation attempt. Native `SUCCEEDED`—not user export—starts Aperture/Confetti once for that live job; restored results remain static. Unknown native progress stays indeterminate. Keep the 1500 ms max(readiness, minimum) splash rule with Aurora Veil intensity 1/speed 3 beneath the animated icon.

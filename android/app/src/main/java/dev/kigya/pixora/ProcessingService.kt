@@ -61,7 +61,7 @@ class ProcessingService : Service() {
         val s=SessionStore.snapshot(); val active=SessionStore.busy()
         val title=Localizer.text(this,titleKey(s.optString("state")))
         val phase=s.optString("phase")
-        val body=if(phase in setOf("preparing_image","checking_device","loading_model","upscaling","building_result","writing_result"))Localizer.text(this,"stages.$phase") else Localizer.text(this,"output")
+        val body=if(phase in setOf("preparing_image","checking_device","loading_model","recreating","upscaling","building_result","writing_result"))Localizer.text(this,"stages.$phase") else Localizer.text(this,"output")
         val open=PendingIntent.getActivity(this,0,Intent(this,MainActivity::class.java),PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val builder=NotificationCompat.Builder(this,"processing").setSmallIcon(R.drawable.ic_notification).setContentTitle(title).setContentText(body)
             .setContentIntent(open).setOngoing(active).setSilent(true).setAutoCancel(!active).setVisibility(NotificationCompat.VISIBILITY_PRIVATE)

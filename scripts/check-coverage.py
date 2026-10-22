@@ -17,6 +17,8 @@ commands = [
      '--llvm', 'coverage/ios/coverage.json',
      '--source-dir', 'native/engine', '--source-dir', 'native/recommendation',
      '--source-dir', 'ios/Native', '--source-dir', 'ios/Pixora',
+     '--require-source', 'native/recreate/recreate.cpp',
+     '--require-source', 'android/app/src/main/cpp/engine/recreate_jni.cpp',
      '--require-source', 'android/app/src/main/cpp/engine/upscale.cpp',
      '--require-source', 'android/app/src/main/cpp/engine/raster_jni.cpp',
      '--require-source', 'android/app/src/main/cpp/engine/recommendation_jni.cpp'],

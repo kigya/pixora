@@ -18,7 +18,8 @@ object SessionStore {
     @Volatile var workerAlive = false
     @Volatile var serviceAlive = false
     private fun empty(sequence: Long) = JSONObject().apply {
-        put("mode", "quality");put("modelId", "realesrgan-x4plus");put("timings", JSONObject());put("schemaVersion", 2); put("sequence", sequence); put("sessionId", ""); put("jobId", "")
+        put("mode", "quality");put("modelId", "realesrgan-x4plus");put("timings", JSONObject());put("schemaVersion", 3); put("sequence", sequence); put("sessionId", ""); put("jobId", "")
+        put("processingKind", "enhance").put("recreateSeed", 0L).put("recreateModelRevision", "").put("recreatePrompt", "").put("recreateSteps", 0)
         put("phase", ""); put("completedTiles", 0); put("totalTiles", 0); put("state", "EMPTY"); put("scale", 2); put("backend", ""); put("progress", -1)
         put("startedAt", 0); put("elapsedMs", 0); put("image", JSONObject.NULL)
         put("resultUri", ""); put("resultWidth", 0); put("resultHeight", 0); put("error", "")
@@ -29,10 +30,15 @@ object SessionStore {
         context = ctx.applicationContext
         journal = AtomicFile(File(ctx.filesDir, "session.json"))
         value = try { JSONObject(withClosed(journal.openRead()) { it.reader(Charsets.UTF_8).readText() }) } catch (_: Exception) { empty(0) }
-        if (value.optInt("schemaVersion") !in 1..2) value = empty(value.optLong("sequence"))
-        value.put("schemaVersion",2)
+        if (value.optInt("schemaVersion") !in 1..3) value = empty(value.optLong("sequence"))
+        value.put("schemaVersion",3)
         if (!value.has("phase")) value.put("phase", "").put("completedTiles", 0).put("totalTiles", 0)
         if(!value.has("mode"))value.put("mode","quality").put("modelId","realesrgan-x4plus").put("timings",JSONObject())
+        if(!value.has("processingKind"))value.put("processingKind","enhance")
+        if(!value.has("recreateSeed"))value.put("recreateSeed",0L)
+        if(!value.has("recreateModelRevision"))value.put("recreateModelRevision","")
+        if(!value.has("recreatePrompt"))value.put("recreatePrompt","")
+        if(!value.has("recreateSteps"))value.put("recreateSteps",0)
         if (activeStates.contains(value.optString("state"))) {
             value.put("state", "INTERRUPTED").put("error", "INTERRUPTED").put("progress", -1)
             persist()
@@ -101,6 +107,6 @@ object SessionStore {
         val upgradedInstall = appInfo.lastUpdateTime > appInfo.firstInstallTime
         val languageChosen = p.contains("language") || p.all.isNotEmpty() || File(context.filesDir, "session.json").exists() || upgradedInstall
         return JSONObject().put("onboardingVersion",OnboardingStore.version(ctx)).put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", language)
-            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("systemLanguage", android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
+            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("aiDetailNoticeSeen", p.getBoolean("aiDetailNoticeSeen", false)).put("systemLanguage", android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
     }
 }

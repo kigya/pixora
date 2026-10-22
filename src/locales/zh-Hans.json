@@ -18,7 +18,8 @@
     "loading_model": "正在准备 AI 模型。",
     "upscaling": "逐部分放大图像。",
     "building_result": "正在合成所选尺寸的图像。",
-    "writing_result": "正在将结果写入手机。"
+    "writing_result": "正在将结果写入手机。",
+    "recreating": "重建"
   },
   "settings": "设置",
   "local": "AI 放大",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "无法保存或打开文件。结果仍保留在应用中。",
     "SHARE_FAILED": "无法分享文件。结果仍保留在应用中。",
     "BUSY": "请等待处理完成，或取消当前处理。",
-    "PROFILE_UNAVAILABLE": "处理模式暂不可用。您仍可保存上次的结果。"
+    "PROFILE_UNAVAILABLE": "处理模式暂不可用。您仍可保存上次的结果。",
+    "RECREATE_MODEL_MISSING": "下载模型",
+    "RECREATE_MODEL_INVALID": "AI 模型不可用。请重新安装 APK。",
+    "RECREATE_DOWNLOAD_FAILED": "处理失败",
+    "RECREATE_LOW_STORAGE": "存储空间不足。",
+    "RECREATE_LOW_MEMORY": "内存不足。请关闭其他应用后重试。",
+    "MODEL_DOWNLOAD_FAILED": "下载模型 — 无法完成此操作. 重试.",
+    "MODEL_INTEGRITY_FAILED": "下载模型.",
+    "MODEL_DELETE_FAILED": "删除模型 — 无法完成此操作. 重试.",
+    "CACHE_CLEAR_FAILED": "清理临时文件 — 无法完成此操作. 重试.",
+    "RECREATE_MODEL_LOAD_FAILED": "下载模型.",
+    "RECREATE_INVALID_INPUT": "无法读取图像。请尝试其他文件。",
+    "RECREATE_GENERATION_FAILED": "处理失败。请重试或选择其他文件。",
+    "RECREATE_INTERNAL_ERROR": "处理失败。请重试或选择其他文件。"
   },
   "free": "免费",
   "offline": "无需网络",
@@ -264,7 +278,11 @@
     "next": "下一步",
     "skip": "跳过",
     "start": "开始使用",
-    "replay": "查看使用介绍"
+    "replay": "查看使用介绍",
+    "detailsTitle": "更多细节",
+    "recreateTitle": "重建图像",
+    "privacyTitle": "照片留在手机上",
+    "step": "第 {current} 步，共 {total} 步"
   },
   "resolution": {
     "title": "分辨率",
@@ -272,5 +290,42 @@
     "original": "原始分辨率",
     "note": "原始分辨率结果使用 PNG。上限为 6400 万像素，每边 16384 px。",
     "limit": "输出超出上限。请选择预处理副本或降低放大倍数。"
-  }
+  },
+  "recreate": {
+    "title": "重建",
+    "enhance": "增强",
+    "download": "下载模型",
+    "delete": "删除模型",
+    "ready": "已就绪",
+    "downloading": "下载中",
+    "prompt": "描述（可选）",
+    "experimental": "实验功能",
+    "paused": "已暂停",
+    "verifying": "验证中",
+    "model": "模型",
+    "storage": "存储空间",
+    "terms": "下载模型即表示接受其使用条款。",
+    "acceptDownload": "同意并下载",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "处理速度",
+    "steps": "已完成部分：{done} / {total}",
+    "missing": "设备不受支持",
+    "failed": "无法完成此操作",
+    "cancelDownload": "取消",
+    "retry": "重试",
+    "clearCache": "清理临时文件",
+    "followsSystem": "跟随系统",
+    "language": "语言",
+    "deleteConfirm": "删除模型?",
+    "downloadFailed": "处理失败",
+    "notEnoughSpace": "存储空间不足。",
+    "notEnoughMemory": "内存不足。请关闭其他应用后重试。",
+    "licenses": "许可证",
+    "languageSearch": "语言"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI 可能改变细小细节"
+  },
+  "selectModel": "选择"
 }

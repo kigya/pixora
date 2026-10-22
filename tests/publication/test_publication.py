@@ -105,6 +105,25 @@ class PublicationTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(1, guard.main(['--staged']))
 
+    def test_only_reviewed_immutable_public_submodule_is_permitted(self):
+        name = 'native/recreate/vendor/stable-diffusion.cpp'
+        oid = '39bc9d0b4bad86750fcb1fd2d711bc57a4c6018f'
+        metadata = '[submodule "' + name + '"]\n path = ' + name + '\n url = https://github.com/leejet/stable-diffusion.cpp.git\n'
+        self.stage('.gitmodules', metadata)
+        self.git('update-index', '--add', '--cacheinfo', '160000,' + oid + ',' + name)
+        self.assertEqual([], guard.check([None]))
+        self.git('commit', '-qm', 'Add reviewed pinned dependency')
+        self.assertEqual([], guard.check(['HEAD']))
+        for mode, pin, path in [('160000', '1' * 40, name), ('160000', oid, 'vendor/unreviewed'), ('100644', oid, name)]:
+            with self.subTest(mode=mode, pin=pin, path=path), self.assertRaises(ValueError):
+                guard.reviewed_submodule(mode, pin, path, None)
+        self.stage('.gitmodules', metadata.replace('https://github.com/leejet/stable-diffusion.cpp.git', 'https://example.invalid/replacement.git'))
+        with self.assertRaises(ValueError):
+            guard.check([None])
+        self.stage('.gitmodules', metadata + ' update = !arbitrary-command\n')
+        with self.assertRaises(ValueError):
+            guard.check([None])
+
     def test_deleted_secret_still_blocks_history(self):
         self.stage('src/config.ts', 'AI' + 'za' + 'X' * 35)
         self.git('commit', '-qm', 'Add temporary fixture')

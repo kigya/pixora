@@ -7,7 +7,9 @@ import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
-import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
+import expo.modules.ExpoReactHostFactory.getDefaultReactHost
+import expo.modules.ApplicationLifecycleDispatcher
+import android.content.res.Configuration
 
 class MainApplication : Application(), ReactApplication {
 
@@ -20,6 +22,11 @@ class MainApplication : Application(), ReactApplication {
           add(UpscalePackage())
         },
     )
+  }
+
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    ApplicationLifecycleDispatcher.onConfigurationChanged(this,newConfig)
   }
 
   override fun onCreate() {
@@ -41,5 +48,6 @@ class MainApplication : Application(), ReactApplication {
     ProfileAvailability.init(this)
     if (firebaseReady) ProfileAvailability.fetchOnce()
     loadReactNative(this)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
   }
 }

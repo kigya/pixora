@@ -1,4 +1,28 @@
 {
-  "name": "UpscaleImage",
-  "displayName": "UpscaleImage"
+  "expo": {
+    "name": "Pixora",
+    "slug": "pixora",
+    "version": "0.9.0",
+    "scheme": "pixora",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "android": {
+      "package": "dev.kigya.pixora",
+      "versionCode": 18
+    },
+    "ios": {
+      "bundleIdentifier": "dev.kigya.pixora",
+      "buildNumber": "18",
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
 }

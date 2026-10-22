@@ -6,20 +6,13 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-import Animated, {
-  ReduceMotion,
-  useAnimatedProps,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import type { Session } from '../specs/NativeUpscale';
 import { useLocale, ltrValue } from './locale';
 import { useTheme } from './theme';
 import { strings } from './i18n';
 import { createStyles, Icon } from './components';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { RingSpinner } from '../components/kinetik/ring-spinner';
+import { ProgressBar } from '../components/kinetik/progress-bar';
 
 /** The clock lives here: its ticks do not render the rest of the workbench. */
 export function ProcessingCard({ session: v }: { session: Session }) {
@@ -56,60 +49,23 @@ export function ProcessingCard({ session: v }: { session: Session }) {
     v.state === 'FINALIZING' ||
     ['building_result', 'writing_result'].includes(v.phase)
       ? 2
-      : v.phase === 'upscaling'
+      : ['upscaling','recreating'].includes(v.phase)
       ? 1
       : 0;
   const headings = [t.preparing, t.processing, t.finalizing];
   const icons = ['image', 'spark', 'save'] as const;
   const percent = Math.max(0, Math.min(100, Math.floor(v.progress)));
-  const displayedProgress = useSharedValue(percent);
-  useEffect(() => {
-    displayedProgress.value = withTiming(percent, {
-      duration: foreground ? 180 : 0,
-      reduceMotion: ReduceMotion.System,
-    });
-  }, [displayedProgress, foreground, percent]);
-  const ringProps = useAnimatedProps(() => ({
-    strokeDashoffset: 239 * (1 - displayedProgress.value / 100),
-  }));
   const compact = window.width < 360 || window.fontScale >= 1.5;
   return (
     <View style={s.card}>
       <View style={[s.row, { flexWrap: compact ? 'wrap' : 'nowrap', gap: 16 }]}>
-        <View
-          accessible
-          accessibilityRole="progressbar"
-          accessibilityLabel={t.processing}
-          accessibilityValue={
-            v.progress >= 0
-              ? { min: 0, max: 100, now: percent }
-              : { text: headings[step] }
-          }
-          style={styles.ring}
-        >
-          <Svg width={88} height={88} viewBox="0 0 88 88" accessible={false}>
-            <Circle
-              cx={44}
-              cy={44}
-              r={38}
-              fill="none"
-              stroke={colors.border}
-              strokeWidth={6}
-            />
-            <AnimatedCircle
-              cx={44}
-              cy={44}
-              r={38}
-              fill="none"
-              stroke={colors.accent}
-              strokeWidth={6}
-              strokeLinecap="round"
-              strokeDasharray={239}
-              animatedProps={ringProps}
-              rotation={-90}
-              origin="44, 44"
-            />
-          </Svg>
+        <View accessible={false} style={styles.ring}>
+          <RingSpinner
+            size={88}
+            active={foreground}
+            progress={v.progress >= 0 ? percent / 100 : undefined}
+            accessibilityLabel={t.processing}
+          />
           <View pointerEvents="none" style={styles.ringText}>
             <Text style={[s.value, { fontSize: 18 }]}>
               {v.progress >= 0 ? ltrValue(`${number(percent)}%`) : '…'}
@@ -121,6 +77,13 @@ export function ProcessingCard({ session: v }: { session: Session }) {
           <Text style={s.value}>{ltrValue(time)}</Text>
         </View>
       </View>
+      <ProgressBar
+        active={foreground}
+        value={v.progress >= 0 ? percent / 100 : null}
+        label={headings[step]}
+        doneLabel={t.done}
+        showValue={v.progress >= 0}
+      />
       <View style={[styles.steps, { flexDirection: 'column' }]}>
         {headings.map((title, index) => (
           <View

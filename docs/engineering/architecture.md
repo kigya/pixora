@@ -1,34 +1,57 @@
-# Architecture
+# Pixora 0.9 architecture
 
-Existing baseline: Bare RN 0.87.1 / React 19 / TypeScript / Hermes; Android Kotlin TurboModule + foreground service + JNI/C++/ncnn. Full-resolution images never enter JS. Weights are bundled; sources and SHA-256 values are preserved.
+**Status snapshot: 2026-10-22.** This document describes the 0.9 source configuration, not runtime or release evidence. The 0.9 test sources were updated but tests have not been run for this change. The normal Android release build is pending in the root integration run. No device, Xiaomi, emulator, or simulator result is claimed here.
 
-0.8.0: shared C++ primitives and recommendation policy; Objective-C++ iOS TurboModule, ncnn CPU and limited background execution. JS receives small typed snapshots/URIs and a suggestion. Independent Analytics/Crashlytics settings apply at native startup, separately from Remote Config. The latest owner decision enables fresh/unresolved legacy defaults with a notice; explicit saved values are preserved. Shared native/engine serves Android JNI and iOS CPU; processing stays local.
+## JavaScript and navigation
 
-Sources: the primary PRD and approved owner plan; interface details are recorded with implementation.
+Pixora 0.9 is an existing Android/iOS application using Expo SDK 58.0.17, React Native 0.88.0, React 19.3.0, TypeScript, Hermes, the New Architecture, and Expo Router 58.0.25. Versions are pinned in `package.json` and `package-lock.json`; Node 22 and JDK 21 are the project toolchain. This is a native development-client application, not Expo Go or a hosted EAS build.
 
-Startup: AppProvider completes initial refresh before building NavigationContainer; onReady calls typed native finishStartup. Android OnPreDrawListener permits the first app frame only after readiness and the monotonic 1500 ms deadline, and is removed on destroy. The iOS branded overlay measures at least 1500 ms from attachment and dismisses after main-queue readiness; Reduce Motion cancels transform animation. No thread-blocking sleep.
+`main` enters through `expo-router/entry`. Files in `app/` define Expo Router routes and `_layout.tsx` mounts `src/navigation/ExpoRoot.tsx`. `ExpoRoot` owns the `GestureHandlerRootView`, safe-area provider, app state provider, theme provider, startup surface, and Router stack. `src/navigation/RouteScreen.tsx` adapts the existing screen props to Router navigation, so Home, Settings, Onboarding, Feedback, and Language retain native stack Back behavior. `app/index.tsx` routes first installs to Onboarding and completed installs to Home.
 
+`AppProvider` subscribes to the native job journal before refreshing settings, capabilities, model availability, and session state. `src/specs/NativeUpscale.ts` remains the typed native boundary. JavaScript exchanges small metadata snapshots, status, and preview/export URIs; image pixels and neural weights stay in native code. The splash combines the readiness gate with a 1500 ms minimum, and optional reconstruction-model downloading does not gate startup.
 
-## Shared recommendation policy — 2026-10-17
+The native Android and iOS projects are retained and adapted manually. Do not regenerate them with Expo prebuild: the projects contain application-specific ncnn, service, model-store, permission, signing, and platform lifecycle code. Package/bundle identifiers remain `dev.kigya.pixora`.
 
-`native/recommendation` owns content decisions and availability resolution for both platforms. Android decodes the import's working-size before.png up to 1024 px; iOS repeats prepareSelection's bounded 1024 px source decode in memory (the display preview may be 1536 px). Both provide straight RGBA; iOS unpremultiplies its CoreGraphics input. Analysis runs on existing native background I/O executors and never launches an upscale or sends pixels over the JS bridge.
+## Native ownership and job lifecycle
 
-The core measures visible color/luminance histogram occupancy, flat/edge/texture fractions, axis-aligned edges and local high-frequency residuals away from strong edges. It compares an alpha-aware area-averaged overview (long edge ≤256) with up to five distinct corner/center patches (each dimension ≤128) at working resolution. Full-resolution two-axis grid analysis searches periods 2–16 and every phase, requires near-flat interiors and widely occupied strong boundary lines, and rejects 8/16 px compression-like grids into the ambiguous branch. A cropped or noisy grid may abstain. Single-pixel art or genuine 8/16 px art may remain ambiguous by design.
+Android keeps the Kotlin `NativeUpscale` TurboModule, persistent `SessionStore`, foreground `ProcessingService`, `ImageProcessor`, bitmap ownership, and JNI entry points. iOS keeps its Objective-C++ `PixoraUpscale` module, persistent session/settings state, worker queue, background-task expiration/cancellation, ImageIO/Core Graphics processing, and C++ entry points. Both call the shared native engine; neither routes pixels through JavaScript.
 
-Decision order: uninformative→generic Balanced; compression-like blocks→mixed Balanced; strong pixel grid→Pixel; interface evidence or photo/drawing disagreement→mixed Balanced; consistent flat illustrated content→Art; photograph-like overview and patch majority→Standard, or Natural when a strict majority is smooth with low noise and few strong edges; otherwise→mixed Balanced. Thresholds are hand-authored hypotheses, not calibrated probabilities. No Detail/Sharp recommendations, face recognition, OCR, model inference or dependency additions.
+Only one processing job is active at a time. The native journal stores the job ID, processing kind, model revision, seed, prompt/parameters, progress stage, source/result metadata, and terminal state. Cancellation is forwarded to native workers and partial results are removed. A job reaches `SUCCEEDED` and publishes 100% only after the result file has been written and validated and its preview has been produced. A process interruption is recovered from the last saved journal; active work is not silently marked complete.
 
-The internal stable availability bit order is standard/balanced/natural/lite/art/pixel. Shared `available()` retains the selected profile when enabled; otherwise tries standard, balanced, natural, lite and sets reason `unavailable`. It returns a null profile when none is suitable. Android JNI returns a small JSON decision or `null`; iOS builds the same decision object directly. The external `getImageRecommendation(imageId)` signature is unchanged; reason IDs add `smooth`, `mixed`, `unavailable`. Image identity and current availability are still guarded before display. No analysis values or recommendation events enter telemetry.
+The existing enhancement path uses the bundled ncnn models and preserves their IDs, provenance, and hashes. Inference remains on-device. Android retains the foreground service and its bounded worker lifecycle; iOS uses the available background execution window and stops on expiration. GPU/CPU behavior for enhancement remains owned by the existing native engine.
 
-Tests/builds, binary size, runtime cost and corpus quality are unverified for this change by owner instruction. No prior strict-coverage receipt is carried forward.
+## Explicit optional reconstruction
 
-## Explicit original-resolution processing — 2026-10-22
+“Recreate” is a distinct user-selected operation. The normal enhancement path remains available and is the default. Reconstruction uses stable-diffusion.cpp at commit `39bc9d0b4bad86750fcb1fd2d711bc57a4c6018f`, SD 1.5 Q4_0 plus LCM-LoRA, and CPU inference. It is not an automatic fallback for low-quality images and is not a cloud service.
 
-The default Prepared copy path retains its 1024 px working input and Fast 512 option. Home exposes Original resolution separately, forces Quality and shows the output cap and PNG-only export restriction before launch. JS and both native launchers enforce scale 2/4, output<=64000000 pixels and each side<=16384. Oversize input does not silently fall back. Existing bridge methods and saved jobs default to Prepared copy; legacy model IDs keep their previous mappings.
+The two pinned files are fetched only after the user requests the download. Their combined declared size is 1,881,812,340 bytes (about 1.88 GB). Each file is written to a resumable temporary file, checked against its declared size and SHA-256, then promoted to the installed model path. The user can cancel, resume/retry, inspect storage use, and explicitly delete the downloaded model. Cache cleanup does not target the model directory. A readiness check includes the actual installed file verification before a reconstruction job may run.
 
-Android OriginalProcessor owns a BitmapRegionDecoder and processes 256 px source cores with per-network context. EXIF transforms map oriented regions back to raw source rectangles; application-owned bitmap references are released once even when identity operations alias. GPU failure restarts on CPU, allocation failure retries a smaller inner tile, and cancellation/deadline propagate through decoding boundaries, inference, finishing and PNG assembly. OriginalRaster is the controlled disk/JNI boundary; production LocalOriginalRaster always calls the native raster implementation.
+| Asset | Pinned repository revision/file | Size | SHA-256 |
+|---|---|---:|---|
+| SD 1.5 Q4_0 | `gpustack/stable-diffusion-v1-5-GGUF@dcac270609fffc0ce7c7d41a3c0e752721859f7c/stable-diffusion-v1-5-Q4_0.gguf` | 1,747,190,784 bytes | `c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b` |
+| LCM-LoRA | `latent-consistency/lcm-lora-sdv1-5@cf2fced511dbe7e26c8d1d397e728fbab875db4b/pytorch_lora_weights.safetensors` | 134,621,556 bytes | `8f90d840e075ff588a58e22c6586e2ae9a6f7922996ee6649a7f01072333afe4` |
 
-iOS PixoraOriginal uses an oriented lazy CIImage, a CPU Core Image context with intermediate caching disabled and corresponding source regions. Existing CPU ncnn inference and finishers remain. Native/engine/raster writes premultiplied RGBA cores with bounded pwrite/pread buffers, then streams unpremultiplied sRGB PNG rows through zlib. No image-wide mmap or application-owned output bitmap is used. A source decoder may allocate internally; peak device memory remains unmeasured. There is no persistent inference-model cache.
+The session stores the selected model revision, a generated seed, the optional prompt, step count, and the requested 2×/4× scale. The UI offers 4 or 8 LCM steps; native parameters use CFG 1 and strength 0.6. The source is proportionally reduced to a maximum 512 px long side for generation. Alpha is held separately and restored after RGB generation. The generated image then passes through the existing local upscaler to create the requested output dimensions. This path is experimental; quality, runtime, memory pressure, and device suitability have not been established by this source description.
 
-Each platform publishes success only after finishing, validating output dimensions, atomically moving the PNG and writing a small preview. Job failures/cancellation remove partial output; startup removes orphaned partial raster/PNG files from the retained session. Original PNG export/share copies bytes; it never decodes the large result for transcoding. Prepared PNG/JPEG/WebP behavior is retained. No photo, filename, URI or feedback body is added to telemetry.
+## Result presentation and compatibility
 
-Shared paddingFor chooses 64 px for the RRDB Standard/Art/Natural networks and 32 px for Lite/legacy animevideov3, backed by bounded host untiled comparisons. Android outer regions use the same policy; Pixel has zero model context and integer nearest-neighbor scaling. Timing cache keys include the changed context. No model file/hash, OpenMP initialization, arithmetic or finisher parameter changed. Host verification and remaining mobile/iOS runtime limits are in the quality implementation report.
+While a job is active, the processing surface uses Aurora Veil, Scan Progress, Ring Spinner, and Progress Bar with native-reported stage/progress; unknown progress stays indeterminate. The result surface is reached only after native `SUCCEEDED`. After the user successfully saves an export, Home is wired to present the result through Aperture Card and request a one-time Confetti Burst for that job. These UI effects have not been device-verified in 0.9.
+
+New jobs use a prepared working copy. The 0.9 interface does not offer an Original resolution choice. Legacy saved results remain viewable/exportable under their recorded metadata; retained compatibility handling is not a user-facing option for new jobs.
+
+The first-install product introduction has three horizontally paged, passive product demonstrations. Completion is stored by the native onboarding-version preference on Start or Skip; Settings can replay it without changing first-run state. Existing installs are initialized as already introduced when native upgrade evidence exists. The system language remains the initial choice and language selection stays in Settings.
+
+## Project layout
+
+- `app/`, `src/navigation/`: Expo Router entry, route declarations, and retained screen adapters.
+- `src/application/`, `src/domain/`, `src/specs/`: startup/session ownership, data rules, and native contract.
+- `src/screens/`, `src/ui/`, `src/components/kinetik/`, `src/lib/kinetik/`: product screens, shared UI, Kinetik components and tokens.
+- `src/locales/`: localized UI dictionaries and existing locale registry.
+- `android/`, `ios/`: preserved native application shells, platform job owners, downloaders, and JNI/Objective-C++ bridges.
+- `native/engine/`, `native/recommendation/`, `native/recreate/`: shared native processing/recommendation code and the optional reconstruction wrapper.
+- `assets/recreate/`: demonstration pair; its manifest records source and generation provenance.
+- `scripts/`: verification helpers, local dependency setup, and release build tooling.
+
+## Historical architecture (not the 0.9 stack)
+
+Through 0.8.x Pixora was Bare React Native 0.87.1 with React 19 and a React Navigation container. Original-resolution tiled processing and its explicit UI belonged to the approved 0.8 quality revision. The 0.9 owner-approved plan replaces the stack with Expo SDK 58 / React Native 0.88 and removes Original resolution from new-job UI. Previous build, device, and coverage receipts refer only to their recorded source revisions and must not be reused as 0.9 evidence.

@@ -3,6 +3,7 @@ import type {
   Settings,
   Capabilities,
   ProfileAvailability,
+  RecreateModelState,
 } from '../src/specs/NativeUpscale';
 import { emptySession } from '../src/domain/session';
 export let session: Session = { ...emptySession };
@@ -10,6 +11,13 @@ export let settings: Settings;
 export let capabilities: Capabilities;
 export const sessionListeners = new Set<(s: Session) => void>();
 export const layoutListeners = new Set<(s: unknown) => void>();
+export const recreateListeners = new Set<(s: RecreateModelState) => void>();
+export let recreateModel: RecreateModelState = {state:'absent',downloadedBytes:0,totalBytes:1881812340,installedBytes:0,error:''};
+export function emitRecreateModel(next: Partial<RecreateModelState>) {
+  recreateModel = {...recreateModel,...next};
+  recreateListeners.forEach(listener => listener(recreateModel));
+  return recreateModel;
+}
 export function emitSession(next: Partial<Session>) {
   session = { ...session, ...next, sequence: session.sequence + 1 };
   sessionListeners.forEach(listener => listener(session));
@@ -22,6 +30,7 @@ export function seed(
   session = { ...emptySession, sequence: 10, ...next };
   settings = {
     onboardingVersion: 1,
+    aiDetailNoticeSeen: true,
     cacheLimitMiB: -1,
     notificationHintCount: 0,
     theme: 'light',
@@ -44,9 +53,19 @@ export function seed(
     workBytes: 2048,
     version: '0.4.0',
   };
+  recreateModel = {state:'absent',downloadedBytes:0,totalBytes:1881812340,installedBytes:0,error:''};
 }
 seed();
 const native = {
+  getRecreateModelState: jest.fn(async () => recreateModel),
+  downloadRecreateModel: jest.fn(async () => emitRecreateModel({state:'downloading'})),
+  cancelRecreateDownload: jest.fn(async () => emitRecreateModel({state:'paused'})),
+  deleteRecreateModel: jest.fn(async () => emitRecreateModel({state:'absent',downloadedBytes:0,installedBytes:0})),
+  onRecreateModelChanged: jest.fn((listener: (s: RecreateModelState) => void) => {recreateListeners.add(listener);return {remove:()=>recreateListeners.delete(listener)};}),
+  getStorageUsage: jest.fn(async () => ({cacheBytes:1024,sessionBytes:2048,temporaryBytes:0,recreateModelBytes:recreateModel.installedBytes,freeBytes:1e10})),
+  clearCache: jest.fn(async () => 1024),
+  markAiDetailNoticeSeen: jest.fn(async () => (settings={...settings,aiDetailNoticeSeen:true})),
+  startRecreateJob: jest.fn(async (_id:string,scale:number,speed:string,prompt:string,_confirmed:boolean) => emitSession({state:'RUNNING',processingKind:'recreate',mode:'recreate',scale,speed,recreatePrompt:prompt,recreateSeed:123,recreateSteps:speed==='fast'?4:8,jobId:'recreate-job'})),
   getProfileAvailability: jest.fn(async () => ({
     standard: true,
     lite: true,

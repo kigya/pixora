@@ -18,7 +18,8 @@
     "loading_model": "Pregătim modelul AI.",
     "upscaling": "Mărim imaginea pe porțiuni.",
     "building_result": "Asamblăm imaginea la dimensiunea aleasă.",
-    "writing_result": "Scriem rezultatul pe telefon."
+    "writing_result": "Scriem rezultatul pe telefon.",
+    "recreating": "Recreează"
   },
   "settings": "Setări",
   "local": "Mărire cu AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Fișierul nu a putut fi salvat sau deschis. Rezultatul rămâne în aplicație.",
     "SHARE_FAILED": "Fișierul nu a putut fi distribuit. Rezultatul rămâne în aplicație.",
     "BUSY": "Așteaptă finalizarea sau anulează sarcina curentă.",
-    "PROFILE_UNAVAILABLE": "Modurile de procesare nu sunt disponibile momentan. Poți salva ultimul rezultat."
+    "PROFILE_UNAVAILABLE": "Modurile de procesare nu sunt disponibile momentan. Poți salva ultimul rezultat.",
+    "RECREATE_MODEL_MISSING": "Descarcă modelul",
+    "RECREATE_MODEL_INVALID": "Modelul AI nu este disponibil. Reinstalează APK-ul.",
+    "RECREATE_DOWNLOAD_FAILED": "Procesarea a eșuat",
+    "RECREATE_LOW_STORAGE": "Spațiu insuficient.",
+    "RECREATE_LOW_MEMORY": "Memorie insuficientă. Închide alte aplicații și încearcă din nou.",
+    "MODEL_DOWNLOAD_FAILED": "Descarcă modelul — Acțiunea nu a putut fi finalizată. Încearcă din nou.",
+    "MODEL_INTEGRITY_FAILED": "Descarcă modelul.",
+    "MODEL_DELETE_FAILED": "Șterge modelul — Acțiunea nu a putut fi finalizată. Încearcă din nou.",
+    "CACHE_CLEAR_FAILED": "Șterge fișierele temporare — Acțiunea nu a putut fi finalizată. Încearcă din nou.",
+    "RECREATE_MODEL_LOAD_FAILED": "Descarcă modelul.",
+    "RECREATE_INVALID_INPUT": "Imaginea nu poate fi citită. Încearcă alt fișier.",
+    "RECREATE_GENERATION_FAILED": "Procesarea a eșuat. Încearcă din nou sau alege alt fișier.",
+    "RECREATE_INTERNAL_ERROR": "Procesarea a eșuat. Încearcă din nou sau alege alt fișier."
   },
   "free": "Gratuit",
   "offline": "Fără internet",
@@ -264,7 +278,11 @@
     "next": "Înainte",
     "skip": "Omite",
     "start": "Începe",
-    "replay": "Vezi introducerea"
+    "replay": "Vezi introducerea",
+    "detailsTitle": "Mai multe detalii",
+    "recreateTitle": "Recreează imagini",
+    "privacyTitle": "Fotografiile rămân pe telefon",
+    "step": "Pasul {current} din {total}"
   },
   "resolution": {
     "title": "Rezoluție",
@@ -272,5 +290,42 @@
     "original": "Rezoluție originală",
     "note": "Rezultatul la rezoluția originală folosește PNG. Limita este 64 MP și 16384 px pe latură.",
     "limit": "Rezultatul depășește limita. Alege copia pregătită sau o scară mai mică."
-  }
+  },
+  "recreate": {
+    "title": "Recreează",
+    "enhance": "Îmbunătățește",
+    "download": "Descarcă modelul",
+    "delete": "Șterge modelul",
+    "ready": "Gata",
+    "downloading": "Se descarcă",
+    "prompt": "Descriere (opțional)",
+    "experimental": "Experimental",
+    "paused": "În pauză",
+    "verifying": "Se verifică",
+    "model": "Model",
+    "storage": "Stocare",
+    "terms": "Descărcând modelul accepți condițiile sale de utilizare.",
+    "acceptDownload": "Acceptă și descarcă",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Viteză de procesare",
+    "steps": "Părți finalizate: {done} / {total}",
+    "missing": "Dispozitiv neacceptat",
+    "failed": "Acțiunea nu a putut fi finalizată",
+    "cancelDownload": "Anulează",
+    "retry": "Încearcă din nou",
+    "clearCache": "Șterge fișierele temporare",
+    "followsSystem": "Sistem",
+    "language": "Limbă",
+    "deleteConfirm": "Șterge modelul?",
+    "downloadFailed": "Procesarea a eșuat",
+    "notEnoughSpace": "Spațiu insuficient.",
+    "notEnoughMemory": "Memorie insuficientă. Închide alte aplicații și încearcă din nou.",
+    "licenses": "Licențe",
+    "languageSearch": "Limbă"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI poate modifica detalii mici"
+  },
+  "selectModel": "Alege"
 }

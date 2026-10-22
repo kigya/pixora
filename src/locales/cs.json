@@ -18,7 +18,8 @@
     "loading_model": "Připravujeme model AI.",
     "upscaling": "Zvětšujeme obrázek po jednotlivých částech.",
     "building_result": "Skládáme obrázek ve zvolené velikosti.",
-    "writing_result": "Ukládáme výsledek do telefonu."
+    "writing_result": "Ukládáme výsledek do telefonu.",
+    "recreating": "Znovu vytvořit"
   },
   "settings": "Nastavení",
   "local": "Zvětšení pomocí AI",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Soubor nelze uložit nebo otevřít. Výsledek zůstává v aplikaci.",
     "SHARE_FAILED": "Soubor nelze sdílet. Výsledek zůstává v aplikaci.",
     "BUSY": "Počkejte na dokončení nebo zrušte aktuální úlohu.",
-    "PROFILE_UNAVAILABLE": "Režimy zpracování jsou dočasně nedostupné. Poslední výsledek můžete stále uložit."
+    "PROFILE_UNAVAILABLE": "Režimy zpracování jsou dočasně nedostupné. Poslední výsledek můžete stále uložit.",
+    "RECREATE_MODEL_MISSING": "Stáhnout model",
+    "RECREATE_MODEL_INVALID": "Model AI není dostupný. Znovu nainstalujte APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Zpracování selhalo",
+    "RECREATE_LOW_STORAGE": "Nedostatek místa.",
+    "RECREATE_LOW_MEMORY": "Nedostatek paměti. Zavřete ostatní aplikace a zkuste to znovu.",
+    "MODEL_DOWNLOAD_FAILED": "Stáhnout model — Tuto akci se nepodařilo dokončit. Zkusit znovu.",
+    "MODEL_INTEGRITY_FAILED": "Stáhnout model.",
+    "MODEL_DELETE_FAILED": "Smazat model — Tuto akci se nepodařilo dokončit. Zkusit znovu.",
+    "CACHE_CLEAR_FAILED": "Smazat dočasné soubory — Tuto akci se nepodařilo dokončit. Zkusit znovu.",
+    "RECREATE_MODEL_LOAD_FAILED": "Stáhnout model.",
+    "RECREATE_INVALID_INPUT": "Obrázek nelze přečíst. Zkuste jiný soubor.",
+    "RECREATE_GENERATION_FAILED": "Zpracování selhalo. Zkuste to znovu nebo vyberte jiný soubor.",
+    "RECREATE_INTERNAL_ERROR": "Zpracování selhalo. Zkuste to znovu nebo vyberte jiný soubor."
   },
   "free": "Zdarma",
   "offline": "Bez internetu",
@@ -264,7 +278,11 @@
     "next": "Další",
     "skip": "Přeskočit",
     "start": "Začít",
-    "replay": "Zobrazit úvod"
+    "replay": "Zobrazit úvod",
+    "detailsTitle": "Více detailů",
+    "recreateTitle": "Znovu vytvářejte obrázky",
+    "privacyTitle": "Fotky zůstávají v telefonu",
+    "step": "Krok {current} z {total}"
   },
   "resolution": {
     "title": "Rozlišení",
@@ -272,5 +290,42 @@
     "original": "Původní rozlišení",
     "note": "Výsledek v původním rozlišení používá PNG. Limit je 64 MP a 16384 px na stranu.",
     "limit": "Výsledek překračuje limit. Zvolte připravenou kopii nebo menší měřítko."
-  }
+  },
+  "recreate": {
+    "title": "Znovu vytvořit",
+    "enhance": "Vylepšit",
+    "download": "Stáhnout model",
+    "delete": "Smazat model",
+    "ready": "Připraveno",
+    "downloading": "Stahování",
+    "prompt": "Popis (nepovinné)",
+    "experimental": "Experimentální",
+    "paused": "Pozastaveno",
+    "verifying": "Ověřování",
+    "model": "Model",
+    "storage": "Úložiště",
+    "terms": "Stažením modelu přijímáte jeho podmínky použití.",
+    "acceptDownload": "Přijmout a stáhnout",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Rychlost zpracování",
+    "steps": "Hotové části: {done} / {total}",
+    "missing": "Zařízení není podporováno",
+    "failed": "Tuto akci se nepodařilo dokončit",
+    "cancelDownload": "Zrušit",
+    "retry": "Zkusit znovu",
+    "clearCache": "Smazat dočasné soubory",
+    "followsSystem": "Systémový",
+    "language": "Jazyk",
+    "deleteConfirm": "Smazat model?",
+    "downloadFailed": "Zpracování selhalo",
+    "notEnoughSpace": "Nedostatek místa.",
+    "notEnoughMemory": "Nedostatek paměti. Zavřete ostatní aplikace a zkuste to znovu.",
+    "licenses": "Licence",
+    "languageSearch": "Jazyk"
+  },
+  "notice": {
+    "aiDetailsMayChange": "AI může změnit drobné detaily"
+  },
+  "selectModel": "Vybrat"
 }

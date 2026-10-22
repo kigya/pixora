@@ -82,25 +82,17 @@ test('original launch bypasses reduction confirmation and keeps the notification
     true,
   );
 });
-test('oversize original remains selected, shows a choice and cannot start', async () => {
+test('new jobs expose only the prepared input and omit original-resolution choice', async () => {
   await render(
     <AppProvider>
       <Home {...({ navigation: { navigate: jest.fn() }, route: {} } as any)} />
     </AppProvider>,
   );
-  await screen.findByRole('radio', { name: 'Original resolution' });
-  await fireEvent.press(
-    screen.getByRole('radio', { name: 'Original resolution' }),
-  );
-  expect(screen.queryByRole('radio', { name: 'Fast' })).not.toBeOnTheScreen();
+  expect(await screen.findAllByText(/1,024.*768/)).not.toHaveLength(0);
+  expect(screen.queryByRole('radio', { name: 'Original resolution' })).not.toBeOnTheScreen();
+  expect(screen.getByTestId('start-job')).toBeEnabled();
   await fireEvent.press(screen.getByRole('radio', { name: '4×' }));
-  expect(
-    screen.getByText(
-      'The output exceeds the limit. Choose Prepared copy or reduce the scale.',
-    ),
-  ).toBeOnTheScreen();
-  expect(screen.getByTestId('start-job')).toBeDisabled();
-  await fireEvent.press(screen.getByRole('radio', { name: 'Prepared copy' }));
+  expect(screen.getAllByText(/4,096.*3,072/).length).toBeGreaterThan(0);
   expect(screen.getByTestId('start-job')).toBeEnabled();
 });
 
@@ -128,7 +120,7 @@ test('an original result defaults to PNG and excludes whole-image transcode form
   expect(Native.exportResult).toHaveBeenCalledWith('original', 'png');
 });
 
-test('applying an available recommendation in original mode retains Quality', async () => {
+test('recommendation shows only the suggested model and an explicit apply action', async () => {
   Native.getImageRecommendation.mockResolvedValueOnce({
     imageId: image.id,
     profileId: 'standard',
@@ -140,14 +132,17 @@ test('applying an available recommendation in original mode retains Quality', as
       <Home {...({ navigation: { navigate: jest.fn() }, route: {} } as any)} />
     </AppProvider>,
   );
-  await screen.findByRole('radio', { name: 'Original resolution' });
-  await fireEvent.press(
-    screen.getByRole('radio', { name: 'Original resolution' }),
-  );
+  await screen.findByRole('heading', { name: 'Standard' });
+  expect(screen.queryByText(/photo|standard/i)).not.toBeOnTheScreen();
   await fireEvent.press(
     screen.getByRole('button', { name: 'Apply suggestion' }),
   );
-  expect(screen.getByRole('radio', { name: 'Quality' })).toBeSelected();
+  expect(screen.getByLabelText('Processing speed')).toHaveAccessibilityValue({
+    min: 0,
+    max: 1,
+    now: 1,
+    text: 'Quality',
+  });
 });
 
 test('settings replays onboarding and contains full-policy browser failures', async () => {

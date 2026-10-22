@@ -18,7 +18,8 @@
     "loading_model": "Nous préparons le modèle d’IA.",
     "upscaling": "Nous agrandissons l’image partie par partie.",
     "building_result": "Nous assemblons l’image à la taille choisie.",
-    "writing_result": "Nous écrivons le résultat sur le téléphone."
+    "writing_result": "Nous écrivons le résultat sur le téléphone.",
+    "recreating": "Recréer"
   },
   "settings": "Réglages",
   "local": "Agrandissement par IA",
@@ -112,7 +113,20 @@
     "EXPORT_FAILED": "Impossible d’enregistrer ou d’ouvrir le fichier. Le résultat reste dans l’app.",
     "SHARE_FAILED": "Impossible de partager le fichier. Le résultat reste dans l’app.",
     "BUSY": "Attendez la fin ou annulez le traitement.",
-    "PROFILE_UNAVAILABLE": "Les modes sont temporairement indisponibles. Vous pouvez enregistrer le dernier résultat."
+    "PROFILE_UNAVAILABLE": "Les modes sont temporairement indisponibles. Vous pouvez enregistrer le dernier résultat.",
+    "RECREATE_MODEL_MISSING": "Télécharger le modèle",
+    "RECREATE_MODEL_INVALID": "Modèle d’IA indisponible. Réinstallez l’APK.",
+    "RECREATE_DOWNLOAD_FAILED": "Échec du traitement",
+    "RECREATE_LOW_STORAGE": "Espace de stockage insuffisant.",
+    "RECREATE_LOW_MEMORY": "Mémoire insuffisante. Fermez d’autres apps et réessayez.",
+    "MODEL_DOWNLOAD_FAILED": "Télécharger le modèle — Impossible de terminer cette action. Réessayer.",
+    "MODEL_INTEGRITY_FAILED": "Télécharger le modèle.",
+    "MODEL_DELETE_FAILED": "Supprimer le modèle — Impossible de terminer cette action. Réessayer.",
+    "CACHE_CLEAR_FAILED": "Effacer les fichiers temporaires — Impossible de terminer cette action. Réessayer.",
+    "RECREATE_MODEL_LOAD_FAILED": "Télécharger le modèle.",
+    "RECREATE_INVALID_INPUT": "Impossible de lire l’image. Essayez un autre fichier.",
+    "RECREATE_GENERATION_FAILED": "Échec du traitement. Réessayez ou choisissez un autre fichier.",
+    "RECREATE_INTERNAL_ERROR": "Échec du traitement. Réessayez ou choisissez un autre fichier."
   },
   "free": "Gratuit",
   "offline": "Sans internet",
@@ -264,7 +278,11 @@
     "next": "Suivant",
     "skip": "Passer",
     "start": "Commencer",
-    "replay": "Voir la présentation"
+    "replay": "Voir la présentation",
+    "detailsTitle": "Plus de détails",
+    "recreateTitle": "Recréez vos images",
+    "privacyTitle": "Vos photos restent sur votre téléphone",
+    "step": "Étape {current} sur {total}"
   },
   "resolution": {
     "title": "Résolution",
@@ -272,5 +290,42 @@
     "original": "Résolution d’origine",
     "note": "Le résultat en résolution d’origine utilise PNG. Limite : 64 MP et 16384 px par côté.",
     "limit": "Le résultat dépasse la limite. Choisissez la copie préparée ou un facteur inférieur."
-  }
+  },
+  "recreate": {
+    "title": "Recréer",
+    "enhance": "Améliorer",
+    "download": "Télécharger le modèle",
+    "delete": "Supprimer le modèle",
+    "ready": "Prêt",
+    "downloading": "Téléchargement",
+    "prompt": "Description (facultative)",
+    "experimental": "Expérimental",
+    "paused": "En pause",
+    "verifying": "Vérification",
+    "model": "Modèle",
+    "storage": "Stockage",
+    "terms": "Le téléchargement vaut acceptation des conditions d’utilisation du modèle.",
+    "acceptDownload": "Accepter et télécharger",
+    "modelSize": "1.88 GB",
+    "downloadSize": "{size}",
+    "speed": "Vitesse",
+    "steps": "Parties terminées : {done} / {total}",
+    "missing": "Appareil non pris en charge",
+    "failed": "Impossible de terminer cette action",
+    "cancelDownload": "Annuler",
+    "retry": "Réessayer",
+    "clearCache": "Effacer les fichiers temporaires",
+    "followsSystem": "Système",
+    "language": "Langue",
+    "deleteConfirm": "Supprimer le modèle?",
+    "downloadFailed": "Échec du traitement",
+    "notEnoughSpace": "Espace de stockage insuffisant.",
+    "notEnoughMemory": "Mémoire insuffisante. Fermez d’autres apps et réessayez.",
+    "licenses": "Licences",
+    "languageSearch": "Langue"
+  },
+  "notice": {
+    "aiDetailsMayChange": "L’IA peut modifier de petits détails"
+  },
+  "selectModel": "Choisir"
 }

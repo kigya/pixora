@@ -11,6 +11,13 @@ jacoco { toolVersion = "0.8.14" }
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    def node = providers.environmentVariable('NODE_BINARY').getOrElse('node')
+    def root = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+    entryFile = file([node, '-e', "require('expo/scripts/resolveAppEntry')", root, 'android', 'absolute'].execute(null, rootDir).text.trim())
+    cliFile = new File([node, '--print', "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
+    bundleCommand = 'export:embed'
+    nodeExecutableAndArgs = [node]
+
     if (project.hasProperty('firebaseDiagnostics')) {
         entryFile = file('../../index.diagnostics.js')
     }
@@ -111,8 +118,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild { cmake { arguments "-DFEEDBACK_GENERATED_DIR=${layout.buildDirectory.dir('generated/feedback').get().asFile}", "-DANDROID_STL=c++_shared", "-DUPSCALE_COVERAGE=${project.hasProperty('coverage') ? 'ON' : 'OFF'}" } }
         buildConfigField "boolean", "FAST_MODEL_ENABLED", (project.findProperty("fastModeEnabled") ?: "true")
-        versionCode 17
-        versionName "0.8.7"
+        versionCode 18
+        versionName "0.9.0"
     }
     externalNativeBuild { cmake { path "src/main/cpp/CMakeLists.txt"; version "3.22.1" } }
     androidResources { noCompress += ["bin", "param"] }

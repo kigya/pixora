@@ -50,7 +50,7 @@ profiles=list((root/'artifacts/ios/DerivedData/Build/ProfileData').rglob('Covera
 if not profiles:raise SystemExit('Missing real XCTest LLVM coverage profile')
 profile=max(profiles,key=lambda p:p.stat().st_mtime)
 binary=root/'artifacts/ios/DerivedData/Build/Products/Debug-iphonesimulator/Pixora.app/Pixora'
-sources=sorted((root/'ios/Native').glob('*.mm'))+[root/'ios/Pixora/AppDelegate.mm']
+sources=sorted((root/'ios/Native').glob('*.mm'))+[root/'ios/Pixora/AppDelegate.swift']
 with (root/'coverage/ios/coverage.json').open('w') as output:
  subprocess.run(['xcrun','llvm-cov','export',str(binary),'-instr-profile='+str(profile),*[str(p) for p in sources]],stdout=output,check=True)
 subprocess.run(['xcrun','llvm-cov','report',str(binary),'-instr-profile='+str(profile),*[str(p) for p in sources]],check=True)

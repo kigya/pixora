@@ -3,8 +3,10 @@
 #import <PixoraNative/PixoraUpscale.h>
 #import "../Native/PixoraImages.h"
 #import "../Native/PixoraFeedback.h"
+#import "../Native/PixoraRecreateModelStore.h"
 #import <objc/runtime.h>
 #include "engine.h"
+#include "recreate.h"
 #include <atomic>
 #include <stdexcept>
 @interface PixoraUpscale (TestSurface)
@@ -17,6 +19,7 @@
 - (void)invalidate;
 - (void)restoreSession;
 - (void)persist;
+- (void)clearCache:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 - (void)perform:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject work:(id (^)(void))work;
 @end
 @interface FailingPreferences : NSUserDefaults
@@ -59,7 +62,7 @@ static NSArray* ListShares(id manager,SEL cmd,NSURL* directory,NSArray* keys,NSD
 - (void)testColdSessionRestoreAndStorageFailure {
  NSURL* journal=[_folder URLByAppendingPathComponent:@"session.json"];
  for(id invalid in @[@[],@{},@{@"schemaVersion":@1},@{@"schemaVersion":@2,@"state":@4},@{@"schemaVersion":@2,@"state":@"READY",@"exports":@4},@{@"schemaVersion":@2,@"state":@"READY",@"exports":@[],@"image":@4}]){[[NSJSONSerialization dataWithJSONObject:invalid options:0 error:nil] writeToURL:journal atomically:YES];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");}
- [[NSJSONSerialization dataWithJSONObject:[_module empty] options:0 error:nil]writeToURL:journal atomically:YES];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");XCTAssertEqualObjects([self state][@"image"],NSNull.null);
+ [[NSJSONSerialization dataWithJSONObject:[_module empty] options:0 error:nil]writeToURL:journal atomically:YES];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");XCTAssertEqualObjects([self state][@"image"],NSNull.null);XCTAssertEqualObjects([self state][@"processingKind"],@"enhance");XCTAssertEqualObjects([self state][@"recreateModelRevision"],@"");XCTAssertEqual([self state][@"recreateSeed"],@0);
  NSDictionary* image=[_module import:[self fixture:8 height:6]];NSString* identifier=image[@"id"];
  for(NSString* state in @[@"READY",@"RUNNING",@"SUCCEEDED"]){NSMutableDictionary* session=[_module valueForKey:@"session"];session[@"state"]=state;[session removeObjectForKey:@"resultPath"];[_module persist];[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],[state isEqual:@"READY"]?@"READY":@"INTERRUPTED");}
  XCTAssertEqualObjects([self state][@"image"][@"id"],identifier);
@@ -69,6 +72,19 @@ static NSArray* ListShares(id manager,SEL cmd,NSURL* directory,NSArray* keys,NSD
  [self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module perform:a reject:b work:^id{throw std::bad_alloc();}];} error:&error];XCTAssertEqualObjects(error,@"LOW_MEMORY");
  [self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module perform:a reject:b work:^id{throw std::runtime_error("test");}];} error:&error];XCTAssertEqualObjects(error,@"INFERENCE_FAILED");
  NSURL* missing=[_folder URLByAppendingPathComponent:@"missing/child" isDirectory:YES];[_module setValue:missing forKey:@"root"];XCTAssertThrows([_module persist]);XCTAssertNoThrow([_module expireBackgroundTask]);XCTAssertEqualObjects([_module snapshot][@"state"],@"CANCELLING");[_module restoreSession];XCTAssertEqualObjects([self state][@"state"],@"EMPTY");[_module setValue:_folder forKey:@"root"];
+}
+- (void)testCacheClearReportsOnlyRemovedCacheBytesAndPreservesSessionAndModelFiles {
+ NSURL* cache=[NSFileManager.defaultManager URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask].firstObject;NSURL* cacheFile=[cache URLByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingString:@".tmp"]];NSURL* session=[_folder URLByAppendingPathComponent:@"sessions/keep/source.png"];NSURL* model=[_folder URLByAppendingPathComponent:@"recreate-model/keep.gguf"];
+ [NSFileManager.defaultManager createDirectoryAtURL:session.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:nil];[NSFileManager.defaultManager createDirectoryAtURL:model.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:nil];NSData* payload=[NSData dataWithBytes:"cache-payload" length:13];XCTAssertTrue([payload writeToURL:cacheFile atomically:YES]);XCTAssertTrue([payload writeToURL:session atomically:YES]);XCTAssertTrue([payload writeToURL:model atomically:YES]);
+ NSError* error=nil;NSNumber* removed=[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module clearCache:a reject:b];} error:&error];XCTAssertNil(error);XCTAssertEqual(removed.longLongValue,(long long)payload.length);XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:cacheFile.path]);XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:session.path]);XCTAssertTrue([NSFileManager.defaultManager fileExistsAtPath:model.path]);
+ NSMutableDictionary* current=[_module valueForKey:@"session"];current[@"state"]=@"RUNNING";NSString* code=nil;[self await:^(RCTPromiseResolveBlock a,RCTPromiseRejectBlock b){[self->_module clearCache:a reject:b];} error:&code];XCTAssertEqualObjects(code,@"BUSY");
+}
+- (void)testRecreatePartialDownloadIsRestorableAndDeleteRemovesOnlyModelFiles {
+ PixoraRecreateModelStore* store=[[PixoraRecreateModelStore alloc] initWithRoot:_folder changed:nil];NSURL* part=[[store diffusionModelURL] URLByAppendingPathExtension:@"part"];NSData* partial=[NSData dataWithBytes:"prefix" length:6];XCTAssertTrue([partial writeToURL:part atomically:YES]);NSDictionary* state=[store snapshot];XCTAssertEqualObjects(state[@"state"],@"paused");XCTAssertEqual([state[@"downloadedBytes"] longLongValue],6);XCTAssertEqual([state[@"totalBytes"] longLongValue],1881812340LL);
+ [store deleteModel];XCTAssertEqualObjects([store snapshot][@"state"],@"absent");XCTAssertFalse([NSFileManager.defaultManager fileExistsAtPath:part.path]);
+}
+- (void)testRecreateModelDeletionRejectsActiveDownload {
+ PixoraRecreateModelStore* store=[[PixoraRecreateModelStore alloc] initWithRoot:_folder changed:nil];[store setValue:@"downloading" forKey:@"state"];NSException* caught=nil;@try{[store deleteModel];}@catch(NSException* error){caught=error;}XCTAssertEqualObjects(caught.name,@"BUSY");
 }
 - (void)testFormatsAlphaAndMetadata {
  NSURL* source=[self fixture:7 height:5];NSDictionary* bounds=pixora::inspect(source);XCTAssertEqual([bounds[@"width"] intValue],7);XCTAssertTrue([bounds[@"hasAlpha"] boolValue]);
@@ -159,6 +175,10 @@ static NSArray* ListShares(id manager,SEL cmd,NSURL* directory,NSArray* keys,NSD
  auto load=[](void* opaque,const upscale::Model& model){return pixora::loadModel(opaque,model);};
  auto run=[&](std::vector<uint8_t>& output,int tile){return upscale::process({input.rgba.data(),72,9,72*4},{output.data(),288,36,288*4},false,tile,1,false,cancelled,hooks,load);};
  XCTAssertEqual(run(whole,1024),0);XCTAssertEqual(run(tiled,32),0);int difference=0;for(size_t i=0;i<whole.size();i++)difference=std::max(difference,std::abs((int)whole[i]-tiled[i]));XCTAssertLessThanOrEqual(difference,1);XCTAssertEqual(whole[3],0);XCTAssertEqual(whole[19],80);
+}
+- (void)testReconstructionCancellationLatchedBeforeRunDoesNotLoadModel {
+ uint8_t rgba[4]={20,40,60,255};pixora::recreate::Request request;request.model_path="missing-model.gguf";request.lora_path="missing-lora.safetensors";request.prompt="fixture";request.rgba=rgba;request.width=1;request.height=1;request.steps=4;request.seed=17;
+ pixora::recreate::reset_cancel();pixora::recreate::cancel();pixora::recreate::Result result;auto status=pixora::recreate::run(request,nullptr,nullptr,&result);pixora::recreate::free_result(&result);XCTAssertEqual(status,pixora::recreate::Status::Cancelled);
 }
 - (void)testLegacyFifthModelAndJobValidation {
  NSDictionary* image=[_module import:[self fixture:8 height:6]];NSString* identifier=image[@"id"];NSString* error=nil;
