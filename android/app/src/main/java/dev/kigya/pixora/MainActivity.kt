@@ -1,7 +1,7 @@
 package dev.kigya.pixora
 
 import android.os.Bundle
-import android.os.SystemClock
+import android.os.Build
 import android.view.View
 import android.view.ViewTreeObserver
 import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
@@ -11,7 +11,6 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import expo.modules.ReactActivityDelegateWrapper
 
 class MainActivity : ReactActivity() {
-  private val startupDeadline = SystemClock.uptimeMillis() // JS Aurora splash owns the 1500 ms minimum.
   private var startupReady = false
   private var startupContent: View? = null
   private var startupDrawCleanup: (() -> Unit)? = null
@@ -31,13 +30,17 @@ class MainActivity : ReactActivity() {
     // saved fragments after process death or a configuration change.
     supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
     super.onCreate(savedInstanceState)
-    // Keep the system splash until the initial data and navigation are ready.
+    // Hand off the plain system background as soon as the Aurora frame is laid out.
+    // Do not run a second native logo animation or minimum-duration timer.
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      splashScreen.setOnExitAnimationListener { it.remove() }
+    }
     // Returning false only defers drawing; it never blocks the UI or JS thread.
     val content = findViewById<View>(android.R.id.content)
     startupContent = content
     val listener = object : ViewTreeObserver.OnPreDrawListener {
       override fun onPreDraw(): Boolean {
-        if (!startupReady || SystemClock.uptimeMillis() < startupDeadline) return false
+        if (!startupReady) return false
         content.viewTreeObserver.removeOnPreDrawListener(this)
         startupDrawCleanup = null
         window.setBackgroundDrawableResource(R.color.window_background)
@@ -47,8 +50,6 @@ class MainActivity : ReactActivity() {
     content.viewTreeObserver.addOnPreDrawListener(listener)
     // Capture the registered view and listener together for lifecycle cleanup.
     startupDrawCleanup = { content.viewTreeObserver.removeOnPreDrawListener(listener) }
-    content.postDelayed({ content.postInvalidateOnAnimation() },
-        (startupDeadline - SystemClock.uptimeMillis()).coerceAtLeast(0))
     updateSystemBars()
   }
 

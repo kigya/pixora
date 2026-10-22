@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from 'expo-router/native-stack';
 import type { Routes } from '../navigation/routes';
 import Native from '../specs/NativeUpscale';
 import { useApp } from '../application/AppProvider';

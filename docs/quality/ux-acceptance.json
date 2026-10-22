@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_fingerprint": "a4cd48c337f648710c05a10c0145a4b986ce7d92ddfd5636ba4dad75b118da52",
-  "recorded_at": "2026-10-22T18:57:52.559496+00:00",
+  "source_fingerprint": "adaf5700a8cd9f7e713dc98a50c5e1c61c2277c1bbbb7d912d5c1263a71b0946",
+  "recorded_at": "2026-10-22T19:32:40.690913+00:00",
   "criteria": [
     {
       "id": "REQ-TRACE-001",
@@ -168,5 +168,6 @@
       ],
       "references": []
     }
-  ]
+  ],
+  "change": "Startup navigation-context and logo-only splash correction; no verification launch or tests."
 }

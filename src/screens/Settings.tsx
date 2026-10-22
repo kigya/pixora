@@ -6,7 +6,7 @@ import {
   Platform,
   Linking,
 } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from 'expo-router/native-stack';
 import type { Routes } from '../navigation/routes';
 import Native, { type RecreateModelState, type StorageUsage } from '../specs/NativeUpscale';
 import { Button, Segments, Icon, createStyles } from '../ui/components';

@@ -108,3 +108,9 @@ Required UI scenarios: closed model selection independent of expansion, at most 
 ## 0.9 overall status
 
 All newly added or changed 0.9 test scenarios are **NOT RUN**, including JS/TS, Kotlin, C++, Objective-C++ and component tests. No current 0.9 coverage percentage is claimed. The previous 100% C++ classifier report and all earlier Android/iOS/device results are historical for their recorded revisions. Xiaomi, emulators and simulators were not run. A successful build, if later recorded, proves only the build checks that actually ran; it does not prove visual behavior, model quality, runtime, memory, speed or physical-device acceptance.
+
+## Startup correction follow-up — NOT RUN
+
+FEAT-907/TEST-907 follow-up: the owner observed two splash compositions and a crash. Existing Xiaomi crash logs identify the navigation-context mismatch; source correction switches route hooks/types to Expo Router. Android's first branded splash is removed; Aurora displays only the logo for at least1500ms from first layout and until initialization is ready, fading in from the theme-matched system background.
+
+Future scenarios: cold launch in light/dark/system themes, saved appearance override, slow initialization, retry, Reduce Motion, rotation, foreground restoration, fresh onboarding and Settings/Back/replay navigation. All scenarios, test suites, lint, coverage and app verification launches are NOT RUN under the current owner instruction. Only release compilation, artifact inspection and requested package installation are performed separately. Installation is not startup acceptance.
