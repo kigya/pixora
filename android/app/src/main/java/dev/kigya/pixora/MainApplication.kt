@@ -7,7 +7,9 @@ import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
-import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
+import expo.modules.ExpoReactHostFactory.getDefaultReactHost
+import expo.modules.ApplicationLifecycleDispatcher
+import android.content.res.Configuration
 
 class MainApplication : Application(), ReactApplication {
 
@@ -22,8 +24,15 @@ class MainApplication : Application(), ReactApplication {
     )
   }
 
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    ApplicationLifecycleDispatcher.onConfigurationChanged(this,newConfig)
+  }
+
   override fun onCreate() {
     super.onCreate()
+    // A failed marker write is retried by getSettings; it must not prevent startup.
+    try { OnboardingStore.version(this) } catch (_: Exception) { }
     AppCompatDelegate.setDefaultNightMode(ThemePolicy.nightMode(getSharedPreferences("settings", MODE_PRIVATE).getString("theme","system")))
     // Keep the app usable offline if durable consent reconciliation fails. Firebase components
     // must not initialize until stale SDK collection overrides are safely removed or reconciled.
@@ -39,5 +48,6 @@ class MainApplication : Application(), ReactApplication {
     ProfileAvailability.init(this)
     if (firebaseReady) ProfileAvailability.fetchOnce()
     loadReactNative(this)
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
   }
 }

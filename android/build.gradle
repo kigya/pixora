@@ -2,7 +2,7 @@ buildscript {
     ext {
         buildToolsVersion = "36.0.0"
         minSdkVersion = 29
-        compileSdkVersion = 36
+        compileSdkVersion = 37
         targetSdkVersion = 36
         ndkVersion = "27.1.12297006"
         kotlinVersion = "2.2.0"
@@ -21,4 +21,5 @@ buildscript {
     }
 }
 
+apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"

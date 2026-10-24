@@ -41,5 +41,5 @@ class BundledModels(
 interface JobControl { fun reset();fun cancel() }
 object NativeJobControl:JobControl {
     override fun reset()=NativeEngine.resetCancellation()
-    override fun cancel()=NativeEngine.cancel()
+    override fun cancel(){NativeEngine.cancel();NativeEngine.cancelRecreate()}
 }

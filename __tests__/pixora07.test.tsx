@@ -19,7 +19,7 @@ import { StorageSlider } from '../src/ui/storageSlider';
 import { LocaleContext } from '../src/ui/locale';
 import { jobContext, useTrackedScreen } from '../src/application/telemetry';
 import { emptySession } from '../src/domain/session';
-import Native, { seed } from '../tests/nativeMock';
+import Native, { seed, capabilities } from '../tests/nativeMock';
 import { strings } from '../src/ui/i18n';
 
 const events = () =>
@@ -60,7 +60,7 @@ test('telemetry controls persist independently and retain state after a failed w
   const analytics = await screen.findByRole('switch', {
     name: strings.en.analyticsTitle,
   });
-  await act(() => fireEvent(analytics, 'valueChange', true));
+  await fireEvent(analytics, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
     true,
     false,
@@ -68,33 +68,15 @@ test('telemetry controls persist independently and retain state after a failed w
   );
   expect(
     screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-  ).toHaveProp('value', true);
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.crashesTitle }),
-      'valueChange',
-      true,
-    ),
-  );
+  ).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
     true,
     true,
     true,
   );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-      'valueChange',
-      false,
-    ),
-  );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.crashesTitle }),
-      'valueChange',
-      false,
-    ),
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(events()).toEqual(
     expect.arrayContaining([
       ['settings_changed', { setting: 'analytics', value: 'on' }],
@@ -104,19 +86,13 @@ test('telemetry controls persist independently and retain state after a failed w
   Native.updateTelemetrySettings.mockRejectedValueOnce(
     new Error('write failed'),
   );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-      'valueChange',
-      true,
-    ),
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(
     await screen.findByText(strings.en.errors.INFERENCE_FAILED),
   ).toBeOnTheScreen();
   expect(
     screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-  ).toHaveProp('value', false);
+  ).toHaveProp('accessibilityState', { checked: false, disabled: false });
 });
 
 test('stale telemetry write failure cannot roll back a newer queued choice', async () => {
@@ -136,18 +112,10 @@ test('stale telemetry write failure cannot roll back a newer queued choice', asy
       <TelemetryControls />
     </AppProvider>,
   );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-    'valueChange',
-    true,
-  );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.crashesTitle }),
-    'valueChange',
-    true,
-  );
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
   await act(async () => rejectFirst(new Error('stale write failed')));
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(2));
@@ -162,8 +130,8 @@ test('stale telemetry write failure cannot roll back a newer queued choice', asy
     noticeSeen: true,
     consentVersion: 2,
   }));
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
 });
 
 test('latest telemetry write failure rolls back only to the last confirmed settings', async () => {
@@ -183,16 +151,8 @@ test('latest telemetry write failure rolls back only to the last confirmed setti
       <TelemetryControls />
     </AppProvider>,
   );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-    'valueChange',
-    true,
-  );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.crashesTitle }),
-    'valueChange',
-    true,
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
   await act(async () => resolveFirst({
     analytics: true,
@@ -207,8 +167,8 @@ test('latest telemetry write failure rolls back only to the last confirmed setti
     [true, false, true],
     [true, true, true],
   ]);
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', false);
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: false, disabled: false });
 });
 
 test('informational first-launch notice keeps default-on choices and reports save failure', async () => {
@@ -318,7 +278,7 @@ test('cache slider commits once on release, not during movement, cancels cleanly
   expect(changed).toHaveBeenLastCalledWith(0);
 });
 
-test('processing card reports real phases, uncertainty, fallback and stops its clock in background', async () => {
+test('processing card keeps elapsed time separate from native progress and pauses in background', async () => {
   jest.useFakeTimers();
   jest.setSystemTime(1000000);
   let listener: (state: any) => void = () => {};
@@ -337,11 +297,9 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
     backend: 'GPU',
   };
   const { rerender } = await render(<ProcessingCard session={job} />);
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
-    min: 0,
-    max: 100,
-    now: 54,
-  });
+  expect(screen.getByText(strings.en.elapsedLabel)).toBeOnTheScreen();
+  expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.processing)).not.toBeOnTheScreen();
   expect(screen.queryByText(strings.en.estimatingTime)).not.toBeOnTheScreen();
   expect(screen.queryByText('GPU')).not.toBeOnTheScreen();
   expect(screen.queryByText(strings.en.remainingLabel)).not.toBeOnTheScreen();
@@ -363,32 +321,20 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
     />,
   );
   expect(screen.getByText(strings.en.fallback)).toBeOnTheScreen();
-  await rerender(
-    <ProcessingCard
-      session={{
-        ...job,
-        state: 'FINALIZING',
-        phase: 'writing_result',
-        progress: -1,
-        backend: '',
-      }}
-    />,
-  );
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
-    text: strings.en.finalizing,
-  });
+  await rerender(<ProcessingCard session={{ ...job, state: 'FINALIZING', phase: 'writing_result', progress: -1, backend: '' }} />);
+  expect(screen.queryByText(strings.en.finalizing)).not.toBeOnTheScreen();
   await rerender(
     <ProcessingCard
       session={{ ...job, phase: 'unknown', backend: 'CPU', elapsedMs: 301000 }}
     />,
   );
-  expect(screen.getByText(strings.en.long)).toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.long)).not.toBeOnTheScreen();
   await rerender(
     <ProcessingCard
       session={{ ...job, phase: 'preparing_image', backend: 'CPU' }}
     />,
   );
-  expect(screen.getByText(strings.en.cpu)).toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.cpu)).not.toBeOnTheScreen();
 });
 
 test('screen engagement excludes background and loss of native navigation focus', async () => {
@@ -443,6 +389,22 @@ test('screen engagement excludes background and loss of native navigation focus'
   expect(removed).toHaveBeenCalled();
 });
 
+test('screen telemetry keeps approved context and drops prompt and email fields', async () => {
+  function Screen() {
+    useTrackedScreen('feedback', {
+      source: 'result', status: 'opened', attempt_token: 'attempt-1',
+      prompt: 'private prompt', email: 'person@example.test', filename: 'private.jpg',
+    });
+    return null;
+  }
+  await render(<Screen />);
+  const viewEvent = events().find(([name]) => name === 'screen_view')?.[1];
+  expect(viewEvent).toMatchObject({ source: 'result', status: 'opened', attempt_token: 'attempt-1' });
+  expect(viewEvent).not.toHaveProperty('prompt');
+  expect(viewEvent).not.toHaveProperty('email');
+  expect(viewEvent).not.toHaveProperty('filename');
+});
+
 test('job analytics categorises sizes without image URI or filenames', () => {
   const context = jobContext(emptySession);
   expect(context.size_bucket).toBe('small');
@@ -470,11 +432,7 @@ test('job analytics categorises sizes without image URI or filenames', () => {
   expect(JSON.stringify(context)).not.toMatch(/uri|filename|email/i);
 });
 
-test('processing layout adapts to large type and RTL while keeping values LTR', async () => {
-  const rn = require('react-native');
-  const dimensions = jest
-    .spyOn(rn, 'useWindowDimensions')
-    .mockReturnValue({ width: 320, height: 640, fontScale: 2, scale: 1 });
+test('processing elapsed label localizes in RTL and keeps its time value LTR', async () => {
   const job = {
     ...emptySession,
     startedAt: Date.now(),
@@ -487,17 +445,9 @@ test('processing layout adapts to large type and RTL while keeping values LTR', 
       <ProcessingCard session={job} />
     </LocaleContext.Provider>,
   );
-  expect(screen.getByRole('progressbar')).toHaveAccessibilityValue({
-    min: 0,
-    max: 100,
-    now: 30,
-  });
-  dimensions.mockReturnValue({
-    width: 840,
-    height: 640,
-    fontScale: 1,
-    scale: 1,
-  });
+  expect(screen.getByText(strings.ar.elapsedLabel)).toBeOnTheScreen();
+  expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+  expect(screen.getByTestId('processing-time').props.style).toBeDefined();
   await rerender(
     <LocaleContext.Provider value="ar">
       <ProcessingCard session={job} />
@@ -570,6 +520,7 @@ test('remote configuration replaces a disabled selection, preserves import and b
     updatedAt: 1,
   };
   Native.getProfileAvailability.mockResolvedValue(flags);
+  capabilities.modes = ['quality', 'fast', 'illustration', 'pixel'];
   let updated: (value: any) => void = () => {};
   Native.onProfileAvailabilityChanged.mockImplementation(callback => {
     updated = callback!;
@@ -587,7 +538,7 @@ test('remote configuration replaces a disabled selection, preserves import and b
     previewUri: 'file:///image',
     needsPreparation: false,
   };
-  seed({ state: 'READY', image, sessionId: 'session', profileId: 'standard' });
+  seed({ state: 'READY', image, sessionId: 'session', profileId: 'standard', processingKind: 'enhance' });
   const props = {
     navigation: { navigate: jest.fn(), goBack: jest.fn() },
     route: {},
@@ -598,11 +549,6 @@ test('remote configuration replaces a disabled selection, preserves import and b
     </AppProvider>,
   );
   expect(await screen.findByText(strings.en.profileChanged)).toBeOnTheScreen();
-  expect(
-    screen.getByRole('button', {
-      name: `${strings.en.profileTitle}: ${strings.en.presets.lite.title}`,
-    }),
-  ).toBeOnTheScreen();
   await act(() =>
     updated({
       ...flags,

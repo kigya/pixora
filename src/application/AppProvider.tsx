@@ -22,7 +22,7 @@ import {
   isActive,
 } from '../domain/session';
 import { strings, type Copy, type LocaleCode } from '../ui/i18n';
-import { ThemeContext, darkColors, lightColors } from '../ui/theme';
+import { PixoraThemeProvider } from '../ui/theme';
 import { LocaleContext } from '../ui/locale';
 import { DialogProvider } from '../ui/dialog';
 import { InformationProvider } from '../ui/information';
@@ -38,6 +38,7 @@ type AppContextValue = {
   t: Copy;
   lang: LocaleCode;
   loading: boolean;
+  startupError: boolean;
   notifications: boolean | null;
   accept: (s: Session) => void;
   refresh: () => Promise<void>;
@@ -52,6 +53,8 @@ export const useApp = () => useContext(AppContext)!;
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [session, accept] = useReducer(sessionReducer, emptySession),
     [settings, setSettings] = useState<Settings>({
+      onboardingVersion: 1,
+      aiDetailNoticeSeen: false,
       cacheLimitMiB: -1,
       notificationHintCount: 0,
       theme: 'system',
@@ -65,6 +68,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }),
     [caps, setCaps] = useState<Capabilities | null>(null),
     [loading, setLoading] = useState(true),
+    [themeReady, setThemeReady] = useState(false),
+    [startupError, setStartupError] = useState(false),
     [message, setMessage] = useState<MessageKey>(''),
     [notifications, setNotifications] = useState<boolean | null>(null);
   const [availability, setAvailability] = useState<ProfileAvailability>({
@@ -103,17 +108,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]);
     accept(current);
     setSettings(preferences);
+    setThemeReady(true);
     setCaps(capabilities);
     setNotifications(notice);
     setAvailability(flags);
     setTelemetry(tracking);
+    setStartupError(false);
   }, []);
   useEffect(() => {
     const subscription = Native.onSessionChanged(accept);
     const flagsSubscription =
       Native.onProfileAvailabilityChanged(setAvailability);
     refresh()
-      .catch(() => setMessage('modelInvalid'))
+      .catch(() => {setStartupError(true); setMessage('modelInvalid');})
       .finally(() => setLoading(false));
     const listener = AppState.addEventListener('change', state => {
       if (state === 'active') {
@@ -138,6 +145,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       t,
       lang,
       loading,
+      startupError,
       notifications,
       accept,
       refresh,
@@ -154,25 +162,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       t,
       lang,
       loading,
+      startupError,
       notifications,
       refresh,
       message,
     ],
   );
-  const theme = useMemo(
-    () => ({ colors: dark ? darkColors : lightColors, dark }),
-    [dark],
-  );
   return (
     <SessionContext.Provider value={session}>
       <AppContext.Provider value={value}>
-        <ThemeContext.Provider value={theme}>
+        <PixoraThemeProvider dark={dark} resolved={themeReady}>
           <LocaleContext.Provider value={lang}>
             <DialogProvider>
               <InformationProvider>{children}</InformationProvider>
             </DialogProvider>
           </LocaleContext.Provider>
-        </ThemeContext.Provider>
+        </PixoraThemeProvider>
       </AppContext.Provider>
     </SessionContext.Provider>
   );

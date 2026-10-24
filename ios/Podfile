@@ -1,14 +1,16 @@
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), 'scripts/autolinking')
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve("react-native/scripts/react_native_pods.rb", {paths: [process.argv[1]]})', __dir__]).strip
 ENV['USE_FRAMEWORKS'] = 'static'
-platform :ios, min_ios_version_supported
+platform :ios, '16.4'
 prepare_react_native_project!
 use_frameworks! :linkage => :static
 $RNFirebaseAsStaticFramework = true
 $RNFirebaseDisableSPM = true
 # Firebase version is inherited from pinned RNFB 26.4.0 (12.18.0).
 target 'Pixora' do
-  config = use_native_modules!
+  use_expo_modules!
+  config = use_native_modules!(['node', '--no-warnings', '--eval', "require('expo/bin/autolinking')", 'expo-modules-autolinking', 'react-native-config', '--json', '--platform', 'ios'])
   pod 'PixoraNative', :path => '..'
   use_react_native!(:path => config[:reactNativePath], :app_path => "#{Pod::Config.instance.installation_root}/..")
   target 'PixoraTests' do

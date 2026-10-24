@@ -77,6 +77,20 @@ class MediaExportTest {
         gallery.failOpen=false;gallery.failUpdate=true;failure{ImageFiles.export(ctx,session,"png")};assertEquals(3,gallery.deletes)
         assertFalse(ctx.cacheDir.listFiles()!!.any{it.name.startsWith("export-")})
     }
+    @Test fun originalPngExportsAndSharesPreserveBytesAndRejectOtherFormats() {
+        session.put("resolution","original").put("resultWidth",16).put("resultHeight",12)
+        val original=File(session.getString("resultPath")).readBytes()
+        val exported=ImageFiles.export(ctx,session,"png")
+        assertEquals(16,exported.getInt("width"));assertEquals(12,exported.getInt("height"))
+        assertArrayEquals(original,gallery.output.readBytes())
+        assertArrayEquals(original,ImageFiles.shareFile(ctx,session,"png").readBytes())
+        for(format in listOf("jpeg","webp")) {
+            failure{ImageFiles.export(ctx,session,format)};failure{ImageFiles.shareFile(ctx,session,format)}
+        }
+        File(session.getString("resultPath")).delete()
+        failure{ImageFiles.shareFile(ctx,session,"png")};failure{ImageFiles.export(ctx,session,"png")}
+        assertFalse(File(ctx.cacheDir,"share").listFiles()!!.any{it.length()==0L})
+    }
     @Test fun atomicWriteDoesNotLeavePartialFileWhenRenameFails() {
         val bitmap=Bitmap.createBitmap(4,4,Bitmap.Config.ARGB_8888)
         val target=File(ctx.cacheDir,"occupied").apply{mkdirs();File(this,"child").writeText("keep")}

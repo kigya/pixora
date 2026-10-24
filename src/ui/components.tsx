@@ -1,26 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
-  Pressable,
   StyleSheet,
   Image,
-  PanResponder,
   AccessibilityInfo,
-  useWindowDimensions,
 } from 'react-native';
-import { previewSize } from '../domain/presentation';
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  ReduceMotion,
-} from 'react-native-reanimated';
+import Animated, {cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, Easing} from 'react-native-reanimated';
+import {useReduceMotion} from '../lib/kinetik/hooks/use-reduce-motion';
 import { track, type EventContext } from '../application/telemetry';
 import type { Copy } from './i18n';
 import { useTheme } from './theme';
 import { useLocale } from './locale';
+import { PressJelly } from '../components/kinetik/press-jelly';
+import { SegmentBar } from '../components/kinetik/segment-bar';
+import { CompareSlider } from '../components/kinetik/compare-slider';
+import { useKinetikTheme } from '../lib/kinetik/tokens/theme';
 export function Icon({
   name,
   size = 22,
@@ -94,54 +89,19 @@ export function Button({
   icon?: React.ComponentProps<typeof Icon>['name'];
   testID?: string;
 }) {
-  const { colors } = useTheme();
-  const { rtl } = useLocale();
-  const styles = createStyles(colors, rtl);
-  const scale = useSharedValue(1);
-  const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const { colors } = useKinetikTheme();
   return (
-    <Animated.View style={animated}>
-      <Pressable
+    <PressJelly
         testID={testID}
-        accessibilityRole="button"
         accessibilityLabel={title}
-        accessibilityState={{ disabled }}
         disabled={disabled}
         onPress={onPress}
-        onPressIn={() => {
-          scale.value = withTiming(0.98, {
-            duration: 100,
-            reduceMotion: ReduceMotion.System,
-          });
-        }}
-        onPressOut={() => {
-          scale.value = withTiming(1, {
-            duration: 140,
-            reduceMotion: ReduceMotion.System,
-          });
-        }}
-        style={({ pressed }) => [
-          styles.button,
-          secondary ? styles.secondary : styles.primary,
-          disabled && { opacity: 0.45 },
-          pressed && { opacity: 0.8 },
-        ]}
+        variant={secondary ? 'surface' : 'ember'}
+        leading={icon ? <Icon name={icon} color={secondary ? colors.text : colors.onEmber} /> : undefined}
+        block
       >
-        {icon && (
-          <Icon name={icon} color={secondary ? colors.text : '#FFFFFF'} />
-        )}
-        <Text
-          style={[
-            styles.buttonText,
-            { color: secondary ? colors.text : '#FFFFFF' },
-          ]}
-        >
-          {title}
-        </Text>
-      </Pressable>
-    </Animated.View>
+      {title}
+    </PressJelly>
   );
 }
 export function Segments({
@@ -155,76 +115,46 @@ export function Segments({
   value: string;
   onChange: (id: string) => void;
 }) {
-  const { colors } = useTheme();
-  const { rtl } = useLocale();
-  const styles = createStyles(colors, rtl);
   return (
-    <View
-      style={[
-        styles.segments,
-        preserveOrder && { flexDirection: 'row', direction: 'ltr' },
-      ]}
-    >
-      {values.map(item => (
-        <Pressable
-          key={item.id}
-          accessibilityRole="radio"
-          accessibilityState={{ selected: value === item.id }}
-          accessibilityLabel={item.label}
-          onPress={() => onChange(item.id)}
-          style={[styles.segment, value === item.id && styles.selected]}
-        >
-          <Text
-            style={[
-              styles.segmentText,
-              value !== item.id && { color: colors.muted },
-            ]}
-          >
-            {item.label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
+    <SegmentBar
+      label={values.map(item => item.label).join(', ')}
+      options={values.map(item => ({ value: item.id, label: item.label }))}
+      value={value}
+      onChange={onChange}
+      style={preserveOrder ? { direction: 'ltr' } : undefined}
+    />
   );
 }
-export function UploadArt() {
+export function UploadArt({active = true}: {active?: boolean}) {
   const { colors } = useTheme();
   const { rtl } = useLocale();
   const styles = createStyles(colors, rtl);
+  const reduced = useReduceMotion();
+  const float = useSharedValue(0);
+  useEffect(() => {
+    if (active && !reduced) float.set(withRepeat(withSequence(withTiming(1,{duration:2200,easing:Easing.inOut(Easing.sin)}),withTiming(0,{duration:2200,easing:Easing.inOut(Easing.sin)})),-1,false));
+    else {cancelAnimation(float);float.set(0);}
+    return () => cancelAnimation(float);
+  },[active,reduced,float]);
+  const motion = useAnimatedStyle(() => ({transform:[{translateY:-5*float.get()},{rotate:`${-1+2*float.get()}deg`}]}));
+  const sparkle = useAnimatedStyle(() => ({transform:[{translateY:3*float.get()},{scale:1+0.07*float.get()}]}));
   return (
-    <View style={styles.art}>
+    <View style={styles.art} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Svg width="100%" height="100%" viewBox="0 0 320 170">
-        <Defs>
-          <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#7C3AED" stopOpacity=".35" />
-            <Stop offset="1" stopColor="#22D3EE" stopOpacity=".12" />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="320" height="170" rx="24" fill="url(#g)" />
-        <Rect
-          x="99"
-          y="27"
-          width="122"
-          height="116"
-          rx="24"
-          fill={colors.surface}
-          stroke="#7C3AED"
-          strokeWidth="1.5"
-        />
-        <Path
-          d="M125 111l21-24 18 17 19-29 18 36 M181 62h1"
-          fill="none"
-          stroke="#A78BFA"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+        <Defs><LinearGradient id="g" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#7C3AED" stopOpacity=".35"/><Stop offset="1" stopColor="#22D3EE" stopOpacity=".12"/></LinearGradient></Defs>
+        <Rect x="0" y="0" width="320" height="170" rx="24" fill="url(#g)"/>
       </Svg>
-      <View style={styles.spark}>
-        <Icon name="spark" color={colors.cyan} size={25} />
-      </View>
+      <Animated.View style={[StyleSheet.absoluteFill,motion]}>
+        <Svg width="100%" height="100%" viewBox="0 0 320 170">
+          <Rect x="99" y="27" width="122" height="116" rx="24" fill={colors.surface} stroke="#7C3AED" strokeWidth="1.5"/>
+          <Path d="M125 111l21-24 18 17 19-29 18 36 M181 62h1" fill="none" stroke="#A78BFA" strokeWidth="3" strokeLinecap="round"/>
+        </Svg>
+      </Animated.View>
+      <Animated.View style={[styles.spark,sparkle]}><Icon name="spark" color={colors.cyan} size={25}/></Animated.View>
     </View>
   );
 }
+
 export function Comparison({
   before,
   after,
@@ -238,149 +168,38 @@ export function Comparison({
   ratio: number;
   t: Copy;
 }) {
-  const { colors } = useTheme();
-  const { rtl } = useLocale();
-  const styles = createStyles(colors, rtl);
-  const viewport = useWindowDimensions();
-  const [width, setWidth] = useState(Math.max(1, viewport.width - 40)),
-    [fraction, setFraction] = useState(0.5);
-  const pan = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_event, gesture) =>
-      Math.abs(gesture.dx) > 6 &&
-      Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.2,
-    onPanResponderGrant: e =>
-      setFraction(
-        Math.max(
-          0,
-          Math.min(
-            1,
-            e.nativeEvent.locationX /
-              Math.max(
-                1,
-                previewSize(
-                  ratio,
-                  1,
-                  width,
-                  Math.min(390, viewport.height * 0.48),
-                ).width,
-              ),
-          ),
-        ),
-      ),
-    onPanResponderMove: e =>
-      setFraction(
-        Math.max(
-          0,
-          Math.min(
-            1,
-            e.nativeEvent.locationX /
-              Math.max(
-                1,
-                previewSize(
-                  ratio,
-                  1,
-                  width,
-                  Math.min(390, viewport.height * 0.48),
-                ).width,
-              ),
-          ),
-        ),
-      ),
-    onPanResponderRelease: () => track('comparison_used', { ...context, action: 'divider' }),
-  });
-  const bounds = previewSize(
-    ratio,
-    1,
-    width,
-    Math.min(390, viewport.height * 0.48),
-  );
-  const height = bounds.height;
-  const imageWidth = bounds.width;
+  const [choice, setChoice] = useState<'compare' | 'before' | 'after'>('compare');
+  const announceChoice = (next: 'compare' | 'before' | 'after') => {
+    setChoice(next);
+    track('comparison_used', { ...context, action: next });
+    AccessibilityInfo.announceForAccessibility(
+      next === 'before' ? t.before : next === 'after' ? t.after : t.compare,
+    );
+  };
   return (
-    <View
-      style={{ gap: 12, direction: 'ltr' }}
-      onLayout={e => setWidth(e.nativeEvent.layout.width)}
-    >
-      <View
+    <View style={{ gap: 12 }}>
+      <CompareSlider
+        key={choice}
         testID="comparison"
-        style={[
-          styles.preview,
-          { height, width: imageWidth, alignSelf: 'center' },
-        ]}
-        {...pan.panHandlers}
-        accessible={false}
-      >
-        <Image
-          source={{ uri: after }}
-          resizeMethod="scale"
-          style={{ width: imageWidth, height }}
-          resizeMode="contain"
-        />
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: imageWidth * fraction,
-            height,
-            overflow: 'hidden',
-          }}
-        >
-          <Image
-            source={{ uri: before }}
-            resizeMethod="scale"
-            style={{ width: imageWidth, height }}
-            resizeMode="contain"
-          />
-        </View>
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            left: imageWidth * fraction - 1,
-            top: 0,
-            bottom: 0,
-            width: 2,
-            backgroundColor: '#FAFAFA',
-          }}
-        >
-          <View style={styles.handle}>
-            <Svg width={22} height={22} viewBox="0 0 24 24">
-              <Path
-                d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"
-                stroke="#18181B"
-                strokeWidth={2}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </View>
-        </View>
-        <View pointerEvents="none" style={styles.compareLabels}>
-          <Text style={styles.imageLabel}>{t.before}</Text>
-          <Text style={styles.imageLabel}>{t.after}</Text>
-        </View>
-      </View>
+        accessibilityLabel={t.comparisonHelp}
+        beforeLabel={t.before}
+        afterLabel={t.after}
+        before={<Image source={{ uri: before }} resizeMode="contain" style={StyleSheet.absoluteFill} />}
+        after={<Image source={{ uri: after }} resizeMode="contain" style={StyleSheet.absoluteFill} />}
+        aspectRatio={ratio}
+        initial={choice === 'before' ? 1 : choice === 'after' ? 0 : 0.5}
+        onPositionChange={() => track('comparison_used', { ...context, action: 'divider' })}
+      />
       <Segments
         preserveOrder
         values={[
-          { id: '1', label: t.before },
-          { id: '0.5', label: t.compare },
-          { id: '0', label: t.after },
+          { id: 'before', label: t.before },
+          { id: 'compare', label: t.compare },
+          { id: 'after', label: t.after },
         ]}
-        value={String(fraction)}
-        onChange={id => {
-          track('comparison_used', { ...context, action: id === '1' ? 'before' : id === '0' ? 'after' : 'compare' });
-          setFraction(Number(id));
-          AccessibilityInfo.announceForAccessibility(
-            id === '1' ? t.before : id === '0' ? t.after : t.compare,
-          );
-        }}
+        value={choice}
+        onChange={id => announceChoice(id as 'before' | 'compare' | 'after')}
       />
-      <Text style={styles.caption}>{t.comparisonHelp}</Text>
     </View>
   );
 }

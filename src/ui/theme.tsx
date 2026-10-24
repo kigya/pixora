@@ -1,4 +1,6 @@
-import { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AccessibilityInfo } from 'react-native';
+import { KinetikProvider } from '../lib/kinetik/tokens/theme';
 export const darkColors = {
   bg: '#09090B',
   surface: '#18181B',
@@ -33,3 +35,61 @@ export const lightColors = {
 };
 export const ThemeContext = createContext({ colors: darkColors, dark: true });
 export const useTheme = () => useContext(ThemeContext);
+
+type Colors = typeof darkColors;
+function blend(from: string, to: string, amount: number): string {
+  const a = parseInt(from.slice(1), 16), b = parseInt(to.slice(1), 16);
+  const channel = (shift: number) => Math.round(((a >> shift) & 255) * (1 - amount) + ((b >> shift) & 255) * amount);
+  return `#${[channel(16),channel(8),channel(0)].map(value => value.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** One palette transition drives app-owned and copied Kinetik controls together. */
+export function PixoraThemeProvider({dark, resolved = true, children}: {dark: boolean; resolved?: boolean; children: React.ReactNode}) {
+  const target = dark ? darkColors : lightColors;
+  const [colors, setColors] = useState<Colors>(target);
+  const previous = useRef<Colors>(target);
+  const hasResolvedTheme = useRef(false);
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then(value => {if (mounted) setReduced(value);}).catch(() => {});
+    const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
+    return () => {mounted = false; listener.remove();};
+  }, []);
+  useLayoutEffect(() => {
+    if (!resolved || !hasResolvedTheme.current || reduced) {
+      previous.current = target;
+      setColors(target);
+      if (resolved) hasResolvedTheme.current = true;
+      return;
+    }
+    if (previous.current === target) return;
+    const from = previous.current;
+    let frame = 0;
+    const started = Date.now();
+    const tick = () => {
+      const p = Math.min(1, (Date.now() - started) / 260);
+      const next = Object.fromEntries(Object.keys(target).map(key => {
+        const k = key as keyof Colors;
+        // Keep intermediate tokens in hex for Kinetik alpha and shader helpers.
+        return [k, blend(from[k], target[k], p)];
+      })) as Colors;
+      previous.current = p === 1 ? target : next;
+      setColors(previous.current);
+      if (p < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target, reduced, resolved]);
+  return <ThemeContext.Provider value={{colors, dark}}>
+    <KinetikProvider scheme={dark ? 'dark' : 'light'} colors={{
+      background: colors.bg, surface: colors.surface, surfaceRaised: colors.raised,
+      surfaceSunken: colors.bg, text: colors.text, textMuted: colors.muted,
+      textSubtle: colors.muted, border: colors.border, borderStrong: colors.accent,
+      ember: colors.accent, emberSoft: colors.badge, onEmber: '#FFFFFF',
+      ice: colors.cyan, iceSoft: colors.badge, azure: colors.accent,
+      azureSoft: colors.badge, onAzure: '#FFFFFF', sky: colors.cyan,
+      success: colors.green, danger: colors.red,
+    }}>{children}</KinetikProvider>
+  </ThemeContext.Provider>;
+}

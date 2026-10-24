@@ -148,7 +148,9 @@ struct AxisEvidence {
 // Test every phase, independently per axis. Repeated flat blocks must account
 // for almost all boundary energy on BOTH axes, with substantial occupied edges.
 bool gridAxis(const AxisEvidence& axis, int period) {
-  if (axis.length < period * 6) return false;
+  if (period < 2 || period > 16 || axis.cross <= 0 ||
+      axis.length > static_cast<int>(axis.energy.size()) ||
+      axis.length < period * 6) return false;
   for (int phase = 0; phase < period; ++phase) {
     double boundary = 0, interior = 0;
     int boundary_count = 0, interior_count = 0, occupied = 0;
@@ -162,7 +164,8 @@ bool gridAxis(const AxisEvidence& axis, int period) {
         ++interior_count;
       }
     }
-    if (!boundary_count || !interior_count) continue;
+    // With period >= 2 and length >= 6 * period, every phase has at least
+    // five boundary sites and five interior sites. Both divisors are positive.
     const double b = boundary / (boundary_count * axis.cross);
     const double inside = interior / (interior_count * axis.cross);
     if (b >= 20 && inside <= 0.5 && occupied >= boundary_count * 0.65)
@@ -204,6 +207,36 @@ GridKind pixelGrid(const uint8_t* rgba, int width, int height, int stride,
   return GridKind::None;
 }
 
+// Keep feature extraction, vote accumulation and the final decision separately
+// testable. These remain private implementation details, not a bridge API.
+struct Votes {
+  int photos = 0, drawings = 0, patches = 0, interfaces = 0, smooth = 0;
+  void add(const Features& patch) {
+    if (patch.visible < 64) return;
+    ++patches;
+    photos += photoLike(patch);
+    drawings += drawingLike(patch) && !photoLike(patch);
+    interfaces += interfaceLike(patch);
+    smooth += photoLike(patch) && patch.edges < 0.02 &&
+              patch.texture < 0.20 && patch.noise < 0.03;
+  }
+};
+
+Recommendation choose(const Features& full, const Features& scene,
+                      const Votes& votes) {
+  if (!votes.patches) return kGeneric;
+  if (interfaceLike(scene) || votes.interfaces || (votes.photos && votes.drawings)) return kMixed;
+  if (drawingLike(full) && drawingLike(scene) && !votes.photos &&
+      votes.drawings * 2 >= votes.patches)
+    return {ContentKind::LineArt, "art", "quality", "art"};
+  if (photoLike(scene) && votes.photos * 2 >= votes.patches) {
+    if (votes.smooth * 2 > votes.patches && full.edges < 0.02 && full.noise < 0.03)
+      return {ContentKind::Smooth, "natural", "quality", "smooth"};
+    return {ContentKind::Photo, "standard", "quality", "photo"};
+  }
+  return kMixed;
+}
+
 Recommendation classify(const uint8_t* rgba, int width, int height, int stride) {
   // Full-resolution statistics preserve evidence destroyed in the overview.
   const auto full = measure(rgba, width, height, stride);
@@ -220,32 +253,16 @@ Recommendation classify(const uint8_t* rgba, int width, int height, int stride) 
   const std::array<std::array<int, 2>, 5> positions{{
       {{0, 0}}, {{width - pw, 0}}, {{0, height - ph}},
       {{width - pw, height - ph}}, {{(width - pw) / 2, (height - ph) / 2}}}};
-  int photos = 0, drawings = 0, patches = 0, interfaces = 0, smooth = 0;
+  Votes votes;
   for (size_t i = 0; i < positions.size(); ++i) {
     bool duplicate = false;
     for (size_t j = 0; j < i; ++j) duplicate |= positions[i] == positions[j];
     if (duplicate) continue;
     const auto patch = measure(rgba + static_cast<std::ptrdiff_t>(positions[i][1]) * stride +
         positions[i][0] * 4, pw, ph, stride);
-    if (patch.visible < 64) continue;
-    ++patches;
-    photos += photoLike(patch);
-    drawings += drawingLike(patch) && !photoLike(patch);
-    interfaces += interfaceLike(patch);
-    smooth += photoLike(patch) && patch.edges < 0.02 &&
-              patch.texture < 0.20 && patch.noise < 0.03;
+    votes.add(patch);
   }
-  if (!patches) return kGeneric;
-  if (interfaceLike(scene) || interfaces || (photos && drawings)) return kMixed;
-  if (drawingLike(full) && drawingLike(scene) && !photos &&
-      drawings * 2 >= patches)
-    return {ContentKind::LineArt, "art", "quality", "art"};
-  if (photoLike(scene) && photos * 2 >= patches) {
-    if (smooth * 2 > patches && full.edges < 0.02 && full.noise < 0.03)
-      return {ContentKind::Smooth, "natural", "quality", "smooth"};
-    return {ContentKind::Photo, "standard", "quality", "photo"};
-  }
-  return kMixed;
+  return choose(full, scene, votes);
 }
 
 }  // namespace

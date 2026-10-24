@@ -1,8 +1,22 @@
 # Pixora — product specification and knowledge base
 
-Document version: 2.7 · Date: 2026-10-10 · Historical built version: 0.7.2 / versionCode 9, package dev.kigya.pixora; installed on API 36 while Xiaomi retains the previous package. Package-change checks, implemented 0.7.1 behavior and outstanding 0.7 verification remain in private historical validation records.
+Document version: 3.0 · Date: 2026-10-22 · Historical built version: 0.7.2 / versionCode 9, package dev.kigya.pixora; installed on API 36 while Xiaomi retains the previous package. Package-change checks, implemented 0.7.1 behavior and outstanding 0.7 verification remain in private historical validation records.
 
-## Product purpose
+## Approved 0.9 revision — 22 October 2026
+
+The owner explicitly requested and approved Expo SDK 58 / React Native 0.88, Expo Router, Kinetik UI throughout, and a real experimental offline Recreate mode. This supersedes older bare-stack, shader, bundled-model-only and no-model-download restrictions below. Existing enhancement, privacy, exports, cancellation and durable data remain required.
+
+Recreate uses stable-diffusion.cpp CPU img2img with pinned SD 1.5 Q4 and LCM-LoRA. Its optional two-file package totals 1,881,812,340 bytes, downloaded only after explicit acceptance of model terms. It supports cancellation, resume, integrity checks, deletion and re-download; images and prompts are never sent. The input canvas is capped to 512 px before 2×/4× AI enlargement; output dimensions must match the displayed prediction. An optional local prompt, 4/8 steps, CFG 1 and strength 0.6 are initial uncalibrated settings. Resource guards do not establish mobile suitability.
+
+The three-page Kinetik introduction demonstrates bridge enhancement, reconstruction and image privacy. It uses horizontal swipes only, passive visuals, a fixed indicator and no subtitle/vertical scrolling. Updates bypass it; replay returns to Settings. Aurora Veil (intensity 1, speed 3) runs behind the animated brand icon, without a text app name. Its1500ms minimum begins at the first Aurora layout and also waits for required initialization. Android uses a matching plain system launch background and a transparent system splash icon, without a separate branded animation or native minimum; the aurora fades in over the same theme color. Inactive/background/reduced-motion behavior is required. Completion reveals the validated internal result with Aperture and one Confetti burst per newly observed job, before any optional gallery export.
+
+Model choices are collapsed Expand Cards with an independent selection action and expanded comparison/details. Use Kinetik controls for scale, speed, format, settings, flags/searchable language, cache usage and theme. Preserve 34 active locales and system defaults. Remove redundant introductory/preparation paragraphs and recommendation explanations. Show one durable detail-change notice before generation. Remove Original resolution from new-job UI; preserve compatibility with existing results. Cache clearing protects sessions, settings, gallery files, active jobs and optional weights; optional model removal is separate.
+
+The owner requested test-source updates without running tests, devices, Xiaomi, emulators or simulators. Delivery is a local signed release APK in Downloads and a source PR into release/0.9.0. Main integration, store/GitHub Release publication and release acceptance are excluded. Historical evidence below does not verify this revision.
+
+## Historical baseline (superseded where the approved 0.9 revision differs)
+
+### Product purpose
 
 Pixora enlarges a small Android photo or illustration, compares it with the original and saves or shares a new copy. AI runs on the phone. The model is bundled in the APK, so even first use needs no network. No accounts, ads, payments, credits, API keys or mandatory subscriptions. Inference uses no server. By explicit owner request, a separate feedback feature sends text through free Google Apps Script to the developer's email. Support requires developer time but no paid service.
 
@@ -207,3 +221,44 @@ The shared Android/iOS C++ policy analyzes a working-equivalent image up to 1024
 Disabled recommendations fall back in order Standard → Balanced → Natural → Lite, with an explicit alternative explanation. If no suitable profile is enabled the card is hidden. Generic analysis failure suggests Balanced through the same availability policy. Pixels stay native and no classification/recommendation event is added to telemetry.
 
 The owner requested no checks for this change. Updated tests remain unexecuted; binary size, performance and recommendation quality are unmeasured. USB installation and GitHub delivery require the owner's later request. Existing test/build/device receipts do not verify this revision.
+
+
+## Approved quality / introduction revision — 2026-10-22
+
+Explicit owner-approved implementation: [workflow requirements FEAT-901–904](product/prd.md). New installations now open a skippable three-screen product introduction with replay in Settings; upgrades with existing-install evidence retain Home. Language remains system-default and is selected only in Settings. Startup still ends at max(readiness, 1500 ms).
+
+Prepared copy remains the compatible default (1024 px working input, Fast capped at512). Original resolution is an explicit Quality option with tiled source reads, disk-backed assembly, at most64000000 output pixels and16384 px per side. Exceeding those limits requires choosing Prepared copy or a smaller scale; no silent reduction. The first original-resolution path saves/shares PNG without whole-image transcoding; this restriction is visible before starting. Prepared results retain PNG/JPEG/WebP.
+
+Host whole-image comparisons justify64px context for Standard/Details/Balanced/Sharp, Natural and Art. Lite and legacy animevideov3 retain32px. Model weights, model provenance, arithmetic, final sharpening/blending parameters, Pixel Art scaling and model IDs remain unchanged. New candidates are research-only; no Recreate control or cloud inference is added.
+
+Xiaomi and all emulators/simulators are excluded from this task. No source/build/host-test receipt closes physical acceptance, iOS runtime coverage or release readiness. See the current [quality implementation summary](engineering/quality-onboarding.md).
+
+## Approved UX and result-rating revision — 24 October 2026
+
+Source: explicit owner review and accepted replacement plan in this task. This supersedes earlier no-test/no-Xiaomi restrictions, photographic onboarding, nested language navigation, two-state theme plus system toggle, warning-before-start placement, and neutral review-after-export behavior. Emulators and simulators remain excluded.
+
+- FEAT-909: logo-only Aurora launch remains visible for at least1500ms from a rendered app frame; seamless theme-matched Android starting window. Three custom drawn horizontal onboarding scenes, passive visuals, separated page indicator, reduced motion and lifecycle cancellation.
+- FEAT-910: Segment Bar controls for processing kind and scale, brand-colored export selector, text-only collapsed models with independent selection/expanded comparison, one expected output size, Quality-left/Speed-right. The working preview always retains the imported image. The same-cat illustration pair is explicitly reference content, not model output.
+- FEAT-911: inline searchable language selector, directly selectable System/Light/Dark adapted Theme Switch, corrected telemetry layout, functional modal gestures, disjoint real app-storage buckets and protected cache deletion.
+- FEAT-912: no thumbs voting. After a new successful generation, a dismissible Pop Dialog/Star Rating may be shown at most once every 300000 ms, persisted across restart and tied to one job. Confirmed 1–4 stars opens the existing support form and sends the selected rating with the user-written message; confirmed 5 opens the product's external Google Play page. Internal stars never count as an actual store review. No neutral system In-App Review is invoked by this flow. The owner explicitly selected this selective store-routing approach after discussion of its store-policy risk; implementation is not policy approval.
+- FEAT-913: opt-out-respecting result-rating analytics uses frozen job/recommendation context and bounded technical dimensions only. No images, paths, filenames, EXIF, prompt content, message text or email enter telemetry. Registration/ingestion evidence is separate from source presence.
+
+Verification is in progress. Current-source coverage, device quality and performance require measured evidence; historical percentages do not apply. Deliver the signed APK to Downloads and Xiaomi, push/update the existing release/0.9.0 task PR; no main merge, public release, store upload, real test mail or simulator execution.
+
+## Measured Android Recreate time limit — 24 October 2026
+
+The corrected 512-square profile saved a real four-step result on Xiaomi in 1,558,473 ms. The eight-step job reached the previous 30-minute limit (1,816,925 ms including cancellation cleanup) without an allocation failure. Android Recreate therefore receives a bounded 45-minute deadline and a matching wake-lock lease; Enhance keeps 30 minutes. Memory preflight, cancellation, output validation and source-preservation checks remain. The longer limit is not a successful-generation receipt: the eight-step and three-consecutive-run checks must pass on the resulting build. Errors display the actual mode-specific limit in every active locale.
+
+## Approved compact Recreate and UX follow-up — 24 October 2026
+
+Source: the owner's accepted implementation plan and planning choices. This revision supersedes the 512 px Recreate canvas, inline model list, cat onboarding illustration, Aperture completion reveal and rating confirmation button. It keeps offline inference, the existing model provenance and all privacy/consent boundaries.
+
+- FEAT-914: native/app launch shares the theme surface; logo-only Aurora fades from the solid first frame and remains for at least 1500 foreground-visible milliseconds. Finish/Skip use Expo Router with idempotent completion, retry, and replay return. The second passive onboarding illustration is a mountain landscape; Home's upload illustration loops only while visible and motion is permitted.
+- FEAT-915: separate model screen for Enhance/Recreate; selection returns immediately and expansion remains independent. The Home action reads Recreate for that mode. Inputs remain above the keyboard, license links are inline, dialog actions wrap vertically, and processing retains only the image scan, status, elapsed time and cancellation. No Aurora or Aperture surrounds processing/results; Confetti remains once per live success.
+- FEAT-916: the same pinned SD 1.5 Q4 + LCM-LoRA returns an image capped at 256 px before existing AI upscaling. The initially proposed 256 diffusion canvas and 128 px VAE tiles failed visual calibration. The implementation uses a 512×512 reflected internal canvas, no VAE tiling, then crops/resamples to the public 256 px cap. CPU parameters keep disk-backed lazy loading, mmap, no prefetch and no conditioning cache. Managed budgets 512/768/1024 MiB require physical comparison; they are not hard OS RSS limits. Dynamic memory/disk preflight, cancellation and original preservation remain mandatory. Real saved generation on the four-GB Xiaomi is an acceptance criterion, not an assumption.
+- FEAT-917: explicit model transfer starts in place and survives background execution through a cancellable foreground data-sync service. Notification rationale/request is optional; denial does not block downloading. Display total/downloaded/verified bytes by lifecycle state, keep partial files separate, and preserve verified models during ordinary cache cleanup. Storage presents actual decimal MB/GB without changing durable binary cache limits.
+- FEAT-918: committing 1–4 stars opens Feedback and committing 5 opens Play without another visible submit button. Pan previews never navigate; the finger-up commits once, with accessible activation. Persist the existing five-minute/per-job gate. Technical events respect opt-out, privacy allowlists and the 25-parameter limit; Console ingestion is separately verified.
+
+Delivery: 0.9.0/code19 signed APK, Downloads and physical Xiaomi, existing task PR into release/0.9.0. No main merge, store/public release, emulator/simulator, real review submission or real test email. Updated tests and current-source evidence are required; unresolved checks stay visible.
+
+Implementation calibration note (code 19): the initial 256 diffusion canvas and 128 px VAE tiles produced severe false color/banding on the fixed mountain input. Host comparisons selected a 512×512 internal diffusion canvas with reflected padding and VAE tiling disabled, at both 4/8 requested steps. Its generated crop is resampled to the retained public 256 px cap before real AI 2×/4× upscaling. This is a measured candidate adjustment, not evidence of broad image quality or Xiaomi memory suitability; exact-artifact phone acceptance remains required.

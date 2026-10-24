@@ -30,6 +30,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          submodules: recursive
           fetch-depth: 0
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
@@ -42,7 +43,7 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test -- --runInBand --coverage
@@ -89,6 +90,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          submodules: recursive
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -104,7 +106,7 @@ jobs:
         with:
           languages: java-kotlin
           build-mode: manual
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: python3 scripts/setup-ncnn.py
       - name: Kotlin tests and native JVM coverage
         working-directory: android
@@ -133,6 +135,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          submodules: recursive
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -166,7 +169,10 @@ jobs:
           --llvm coverage/recommendation/coverage.json
           --llvm coverage/recommendation-jni/coverage.json
           --source-dir native/engine --source-dir native/recommendation
+          --require-source native/recreate/recreate.cpp
+          --require-source android/app/src/main/cpp/engine/recreate_jni.cpp
           --require-source android/app/src/main/cpp/engine/upscale.cpp
+          --require-source android/app/src/main/cpp/engine/raster_jni.cpp
           --require-source android/app/src/main/cpp/engine/recommendation_jni.cpp
       # CodeQL supports C/C++; Objective-C++ iOS sources remain in the iOS mobile source scan.
       - uses: github/codeql-action/analyze@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
@@ -181,6 +187,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          submodules: recursive
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -192,7 +199,7 @@ jobs:
         with:
           ruby-version: '3.3.12'
           bundler-cache: true
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - name: Build unsigned generic-device iOS Release
         run: bash scripts/build-ios.sh
   ios-simulator-tests:
@@ -206,6 +213,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          submodules: recursive
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -217,7 +225,7 @@ jobs:
         with:
           ruby-version: '3.3.12'
           bundler-cache: true
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - name: Run simulator XCTest and produce strict iOS coverage
         run: bash scripts/test-ios.sh
       - name: Enforce the owned iOS source denominator
@@ -225,4 +233,4 @@ jobs:
           python3 scripts/check-native-coverage.py
           --llvm coverage/ios/coverage.json
           --source-dir ios/Native --source-dir ios/Pixora
-          --require-source ios/Pixora/AppDelegate.mm
+          --require-source ios/Pixora/AppDelegate.swift

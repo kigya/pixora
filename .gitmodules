@@ -1,0 +1,3 @@
+[submodule "native/recreate/vendor/stable-diffusion.cpp"]
+	path = native/recreate/vendor/stable-diffusion.cpp
+	url = https://github.com/leejet/stable-diffusion.cpp.git

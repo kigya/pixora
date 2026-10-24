@@ -6,7 +6,7 @@ import Animated, {
   ReduceMotion,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
-import { Switch, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Native, { type TelemetrySettings } from '../specs/NativeUpscale';
 import { useApp } from '../application/AppProvider';
 import { track } from '../application/telemetry';
@@ -15,6 +15,7 @@ import { useTheme } from './theme';
 import { createStyles, Button, Icon } from './components';
 import { useOperation } from '../application/useOperation';
 import { errorText } from '../application/errors';
+import { PulseToggle } from '../components/kinetik/pulse-toggle';
 
 export function TelemetryNotice() {
   const { t, lang, telemetry, setTelemetry } = useApp();
@@ -144,8 +145,8 @@ export function TelemetryControls() {
     <View style={s.card}>
       <Text style={s.label}>{t.telemetryTitle}</Text>
       {(['analytics', 'crashes'] as const).map(key => (
-        <View key={key} style={[s.row, { flexWrap: 'nowrap' }]}>
-          <View style={{ flex: 1, gap: 6 }}>
+        <View key={key} style={[s.row, { alignItems: 'center', flexWrap: 'wrap' }]}>
+          <View style={{ flex: 1, flexShrink: 1, gap: 6 }}>
             <Text style={s.value}>
               {key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
             </Text>
@@ -153,12 +154,9 @@ export function TelemetryControls() {
               {key === 'analytics' ? t.analyticsBody : t.crashesBody}
             </Text>
           </View>
-          <Switch
-            accessibilityLabel={
-              key === 'analytics' ? t.analyticsTitle : t.crashesTitle
-            }
+          <PulseToggle
+            accessibilityLabel={key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
             value={displayed[key]}
-            trackColor={{ true: colors.accent, false: colors.border }}
             onValueChange={value => change(key, value)}
           />
         </View>

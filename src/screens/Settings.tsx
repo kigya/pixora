@@ -1,28 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
+  AppState,
   Text,
   View,
-  Pressable,
   Platform,
   Linking,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { NativeStackScreenProps } from 'expo-router/native-stack';
 import type { Routes } from '../navigation/routes';
-import Native from '../specs/NativeUpscale';
+import Native, { type StorageUsage } from '../specs/NativeUpscale';
 import { Button, Segments, Icon, createStyles } from '../ui/components';
 import { useTheme } from '../ui/theme';
 import { useConfirm } from '../ui/dialog';
 import { useLocale } from '../ui/locale';
-import { HelpLink, LanguagePicker } from '../ui/information';
+import { HelpLink } from '../ui/information';
 import { useApp } from '../application/AppProvider';
 import { errorText } from '../application/errors';
 import { TelemetryControls } from '../ui/telemetryControls';
-import { StorageSlider } from '../ui/storageSlider';
+import { cacheLimits } from '../domain/presentation';
+import { ElasticSlider } from '../components/kinetik/elastic-slider';
+import { UsageMeter } from '../components/kinetik/usage-meter';
 import { useOperation } from '../application/useOperation';
 import { PRIVACY_POLICY_URL } from '../application/privacy';
+import { LanguageSelector } from '../ui/languageSelector';
+import { ThemeSwitch, type ThemeMode } from '../components/kinetik/theme-switch';
+import { PressJelly } from '../components/kinetik/press-jelly';
+import { RecreateModelControl } from '../ui/recreateModelControl';
+import { formatStorage, storageAmount } from '../domain/storage';
+import { Profile } from '../components/kinetik/screens/profile';
 
 import { track, useTrackedScreen } from '../application/telemetry';
 
@@ -42,26 +48,60 @@ export function SettingsScreen({
     refresh,
     setMessage,
   } = useApp();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const { rtl, number } = useLocale();
   const s = createStyles(colors, rtl);
   const confirm = useConfirm();
   const [info, setInfo] = useState(''),
     [legal, setLegal] = useState('');
   const [privacyLinkError, setPrivacyLinkError] = useState(false);
+  const [storage, setStorage] = useState<StorageUsage>({
+    cacheBytes: 0, sessionBytes: 0, temporaryBytes: 0, recreateModelBytes: 0,
+    otherBytes: 0, totalBytes: 0, freeBytes: 0,
+  });
   const { operation, error, setError, run } = useOperation();
   const busy = !!operation;
-  const workBytes = caps?.workBytes ?? 0;
+  const appStorageBytes = Math.max(0, storage.totalBytes);
+  const storageUnit = storageAmount(appStorageBytes).unit;
+  const unitBytes = storageUnit === 'GB' ? 1_000_000_000 : 1_000_000;
+  const formatAmount = (value: number) => value > 0 && value < 0.01 ? '<0.01' : number(value);
   useEffect(() => {
     refresh().catch(() => {});
   }, [refresh]);
+  useEffect(() => {
+    let mounted = true;
+    const update = () => {
+      Native.getStorageUsage()
+        .then(usage => {
+          if (!mounted) return;
+          setStorage(usage);
+        })
+        .catch(() => {});
+    };
+    let lastRead = 0; let previousState = '';
+    const subscription = Native.onRecreateModelChanged(model => {
+      const now = Date.now();
+      if (model.state === previousState && now - lastRead < 1000) return;
+      previousState = model.state; lastRead = now; update();
+    });
+    update();
+    const appStateSubscription = AppState.addEventListener('change', state => {
+      if (state === 'active') update();
+    });
+    return () => {
+      mounted = false;
+      subscription.remove();
+      appStateSubscription.remove();
+    };
+  }, []);
   return (
-    <SafeAreaView style={s.screen} edges={['top', 'bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={s.content}>
+    <Profile
+      contentStyle={s.content}
+      header={
         <View style={s.header}>
-          <Pressable
-            accessibilityRole="button"
+          <PressJelly
             accessibilityLabel={t.back}
+            variant="surface"
             onPress={() => {
               if (info) setInfo('');
               else navigation.goBack();
@@ -69,7 +109,7 @@ export function SettingsScreen({
             style={s.iconButton}
           >
             <Icon name="back" />
-          </Pressable>
+          </PressJelly>
           <Text style={[s.heading, { flex: 1, textAlign: 'center' }]}>
             {info === 'legal'
               ? t.licenses
@@ -79,6 +119,8 @@ export function SettingsScreen({
           </Text>
           <View style={{ width: 48 }} />
         </View>
+      }
+    >
         {info ? (
           <>
             <Text selectable style={s.body}>
@@ -101,10 +143,7 @@ export function SettingsScreen({
                   }}
                 />
                 {privacyLinkError && (
-                  <Text
-                    style={s.errorText}
-                    accessibilityLiveRegion="polite"
-                  >
+                  <Text style={s.errorText} accessibilityLiveRegion="polite">
                     {t.privacyPolicyOpenFailed}
                   </Text>
                 )}
@@ -115,41 +154,30 @@ export function SettingsScreen({
           <>
             <Text style={s.label}>{t.interface}</Text>
             <View style={s.card}>
-              <Text style={s.body}>{t.language}</Text>
-              <LanguagePicker
+              <LanguageSelector
+                testID="settings-language-selector"
                 value={settings.language}
-                onChange={async id => {
-                  await run(async () =>
-                    setSettings(
-                      await Native.updateSettings(
-                        id,
-                        settings.format,
-                        settings.theme,
-                      ),
-                    ),
-                  );
-                }}
+                onValueChange={value =>
+                  run(async () => {
+                    setSettings(await Native.updateSettings(value, settings.format, settings.theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
+                }
               />
             </View>
             <View style={s.card}>
-              <Text style={s.body}>{t.theme}</Text>
-              <Segments
-                values={[
-                  { id: 'system', label: t.system },
-                  { id: 'light', label: t.light },
-                  { id: 'dark', label: t.dark },
-                ]}
-                value={settings.theme}
-                onChange={id =>
-                  run(async () =>
-                    setSettings(
-                      await Native.updateSettings(
-                        settings.language,
-                        settings.format,
-                        id,
-                      ),
-                    ),
-                  )
+              <ThemeSwitch
+                value={settings.theme as ThemeMode}
+                systemDark={dark}
+                label={t.theme}
+                optionLabels={{ system: t.system, light: t.light, dark: t.dark }}
+                accessibilityLabel={t.theme}
+                testID="theme-switch"
+                onValueChange={theme =>
+                  run(async () => {
+                    setSettings(await Native.updateSettings(settings.language, settings.format, theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
                 }
               />
             </View>
@@ -193,15 +221,10 @@ export function SettingsScreen({
                 ]}
                 value={settings.format}
                 onChange={id =>
-                  run(async () =>
-                    setSettings(
-                      await Native.updateSettings(
-                        settings.language,
-                        id,
-                        settings.theme,
-                      ),
-                    ),
-                  )
+                  run(async () => {
+                    setSettings(await Native.updateSettings(settings.language, id, settings.theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
                 }
               />
               <Text style={s.caption}>
@@ -215,9 +238,9 @@ export function SettingsScreen({
             <TelemetryControls />
             <View style={s.row}>
               <Text style={s.label}>{t.files}</Text>
-              <Pressable
-                accessibilityRole="button"
+              <PressJelly
                 accessibilityLabel={t.cacheHelpTitle}
+                variant="surface"
                 style={s.iconButton}
                 onPress={() =>
                   confirm(
@@ -229,23 +252,45 @@ export function SettingsScreen({
                 }
               >
                 <Text style={{ color: colors.accent, fontSize: 22 }}>ⓘ</Text>
-              </Pressable>
+              </PressJelly>
             </View>
             <View style={s.card}>
-              <Text style={s.body}>
-                {workBytes < 1048576
-                  ? `${number(workBytes / 1024)} KiB`
-                  : `${number(workBytes / 1048576)} MiB`}
+              <UsageMeter
+                breakdown
+                title={t.storageUsage.total}
+                unit={storageUnit}
+                colors={[colors.accent,colors.cyan,'#A78BFA','#0E7490','#C4B5FD']}
+                total={appStorageBytes / unitBytes}
+                segments={[
+                  { label: t.storageUsage.sessions, value: storage.sessionBytes / unitBytes, displayValue: formatStorage(storage.sessionBytes,lang) },
+                  { label: t.storageUsage.temporary, value: storage.temporaryBytes / unitBytes, displayValue: formatStorage(storage.temporaryBytes,lang) },
+                  { label: t.storageUsage.model, value: storage.recreateModelBytes / unitBytes, displayValue: formatStorage(storage.recreateModelBytes,lang) },
+                  { label: t.storageUsage.cache, value: storage.cacheBytes / unitBytes, displayValue: formatStorage(storage.cacheBytes,lang) },
+                  { label: t.storageUsage.other, value: storage.otherBytes / unitBytes, displayValue: formatStorage(storage.otherBytes,lang) },
+                ]}
+                formatValue={formatAmount}
+              />
+              <Text style={s.caption}>
+                {t.storageUsage.free}: {formatStorage(storage.freeBytes,lang)}
               </Text>
-              <Text style={s.label}>{t.cacheLimit}</Text>
-              <StorageSlider
-                value={settings.cacheLimitMiB}
-                onChange={value =>
-                  run(async () =>
-                    setSettings(await Native.setCacheLimit(value)),
-                  )
+              <ElasticSlider
+                label={t.cacheLimit}
+                value={Math.max(0, cacheLimits.findIndex(value => value === settings.cacheLimitMiB))}
+                min={0}
+                max={cacheLimits.length - 1}
+                step={1}
+                formatValue={index => {
+                  const value = cacheLimits[Math.round(index)] ?? settings.cacheLimitMiB;
+                  return value === 0 ? t.cacheNo : value === -1 ? t.cacheUnlimited : formatStorage(value * 1048576,lang);
+                }}
+                onSlidingComplete={index =>
+                  run(async () => {
+                    setSettings(await Native.setCacheLimit(cacheLimits[Math.round(index)] ?? settings.cacheLimitMiB));
+                    setStorage(await Native.getStorageUsage());
+                  })
                 }
               />
+              <Text style={s.caption}>{t.cacheLimitNote}</Text>
               <Button
                 title={t.discard}
                 secondary
@@ -265,23 +310,31 @@ export function SettingsScreen({
                     ) {
                       accept(await Native.discardSession());
                       track('ui_action', { action: 'session_deleted' });
+                      setStorage(await Native.getStorageUsage());
                       await refresh();
                     }
                   })
                 }
               />
               <Button
-                title={t.clear}
+                title={t.recreate.clearCache}
                 secondary
+                disabled={active}
                 onPress={() =>
                   run(async () => {
-                    await Native.clearTemporaryFiles();
-                    track('ui_action', { action: 'temporary_files_cleared' });
+                    await Native.clearCache();
+                    track('ui_action', { action: 'cache_cleared' });
+                    const usage = await Native.getStorageUsage();
+                    setStorage(usage);
                     await refresh();
                     setMessage('cleared');
                   })
                 }
               />
+            </View>
+            <View style={s.card}>
+              <Text style={s.label}>{t.recreate.title}</Text>
+              <RecreateModelControl allowDelete />
             </View>
             <View style={s.card}>
               <Button
@@ -297,6 +350,13 @@ export function SettingsScreen({
               </Text>
               <HelpLink />
               <Button
+                title={t.onboarding.replay}
+                secondary
+                onPress={() =>
+                  navigation.navigate('Onboarding', { replay: true })
+                }
+              />
+              <Button
                 title={t.privacy}
                 secondary
                 onPress={() => {
@@ -305,23 +365,14 @@ export function SettingsScreen({
                   setInfo('privacy');
                 }}
               />
-              <Button
-                title={t.licenses}
-                secondary
-                onPress={() =>
-                  run(async () => {
-                    setLegal(await Native.getLegalText());
-                    track('ui_action', { action: 'licenses_opened' });
-                    setInfo('legal');
-                  })
-                }
-              />
+              <PressJelly variant="surface" accessibilityLabel={t.licenses} style={{backgroundColor:'transparent',borderWidth:0,boxShadow:'none',paddingHorizontal:0,minWidth:0,borderRadius:0,alignSelf:'flex-start'}} onPress={() => run(async () => {setLegal(await Native.getLegalText());track('ui_action',{action:'licenses_opened'});setInfo('legal');})}>
+                <Text accessibilityRole="link" style={{color:colors.accent}}>{t.licenses} ↗</Text>
+              </PressJelly>
             </View>
           </>
         )}
         {busy && <ActivityIndicator color={colors.accent} />}
         {!!error && <Text style={s.errorText}>{errorText(error, lang)}</Text>}
-      </ScrollView>
-    </SafeAreaView>
+    </Profile>
   );
 }

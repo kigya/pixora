@@ -171,4 +171,40 @@ class ProcessorTest {
         for(stage in listOf("write","preview")) {SessionStore.update{it.put("state","PREPARING")};assertEquals("CANCELLED",run(Files().apply{cancelAt=stage}).getString("state"))}
         for(stage in listOf("progress","write","preview")) {SessionStore.update{it.put("state","PREPARING")};timeout=stage!="progress";val backend=Backend();if(stage=="progress")timeout=true;assertEquals("TIME_LIMIT",run(Files().apply{cancelAt=stage},backend).getString("error"))}
     }
+
+    @Test fun recreationRefusesMissingOrUnverifiedWeightsBeforeAllocatingGenerationBuffers() {
+        SessionStore.update {
+            it.put("state", "PREPARING").put("processingKind", "recreate")
+                .put("mode", "recreate").put("profileId", "standard").put("scale", 2)
+        }
+
+        val result = run()
+
+        assertEquals("FAILED", result.getString("state"))
+        assertEquals("MODEL_INTEGRITY_FAILED", result.getString("error"))
+        assertFalse(File(ctx.filesDir, "recreate-model/sd15-q4.gguf").exists())
+        assertFalse(File(ctx.filesDir, "recreate-model/lcm-lora.safetensors").exists())
+    }
+
+    @Test fun recreationReleasesScaledAndGeneratedBitmapsWhenTheNativeBoundaryCannotRun() {
+        SessionStore.update {
+            it.put("state", "PREPARING").put("processingKind", "recreate")
+                .put("mode", "recreate").put("profileId", "standard").put("speed", "fast")
+                .put("scale", 2).put("recreateSteps", 4).put("recreateSeed", 42L)
+        }
+        val files = Files().apply { inputSize = 600 to 2 }
+        org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.diffusionModel()).thenReturn(File(ctx.filesDir, "fixture-model.gguf"))
+            org.mockito.Mockito.`when`(store.loraModel()).thenReturn(File(ctx.filesDir, "fixture-lora.safetensors"))
+        }.use { constructed ->
+            val result = run(files)
+
+            assertEquals("FAILED", result.getString("state"))
+            assertEquals("INFERENCE_FAILED", result.getString("error"))
+            assertEquals(1, constructed.constructed().size)
+            org.mockito.Mockito.verify(constructed.constructed().single()).verifyInstalled()
+            assertTrue(files.bitmaps.all { it.isRecycled })
+        }
+    }
 }

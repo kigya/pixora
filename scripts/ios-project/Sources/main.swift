@@ -3,12 +3,15 @@ import XcodeProj
 import PathKit
 let path = Path(CommandLine.arguments[1])
 let project = try XcodeProj(path: path)
-for file in project.pbxproj.fileReferences where file.path == "Pixora/AppDelegate.swift" {
- file.path = "Pixora/AppDelegate.mm"; file.name = "AppDelegate.mm"; file.lastKnownFileType = "sourcecode.cpp.objcpp"
+for file in project.pbxproj.fileReferences where file.path == "Pixora/AppDelegate.mm" {
+ file.path = "Pixora/AppDelegate.swift"; file.name = "AppDelegate.swift"; file.lastKnownFileType = "sourcecode.swift"
 }
 for target in project.pbxproj.nativeTargets {
  if target.name == "PixoraTests" {
-  for config in target.buildConfigurationList?.buildConfigurations ?? [] {config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"]="dev.kigya.pixora.tests"}
+  for config in target.buildConfigurationList?.buildConfigurations ?? [] {
+   config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"]="dev.kigya.pixora.tests"
+   config.buildSettings["IPHONEOS_DEPLOYMENT_TARGET"]="16.4"
+  }
   target.buildPhases.removeAll(where: {($0 as? PBXShellScriptBuildPhase)?.name == "Pixora Firebase config"})
   continue
  }
@@ -24,8 +27,9 @@ for target in project.pbxproj.nativeTargets {
   config.buildSettings["PIXORA_APP_INFO_PLIST"] = "Pixora/Info.plist"
   config.buildSettings["INFOPLIST_FILE"] = "$(PIXORA_APP_INFO_PLIST)"
   config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] = config.name == "Debug" ? "dev.kigya.pixora.debug" : "dev.kigya.pixora"
-  config.buildSettings["CURRENT_PROJECT_VERSION"] = "16"
-  config.buildSettings["MARKETING_VERSION"] = "0.8.6"
+  config.buildSettings["CURRENT_PROJECT_VERSION"] = "19"
+  config.buildSettings["MARKETING_VERSION"] = "0.9.0"
+  config.buildSettings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.4"
   config.buildSettings["ENABLE_USER_SCRIPT_SANDBOXING"] = "NO"
   config.buildSettings["DEBUG_INFORMATION_FORMAT"] = "dwarf-with-dsym"
  }
@@ -46,7 +50,7 @@ if !project.pbxproj.nativeTargets.contains(where: {$0.name == "PixoraTests"}) {
  let configurations = ["Debug", "Release"].map { name -> XCBuildConfiguration in
   let config = XCBuildConfiguration(name: name, buildSettings: [
     "PRODUCT_BUNDLE_IDENTIFIER":"dev.kigya.pixora.tests", "PRODUCT_NAME":"PixoraTests",
-    "GENERATE_INFOPLIST_FILE":"YES", "IPHONEOS_DEPLOYMENT_TARGET":"15.1",
+    "GENERATE_INFOPLIST_FILE":"YES", "IPHONEOS_DEPLOYMENT_TARGET":"16.4",
     "CLANG_ENABLE_OBJC_ARC":"YES", "CLANG_CXX_LANGUAGE_STANDARD":"c++20",
     "BUNDLE_LOADER":"$(TEST_HOST)", "TEST_HOST":"$(BUILT_PRODUCTS_DIR)/Pixora.app/Pixora",
     "HEADER_SEARCH_PATHS":"$(inherited) $(SRCROOT)/../native/engine $(SRCROOT)/../native/recommendation/include",

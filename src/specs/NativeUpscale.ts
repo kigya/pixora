@@ -46,6 +46,16 @@ export type ImageRecommendation = {
     | 'unavailable';
 };
 export type Session = {
+  processingKind?: string;
+  recreateSeed?: number;
+  recreateModelRevision?: string;
+  recreatePrompt?: string;
+  recreateSteps?: number;
+  recommendedProfile?: string;
+  recommendationApplied?: boolean;
+  recommendationContextSet?: boolean;
+  resultRating?: number;
+  resolution?: string;
   profileId?: string;
   speed?: string;
   aiInputWidth?: number;
@@ -89,6 +99,8 @@ export type Session = {
   exports: ReadonlyArray<ExportInfo>;
 };
 export type Settings = {
+  aiDetailNoticeSeen: boolean;
+  onboardingVersion: number;
   cacheLimitMiB: number;
   notificationHintCount: number;
   theme: string;
@@ -135,7 +147,37 @@ export type TelemetrySettings = {
   noticeSeen: boolean;
   consentVersion: number;
 };
+export type RecreateModelState = {
+  state: string;
+  downloadedBytes: number;
+  totalBytes: number;
+  installedBytes: number;
+  error: string;
+};
+export type StorageUsage = {
+  cacheBytes: number;
+  sessionBytes: number;
+  temporaryBytes: number;
+  recreateModelBytes: number;
+  otherBytes: number;
+  freeBytes: number;
+  totalBytes: number;
+};
 export interface Spec extends TurboModule {
+  getRecreateModelState(): Promise<RecreateModelState>;
+  downloadRecreateModel(): Promise<RecreateModelState>;
+  cancelRecreateDownload(): Promise<RecreateModelState>;
+  deleteRecreateModel(): Promise<RecreateModelState>;
+  readonly onRecreateModelChanged: CodegenTypes.EventEmitter<RecreateModelState>;
+  startRecreateJob(id: string, scale: number, speed: string, prompt: string, preparationConfirmed: boolean): Promise<Session>;
+  markAiDetailNoticeSeen(): Promise<Settings>;
+  getStorageUsage(): Promise<StorageUsage>;
+  clearCache(): Promise<number>;
+  setRecommendationContext(
+    jobId: string,
+    recommendedProfile: string,
+    recommendationApplied: boolean,
+  ): Promise<Session>;
   finishStartup(): void;
   getProfileAvailability(): Promise<ProfileAvailability>;
   readonly onProfileAvailabilityChanged: CodegenTypes.EventEmitter<ProfileAvailability>;
@@ -165,6 +207,14 @@ export interface Spec extends TurboModule {
     speed: string,
     preparationConfirmed: boolean,
   ): Promise<Session>;
+  startJobWithResolution(
+    id: string,
+    scale: number,
+    profile: string,
+    speed: string,
+    resolution: string,
+    preparationConfirmed: boolean,
+  ): Promise<Session>;
   startJobWithMode(
     inputId: string,
     scale: number,
@@ -179,6 +229,7 @@ export interface Spec extends TurboModule {
   discardSession(): Promise<Session>;
   clearTemporaryFiles(): Promise<number>;
   getSettings(): Promise<Settings>;
+  completeOnboarding(): Promise<Settings>;
   dismissNotificationHint(sessionId: string): Promise<Settings>;
   updateSettings(
     language: string,
@@ -193,6 +244,9 @@ export interface Spec extends TurboModule {
   markNotificationHint(): Promise<Settings>;
   markNotificationIntroSeen(): Promise<Settings>;
   claimReviewPrompt(jobId: string): Promise<boolean>;
+  markReviewPromptShown(jobId: string): Promise<boolean>;
+  submitResultRating(jobId: string, rating: number): Promise<Session>;
+  openStoreReview(): Promise<boolean>;
   requestReview(): Promise<boolean>;
   getFeedbackStatus(): Promise<boolean>;
   sendFeedback(

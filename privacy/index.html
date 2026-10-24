@@ -7,11 +7,11 @@
 </head>
 <body style="max-width:760px;margin:40px auto;padding:0 20px;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.65;color:#222">
 <h1 style="font-size:1.6rem;margin:0 0 .3rem">Privacy Policy for Pixora</h1>
-<div style="color:#667;font-size:.85rem;margin-bottom:1.4rem">Effective date: 11 October 2026 · Last updated: 17 October 2026</div>
+<div style="color:#667;font-size:.85rem;margin-bottom:1.4rem">Effective date: 11 October 2026 · Last updated: 24 October 2026</div>
 
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Introduction</h2>
-<p>This Privacy Policy describes how Kirill Borichevskiy ("we", "us", or "our") collects, uses, and shares information in connection with Pixora for Android and iOS (Android package and iOS bundle identifier <code>dev.kigya.pixora</code>). Pixora enlarges a photo or illustration on your device.</p>
-<p>Pixora has no account, no advertising, and no in-app purchases. Image enlargement runs on the device. The model is included in the app and is not downloaded.</p>
+<p>This Privacy Policy describes how Pixora ("we", "us", or "our") handles information on Android and iOS. Pixora enlarges photos and illustrations and offers experimental image recreation on your device.</p>
+<p>Pixora has no account, no advertising, and no in-app purchases. Image enlargement runs on the device. The enlargement models are included in the app. The optional recreation models are downloaded only after you choose Download model and accept their terms.</p>
 
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Photos stay on your device</h2>
 <p>You choose one image with the system photo picker. Pixora processes that image on the device and can save a new copy to your gallery or hand it to another app that you pick in the share sheet.</p>
@@ -20,9 +20,13 @@
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Information that leaves the device</h2>
 <p>Some information is sent off the device, as described below. It is sent over HTTPS.</p>
 
+<h3 style="font-size:1.02rem;margin:1.1rem 0 .3rem">Optional recreation-model download</h3>
+<p>Experimental recreation uses two model files totaling 1,881,812,340 bytes, downloaded from Hugging Face over HTTPS after your explicit action. Hugging Face and its delivery providers receive your network IP address and ordinary HTTP request information, including the requested model file and a Pixora app user agent. The request contains no photo, photo filename, local file path, description, seed, or account token. See <a href="https://huggingface.co/privacy">Hugging Face's privacy policy</a>.</p>
+<p>Downloads can be cancelled and resumed. Pixora checks pinned SHA-256 hashes before using the files. The models stay in private app storage until you choose Delete model or uninstall the app. Clearing the cache does not delete these models. Recreation itself works locally, including any optional description you enter. The description remains in the local session and is never sent to analytics or a server. If you submit a result rating with usage analytics enabled, bounded technical processing parameters may accompany that rating as described below.</p>
 <h3 style="font-size:1.02rem;margin:1.1rem 0 .3rem">Usage analytics and error reports</h3>
 <p>The release app sends usage analytics and error reports to Google Firebase by default. You can turn <strong>Usage analytics</strong> and <strong>Error reports</strong> off separately in Settings. Turning them off does not turn off the availability check described below. The first launch shows a short notice about this. Debug builds do not send them by default.</p>
 <p>Usage analytics can include which screens and features are used, the chosen processing mode, speed, scale, whether processing used the GPU or CPU, a size category of the image, success or failure, durations, export format, and similar product settings. Error reports can include crash details, device model, operating system, and app version.</p>
+<p>With usage analytics enabled, submitting a result rating sends the selected stars and a bounded technical summary of that generation: processing mode, model and revision, recommended model and whether it was applied, scale, speed, backend, image dimensions, input format, transparency, duration, and recreation steps/settings. Only whether an optional description was provided is recorded, never its contents. A random processing-attempt token links these events. Rating-dialog and store-link actions may also be recorded. Disabling usage analytics stops these events; local ratings are not uploaded later when analytics is enabled again.</p>
 <p>These reports do not include photos, file names, file locations, email addresses, or the text of a support message. Pixora does not collect the Android advertising ID, and it does not use analytics for ads or personalization.</p>
 <p>Firebase may also receive an app instance identifier, device and app information, and an approximate region derived from the network connection. Google's own policy is at <a href="https://firebase.google.com/support/privacy">firebase.google.com/support/privacy</a>.</p>
 
@@ -37,8 +41,8 @@
 <li>the app version and platform (Android or iOS);</li>
 <li>a random request id.</li>
 </ul>
-<p>The current support form does not ask for a rating. Earlier app versions may also send the optional 1–5 support rating they requested.</p>
-<p>The message goes through a Google Apps Script web app to kirillborichevskiy@gmail.com. It does not include a photo, a file name, or a device identifier. Google's policy is at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</p>
+<p>After a successful generation, Pixora may ask you to rate the result, at most once every five minutes. If you confirm1–4 stars, the support form retains those stars and sends them with the message only when you tap Send. Confirming5 stars opens Google Play, where you choose whether and how to review the app. An internal rating is not automatically published to a store.</p>
+<p>The message goes through a Google Apps Script web app to the developer’s support inbox. It does not include a photo, a file name, or a device identifier. Google's policy is at <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>.</p>
 
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Notifications</h2>
 <p>On Android, Pixora can show a notification while an image is being processed. On iOS, Pixora can request notification permission and show a local completion notification. The notification permission is optional. Refusing it does not stop processing. These notifications are not marketing messages.</p>
@@ -47,6 +51,7 @@
 <p>We do not sell personal information.</p>
 <ul>
 <li><strong>Google Firebase</strong> (Analytics, Crashlytics, and Remote Config) receives the usage, error, and availability information described above. On Android, Firebase uses Google Play services where applicable; iOS uses the Firebase Apple SDKs.</li>
+<li><strong>Hugging Face and its delivery providers</strong> serve the optional recreation model files only after you request a download.</li>
 <li><strong>Google Apps Script</strong> delivers a support message to us only after you tap Send.</li>
 <li><strong>Kirill Borichevskiy</strong> receives that support message by email and uses it to reply.</li>
 </ul>
@@ -60,6 +65,7 @@
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Your choices</h2>
 <ul>
 <li>Turn <strong>Usage analytics</strong> and <strong>Error reports</strong> on or off in Settings. Each switch is independent.</li>
+<li>Use enlargement without downloading the recreation models. Delete downloaded models separately in Settings.</li>
 <li>Do not send a support message. Nothing from that form is sent until you tap Send.</li>
 <li>Refuse or revoke the notification permission in your device settings.</li>
 <li>Email <a href="mailto:kirillborichevskiy@gmail.com">kirillborichevskiy@gmail.com</a> to ask for access to, correction of, or deletion of a support message we hold. Pixora cannot delete a photo from your phone, because the photo is not uploaded.</li>
@@ -80,6 +86,6 @@
 <p>We may update this policy. The page will show a new “Last updated” date. If a change is significant, Pixora may also mention it in the app.</p>
 
 <h2 style="font-size:1.15rem;margin:1.4rem 0 .4rem">Contact</h2>
-<p>Pixora is provided by Kirill Borichevskiy. Questions about this policy or your data: <a href="mailto:kirillborichevskiy@gmail.com">kirillborichevskiy@gmail.com</a>.</p>
+<p>For questions about this policy or your data, use the built-in Feedback screen in Pixora. A reply email is optional.</p>
 </body>
 </html>

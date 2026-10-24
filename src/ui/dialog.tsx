@@ -1,24 +1,23 @@
 import React, {
   createContext,
   useContext,
-  useState,
-  useRef,
   useEffect,
+  useRef,
+  useState,
 } from 'react';
 import {
-  Modal,
-  View,
-  Text,
-  Pressable,
-  ScrollView,
   AccessibilityInfo,
+  ScrollView,
+  Text,
+  View,
   findNodeHandle,
+  useWindowDimensions,
 } from 'react-native';
-import { usePane } from './layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from './theme';
-import { useLocale } from './locale';
-import { Button, createStyles } from './components';
+
+import { PopDialog } from '../components/kinetik/pop-dialog';
+import { useKinetikTheme } from '../lib/kinetik/tokens/theme';
+
 type Request = { title: string; body: string; action: string; cancel: string };
 type Confirm = (
   title: string,
@@ -26,129 +25,132 @@ type Confirm = (
   action: string,
   cancel: string,
 ) => Promise<boolean>;
+
 const Context = createContext<Confirm>(async () => false);
 export const useConfirm = () => useContext(Context);
+
 export function DialogProvider({ children }: { children: React.ReactNode }) {
   const [request, setRequest] = useState<Request | null>(null);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  useEffect(() => {
-    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
-    const sub = AccessibilityInfo.addEventListener(
-      'reduceMotionChanged',
-      setReduceMotion,
-    );
-    return () => sub.remove();
-  }, []);
   const resolver = useRef<((value: boolean) => void) | null>(null);
   const titleRef = useRef<React.ElementRef<typeof Text>>(null);
-  const { colors } = useTheme();
-  const { rtl } = useLocale();
-  const s = createStyles(colors, rtl);
-  const pane = usePane();
+  const { colors, font, space } = useKinetikTheme();
   const insets = useSafeAreaInsets();
+  const window = useWindowDimensions();
+
   const finish = (value: boolean) => {
     const resolve = resolver.current;
     resolver.current = null;
     setRequest(null);
     resolve?.(value);
   };
+
   useEffect(
     () => () => {
       resolver.current?.(false);
+      resolver.current = null;
     },
     [],
   );
+
+  useEffect(() => {
+    if (!request) return;
+    const focusTitle = () => {
+      const node = findNodeHandle(titleRef.current);
+      if (node) AccessibilityInfo.setAccessibilityFocus(node);
+    };
+    const frame = requestAnimationFrame(focusTitle);
+    return () => cancelAnimationFrame(frame);
+  }, [request]);
+
   const confirm: Confirm = (title, body, action, cancel) =>
     new Promise(resolve => {
       resolver.current?.(false);
       resolver.current = resolve;
       setRequest({ title, body, action, cancel });
     });
+
+  const maxDialogHeight = Math.max(
+    180,
+    window.height - insets.top - insets.bottom - 32,
+  );
+
   return (
     <Context.Provider value={confirm}>
       {children}
-      <Modal
-        testID="confirmation-dialog"
+      <PopDialog
         visible={!!request}
-        transparent
-        animationType={reduceMotion ? 'none' : 'fade'}
-        statusBarTranslucent
-        onRequestClose={() => finish(false)}
         onShow={() => {
-          const node = findNodeHandle(titleRef.current);
-          if (node) AccessibilityInfo.setAccessibilityFocus(node);
+          const node=findNodeHandle(titleRef.current);
+          if(node)AccessibilityInfo.setAccessibilityFocus(node);
         }}
+        onClose={() => finish(false)}
+        closeLabel={request?.cancel}
+        // The visible, focusable heading is inside the bounded scroll region.
+        title=""
+        actions={[
+          {
+            label: request?.action ?? '',
+            tone: 'primary',
+            onPress: () => finish(true),
+          },
+          {
+            label: request?.cancel ?? '',
+            onPress: () => finish(false),
+          },
+        ]}
+        dismissable
+        testID="confirmation-dialog"
+        style={{ maxHeight: maxDialogHeight }}
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: '#00000099',
-          }}
-          accessibilityViewIsModal
+        <ScrollView
+          testID="confirmation-scroll"
+          style={{ flexShrink: 1 }}
+          contentContainerStyle={{ gap: space[4] }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
         >
-          <Pressable
-            testID="confirmation-backdrop"
-            accessible={false}
-            onPress={() => finish(false)}
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-            }}
-          />
           <View
-            pointerEvents="box-none"
             style={{
-              position: 'absolute',
-              left: pane.marginLeft + insets.left,
-              top: pane.marginTop + insets.top,
-              width: pane.width,
-              height: pane.height,
-              padding: 16,
-              justifyContent: 'center',
-              alignItems: 'center',
+              alignSelf: 'flex-start',
+              backgroundColor: colors.emberSoft,
+              borderRadius: 999,
+              paddingHorizontal: space[3],
+              paddingVertical: space[1],
             }}
           >
-            <View
-              style={[
-                s.card,
-                {
-                  width: '100%',
-                  maxWidth: 480,
-                  maxHeight: pane.height - 32,
-                  padding: 24,
-                },
-              ]}
+            <Text
+              style={{
+                color: colors.ember,
+                fontSize: font.size.xs,
+                fontWeight: font.weight.semibold,
+              }}
             >
-              <ScrollView contentContainerStyle={{ gap: 20 }}>
-                <View style={s.badge}>
-                  <Text style={s.badgeText}>✦ Pixora</Text>
-                </View>
-                <Text
-                  ref={titleRef}
-                  accessible
-                  accessibilityRole="header"
-                  style={s.heading}
-                >
-                  {request?.title}
-                </Text>
-                <Text style={s.body}>{request?.body}</Text>
-                <Button
-                  title={request?.action ?? ''}
-                  onPress={() => finish(true)}
-                />
-                <Button
-                  title={request?.cancel ?? ''}
-                  secondary
-                  onPress={() => finish(false)}
-                />
-              </ScrollView>
-            </View>
+              ✦ Pixora
+            </Text>
           </View>
-        </View>
-      </Modal>
+          <Text
+            ref={titleRef}
+            accessible
+            accessibilityRole="header"
+            style={{
+              color: colors.text,
+              fontSize: font.size.lg,
+              fontWeight: font.weight.semibold,
+            }}
+          >
+            {request?.title}
+          </Text>
+          <Text
+            style={{
+              color: colors.textMuted,
+              fontSize: font.size.sm,
+              lineHeight: 22,
+            }}
+          >
+            {request?.body}
+          </Text>
+        </ScrollView>
+      </PopDialog>
     </Context.Provider>
   );
 }

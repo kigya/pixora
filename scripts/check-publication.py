@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reject private files, credentials and non-English maintenance text in Git."""
 import argparse
+import configparser
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -85,6 +86,23 @@ def content_issues(name, content, mode='100644'):
     return issues
 
 
+def reviewed_submodule(mode, oid, name, revision):
+    """Only the reviewed diffusion dependency and exact immutable revision are allowed."""
+    if (mode, name, oid) != (
+        '160000', 'native/recreate/vendor/stable-diffusion.cpp',
+        '39bc9d0b4bad86750fcb1fd2d711bc57a4c6018f',
+    ):
+        raise ValueError('Submodules require an explicit publication review.')
+    config = configparser.ConfigParser(interpolation=None)
+    config.read_string(git('show', (revision or '') + ':.gitmodules').decode())
+    section = 'submodule "native/recreate/vendor/stable-diffusion.cpp"'
+    if config.sections() != [section] or dict(config[section]) != {
+        'path': name,
+        'url': 'https://github.com/leejet/stable-diffusion.cpp.git',
+    }:
+        raise ValueError('Reviewed submodule metadata does not match its pinned public source.')
+
+
 def entries(revision):
     if revision is None:
         records = git('ls-files', '--stage', '-z').split(b'\0')
@@ -93,13 +111,15 @@ def entries(revision):
             mode, oid, stage = meta.decode().split()
             if stage != '0':
                 raise ValueError('Resolve the unmerged index before publication.')
+            if mode == '160000':
+                reviewed_submodule(mode, oid, os.fsdecode(name), revision)
             yield mode, oid, os.fsdecode(name)
     else:
         for record in filter(None, git('ls-tree', '-rz', '--full-tree', revision).split(b'\0')):
             meta, name = record.split(b'\t', 1)
             mode, kind, oid = meta.decode().split()
             if kind != 'blob':
-                raise ValueError('Submodules require an explicit publication review.')
+                reviewed_submodule(mode, oid, os.fsdecode(name), revision)
             yield mode, oid, os.fsdecode(name)
 
 
@@ -118,6 +138,8 @@ def check(revisions):
             if private_path(name):
                 errors.append(f'{name}: private/generated path')
                 continue
+            if mode == '160000':
+                continue  # entries() already verified exact pin and public-source metadata.
             for issue in content_issues(name, git('cat-file', 'blob', oid), mode):
                 errors.append(f'{name}: {issue}')
     return sorted(set(errors))

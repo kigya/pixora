@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "source_fingerprint": "c9af62a169cd75a2652340dcce190d7e30f959f38fb5e945098a8b293766bd98",
+  "recorded_at": "2026-10-24T16:39:03.789940+00:00",
+  "criteria": [
+    {
+      "id": "REQ-TRACE-001",
+      "status": "passed",
+      "reason": "Approved code19 UX, download, compact reconstruction and rating changes map to FEAT/TEST-914 through 918 and the current report.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/product/features.md",
+          "sha256": "1e28f70f5c02b1b86e9a7a20c509edc1530bcdf46e54555f5381c12414a62cc3"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "ARCH-BOUNDARY-001",
+      "status": "blocked",
+      "reason": "Native contracts/offline boundaries have tests and review; iOS compilation/runtime acceptance remains blocked by the missing SDK.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "ICON-001",
+      "status": "not_run",
+      "reason": "The existing canonical icon is retained. This task did not repeat the whole platform/icon acceptance matrix.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "SPLASH-001",
+      "status": "blocked",
+      "reason": "Signed b37 light/dark cold-launch recordings passed on Xiaomi; first-frame timing and foreground pause have unit assertions. Full platform acceptance remains open.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "src/navigation/ExpoRoot.tsx",
+          "sha256": "4dbde70a5b6df8f3f9b71131112ed0e163dcf453aec8bb425687db45a9f4d3f5"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "ONBOARD-001",
+      "status": "blocked",
+      "reason": "Signed b37 fresh-onboarding Finish/Skip, horizontal paging, 1.5x font/reduced-motion replay and return to Settings passed. The complete platform/locale/accessibility matrix remains open.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "NAV-001",
+      "status": "blocked",
+      "reason": "Signed b37 closed-model selection, independent expansion, onboarding completion/replay and direct rating destinations passed; generic iOS runtime acceptance remains blocked.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "src/navigation/ExpoRoot.tsx",
+          "sha256": "4dbde70a5b6df8f3f9b71131112ed0e163dcf453aec8bb425687db45a9f4d3f5"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "MOTION-A11Y-001",
+      "status": "blocked",
+      "reason": "Xiaomi large-font and actual TRANSITION_ANIMATION_SCALE=0 reduced-motion onboarding checks passed; complete accessibility/smoothness/platform acceptance remains open.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "LOCALE-001",
+      "status": "blocked",
+      "reason": "All 34 active locale schemas/placeholders/flag hashes passed. Signed b37 Arabic selection and return to system English keep the Settings screen; full native-language/platform matrix is not accepted.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "PERMISSION-001",
+      "status": "blocked",
+      "reason": "Signed b37 notification rationale and refusal allowed a real foreground download, cancellation and resume after force-stop; the whole platform permission matrix is not repeated.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "PRIVACY-001",
+      "status": "blocked",
+      "reason": "Local filters/opt-outs have tests and no images/content enter telemetry. Firebase access and publication of the revised hosted policy remain blocked or excluded.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "LICENSE-001",
+      "status": "blocked",
+      "reason": "Bundled hashes/provenance and optional model terms are retained; current complete legal/store review is not claimed.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "LOCAL-DATA-001",
+      "status": "blocked",
+      "reason": "Signed b37 cache clearing reached 0 bytes while retaining the current result and 1881812340-byte installed model. Partial download deletion/restoration passed; final original-session restore is pending long generation checks.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "android/app/src/main/java/dev/kigya/pixora/StorageUsage.kt",
+          "sha256": "705505800c30a82e47fdafc53cd6c9cf55f4a365c994ba28590d960550fc6593"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "PLATFORM-001",
+      "status": "blocked",
+      "reason": "ARM64 Android release runs on Xiaomi; generic iOS build is blocked by missing iOS 26.5 platform. No emulator/simulator ran.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "QUALITY-001",
+      "status": "failed",
+      "reason": "Strict JS/Kotlin whole-app coverage remains below 100%; current iOS coverage is incomplete and six dependency security findings remain unresolved. Final Recreate budget matrix is in progress.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    },
+    {
+      "id": "HANDOFF-001",
+      "status": "blocked",
+      "reason": "Signed code19 APK is in Downloads and exact installed hash verified. Long Recreate checks/source PR update remain in progress; global coverage/security/iOS acceptance remains open.",
+      "test_ids": [
+        "TEST-914",
+        "TEST-915",
+        "TEST-916",
+        "TEST-917",
+        "TEST-918"
+      ],
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "5550f179fa872aa923665f677858fa4ccb466f519d087bbccdfe09e5883ff179"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "ab0630ea7be19392bc3dbb6951f0b393b6b6b91c1fcd51166720df1a58c15002"
+        }
+      ]
+    }
+  ],
+  "change": "Owner-authorized code19 UX/download/compact Recreate correction; signed b37 bounded phone checks passed, long generation matrix in progress; strict gates remain explicit."
+}

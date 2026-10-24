@@ -11,6 +11,13 @@ jacoco { toolVersion = "0.8.14" }
  * By default you don't need to apply any configuration, just uncomment the lines you need.
  */
 react {
+    def node = providers.environmentVariable('NODE_BINARY').getOrElse('node')
+    def root = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+    entryFile = file([node, '-e', "require('expo/scripts/resolveAppEntry')", root, 'android', 'absolute'].execute(null, rootDir).text.trim())
+    cliFile = new File([node, '--print', "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
+    bundleCommand = 'export:embed'
+    nodeExecutableAndArgs = [node]
+
     if (project.hasProperty('firebaseDiagnostics')) {
         entryFile = file('../../index.diagnostics.js')
     }
@@ -111,8 +118,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         externalNativeBuild { cmake { arguments "-DFEEDBACK_GENERATED_DIR=${layout.buildDirectory.dir('generated/feedback').get().asFile}", "-DANDROID_STL=c++_shared", "-DUPSCALE_COVERAGE=${project.hasProperty('coverage') ? 'ON' : 'OFF'}" } }
         buildConfigField "boolean", "FAST_MODEL_ENABLED", (project.findProperty("fastModeEnabled") ?: "true")
-        versionCode 16
-        versionName "0.8.6"
+        versionCode 19
+        versionName "0.9.0"
     }
     externalNativeBuild { cmake { path "src/main/cpp/CMakeLists.txt"; version "3.22.1" } }
     androidResources { noCompress += ["bin", "param"] }
@@ -306,13 +313,13 @@ def nativeJvmFixtureDirectory = layout.buildDirectory.dir("nativeJvmFixture")
 def hostIsMac = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("mac")
 def nativeJvmFixtureLibrary = nativeJvmFixtureDirectory.map { it.file(hostIsMac ? "libupscale.dylib" : "libupscale.so") }
 tasks.register("compileNativeJvmFixture", Exec) {
-    inputs.file(rootProject.file("../tests/native/android_jvm_fixture.cpp"))
+    inputs.files(rootProject.file("../tests/native/android_jvm_fixture.cpp"), rootProject.file("../native/engine/raster.cpp"), rootProject.file("../native/engine/raster.h"))
     outputs.file(nativeJvmFixtureLibrary)
     doFirst { nativeJvmFixtureDirectory.get().asFile.mkdirs() }
     def javaIncludes = new File(System.getProperty("java.home"), "include")
     commandLine("c++", "-std=c++17", "-fPIC", hostIsMac ? "-dynamiclib" : "-shared",
         "-I${javaIncludes}", "-I${new File(javaIncludes, hostIsMac ? 'darwin' : 'linux')}",
-        rootProject.file("../tests/native/android_jvm_fixture.cpp"), "-o", nativeJvmFixtureLibrary.get().asFile)
+        rootProject.file("../tests/native/android_jvm_fixture.cpp"), rootProject.file("../native/engine/raster.cpp"), "-lz", "-o", nativeJvmFixtureLibrary.get().asFile)
 }
 tasks.matching { it.name == "testCoverageUnitTest" }.configureEach {
     javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(21) }

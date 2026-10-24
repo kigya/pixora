@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 import {
   render,
   screen,
@@ -68,9 +68,51 @@ test('feedback unavailable is clear and cannot pretend to send', async () => {
     </AppProvider>,
   );
   expect(await screen.findByText(t.feedbackUnavailable)).toBeOnTheScreen();
+  expect(screen.getByTestId('feedback-scroll').props.keyboardShouldPersistTaps).toBe('handled');
+  expect(screen.getByTestId('feedback-scroll').props.automaticallyAdjustKeyboardInsets).toBe(true);
   expect(screen.getByRole('button', { name: t.send })).toBeDisabled();
   await userEvent.press(screen.getByRole('button', { name: t.back }));
   expect(navigation.goBack).toHaveBeenCalled();
+});
+test('feedback preserves automatic scroll insets when iOS keyboard avoidance is not needed', async () => {
+  jest.replaceProperty(Platform, 'OS', 'android');
+  Native.getFeedbackStatus.mockResolvedValue(true);
+  await render(
+    <AppProvider>
+      <FeedbackScreen {...props} />
+    </AppProvider>,
+  );
+  const scroll = await screen.findByTestId('feedback-scroll');
+  expect(Platform.OS).toBe('android');
+  expect(scroll.props.automaticallyAdjustKeyboardInsets).toBe(true);
+});
+test('feedback re-scrolls the focused field after keyboard resize and removes its listener', async () => {
+  const remove = jest.fn();
+  let keyboardDidShow: (() => void) | undefined;
+  let subscriptions = 0;
+  jest.spyOn(Keyboard, 'addListener').mockImplementation((_event, listener) => {
+    subscriptions += 1;
+    keyboardDidShow = listener as () => void;
+    return { remove } as any;
+  });
+  Native.getFeedbackStatus.mockResolvedValue(true);
+  const view = await render(
+    <AppProvider>
+      <FeedbackScreen {...props} />
+    </AppProvider>,
+  );
+  const field = await screen.findByLabelText(t.message);
+  await act(async () => keyboardDidShow?.()); // No focused field: the late keyboard event is ignored.
+  await fireEvent(field, 'focus', { nativeEvent: { target: 731 } });
+  expect(keyboardDidShow).toEqual(expect.any(Function));
+  await act(async () => keyboardDidShow?.());
+  await fireEvent(field, 'blur');
+  await act(async () => keyboardDidShow?.()); // A delayed keyboard event must not retain a blurred input.
+  await fireEvent(field, 'focus', { nativeEvent: { target: null } }); // A missing native tag is also safe.
+  await act(async () => keyboardDidShow?.());
+  await view.unmount();
+  expect(subscriptions).toBeGreaterThan(0);
+  expect(remove).toHaveBeenCalledTimes(subscriptions);
 });
 test('feedback email is optional; failures retain text and retry id', async () => {
   Native.getFeedbackStatus.mockResolvedValue(true);
@@ -111,7 +153,7 @@ test('feedback config failure is a local unavailable state', async () => {
   );
   expect(await screen.findByText(t.feedbackUnavailable)).toBeOnTheScreen();
 });
-test('all processing choices use native capability IDs and real examples', async () => {
+test('collapsed model cards select independently and keep one expanded comparison', async () => {
   capabilities.modes = [
     'quality',
     'fast',
@@ -125,23 +167,17 @@ test('all processing choices use native capability IDs and real examples', async
       <ProcessingPicker value="quality" onChange={change} />
     </AppProvider>,
   );
-  await userEvent.press(
-    await screen.findByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await userEvent.press(
-    screen.getByRole('button', { name: t.presets.art.title }),
-  );
+  await screen.findByTestId('select-model-standard');
+  await userEvent.press(screen.getByTestId('select-model-art'));
   expect(change).toHaveBeenCalledWith('art');
-  await userEvent.press(
-    screen.getByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await userEvent.press(
-    screen.getByRole('button', { name: t.presets.pixel.title }),
-  );
+  await userEvent.press(screen.getByRole('button', { name: t.presets.standard.title }));
+  expect(screen.getByText(t.presets.standard.note)).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: `${t.presets.standard.title}: ${t.before} / ${t.after}` })).toBeOnTheScreen();
+  await userEvent.press(screen.getByRole('button', { name: t.presets.pixel.title }));
+  expect(screen.queryByText(t.presets.standard.note)).not.toBeOnTheScreen();
+  expect(screen.getByText(t.presets.pixel.note)).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: `${t.presets.pixel.title}: ${t.before} / ${t.after}` })).toBeOnTheScreen();
+  await userEvent.press(screen.getByTestId('select-model-pixel'));
   expect(change).toHaveBeenCalledWith('pixel');
 });
 test('storage slider is bounded, accessible and has no numeric input', async () => {
@@ -292,12 +328,10 @@ test('unknown profile falls back and picker backdrop closes safely', async () =>
       <ProcessingPicker value="unknown" onChange={change} />
     </AppProvider>,
   );
-  await userEvent.press(
-    await screen.findByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await fireEvent.press(screen.getByTestId('information-backdrop'));
+  await userEvent.press(await screen.findByRole('button', { name: t.presets.standard.title }));
+  expect(screen.getByText(t.presets.standard.note)).toBeOnTheScreen();
+  await userEvent.press(screen.getByRole('button', { name: t.presets.standard.title }));
+  expect(screen.queryByText(t.presets.standard.note)).not.toBeOnTheScreen();
   expect(change).not.toHaveBeenCalled();
 });
 test('storage slider follows gesture without persisting until release', async () => {
@@ -325,8 +359,9 @@ test('settings help explains storage and changes retention setting', async () =>
   );
   expect(screen.getByText(t.cacheHelpBody)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.understood }));
-  await userEvent.press(screen.getByRole('button', { name: t.cacheNo }));
-  expect(Native.setCacheLimit).toHaveBeenCalledWith(0);
+  const retention = screen.getByRole('adjustable', { name: t.cacheLimit });
+  for (let i = 0; i < 4; i++) await fireEvent(retention, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+  expect(Native.setCacheLimit).toHaveBeenLastCalledWith(0);
 });
 test('successful export requests a neutral native review without a rating screen', async () => {
   seed({
@@ -346,7 +381,8 @@ test('successful export requests a neutral native review without a rating screen
   expect(screen.getByText(t.webpNote)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.save }));
   expect(await screen.findByText(t.exportSuccess)).toBeOnTheScreen();
-  expect(Native.requestReview).toHaveBeenCalledTimes(1);
+  expect(Native.claimReviewPrompt).not.toHaveBeenCalled();
+  expect(Native.requestReview).not.toHaveBeenCalled();
   expect(screen.queryByText(t.rateTitle)).toBeNull();
   expect(navigation.navigate).not.toHaveBeenCalledWith('Feedback', expect.anything());
   expect(Native.exportResult).toHaveBeenCalledWith('j', 'webp');
@@ -354,12 +390,13 @@ test('successful export requests a neutral native review without a rating screen
 
 test('pixel profile does not show an AI modification warning', async () => {
   seed({ state: 'READY', image, mode: 'pixel' });
+  capabilities.modes = ['quality', 'fast', 'illustration', 'pixel'];
   await render(
     <AppProvider>
       <Home {...props} />
     </AppProvider>,
   );
-  expect(await screen.findByText(t.presets.pixel.note)).toBeOnTheScreen();
+  await userEvent.press(await screen.findByRole('button', { name: `Model: ${t.presets.pixel.title}` }));
   expect(screen.queryByText(t.aiNote)).toBeNull();
 });
 

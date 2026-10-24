@@ -1,6 +1,6 @@
-# Verification matrix 0.8.x
+# Verification matrix — historical 0.8.x and Pixora 0.9
 
-Current 2026-10-16 instruction (ADR-814): automatic checks/fixes are authorized; Samsung UI and update installation are deferred. Fresh automatic results remain separate from historical physical checks.
+The 0.8.x sections below retain results and scenarios for their recorded revisions. They do not establish acceptance for 0.9. The initial 0.9 migration had an explicit no-test/no-device boundary. Subsequent owner-authorized code-19 checks supersede that boundary only for the scenarios recorded below and in the current verification report; emulators and simulators remain excluded.
 
 The matrix links PRD criteria to executable checks. Test presence is not PASS; final outcomes and revisions are recorded in private coverage/build/device evidence.
 
@@ -71,4 +71,81 @@ TEST-808 also verifies ADR-817: both iOS scripts explicitly select the Xcode def
 
 ## TEST-808 — full privacy policy access (0.8.6)
 
-Requirement FEAT-807, explicit owner instruction on2026-10-17. Scenarios: Settings→Privacy preserves the local summary; explicit press opens the fixed HTTPS URL once without user-data parameters; browser rejection shows the localized failure message; offline keeps the summary available; navigation, all34 locales/legacy pt, RTL and long labels remain usable. Status: NOT RUN by explicit owner build-only decision; no device or automated runtime evidence is claimed.
+Requirement FEAT-807, explicit owner instruction on 2026-10-17. Scenarios: Settings→Privacy preserves the local summary; explicit press opens the fixed HTTPS URL once without user-data parameters; browser rejection shows the localized failure message; offline keeps the summary available; navigation, all 34 locales/legacy pt, RTL and long labels remain usable. Status: NOT RUN by explicit owner build-only decision; no device or automated runtime evidence is claimed.
+
+## TEST-901 — Kinetik product introduction (FEAT-901)
+
+Required component/native scenarios: three horizontal slides only; no vertical paging; before/after previews do not capture input; fresh install, upgrade bypass, skip, completion persistence, Settings replay, completion write failure, rotation/navigation, Reduce Motion, app background/foreground, large font, RTL and all 35 locale dictionaries. The first slide uses the bridge pair, the second the generated cat pair and the third a device/privacy illustration. **0.9 scenario sources updated; NOT RUN.** This does not establish actual phone layout, VoiceOver/TalkBack, motion smoothness or native-speaker quality.
+
+## TEST-902 — presentation comparisons (FEAT-902)
+
+Required: verify all eight Before transforms and provenance while confirming After hashes, dimensions, alignment and transparency remain exact. Presentation pairs are not quality-ground-truth data. Source/manifest scenarios for the current revision are **NOT RUN**; physical visual acceptance is **NOT RUN**.
+
+## TEST-903 — prepared inputs and no Original resolution choice (FEAT-903)
+
+Required: new-job UI never offers Original resolution; newly started jobs use the prepared copy; previous results remain viewable/exportable. Verify enhancement input policy and Recreate's 512 px long-edge generation cap, aspect padding/cropping, expected 2×/4× output dimensions, cancellation and invalid bounds. Updated UI/native test scenarios are **NOT RUN**. Old Original-resolution checks belong to their historical version only and must not be presented as 0.9 behavior.
+
+## TEST-904 — model candidates and context (FEAT-904)
+
+The host research harness compares current bundled ncnn inference, tile/context behavior and candidates under a licensed calibration/holdout manifest. This is separate from the product Recreate mode. Representative quality evaluation and phone speed/memory comparisons are **NOT RUN** for 0.9. Existing weights/IDs/finishers remain intact unless separately approved by quality evidence.
+
+## TEST-801 host classifier coverage repair — 2026-10-22 (historical)
+
+`test-recommendation-core.sh` recorded the preserved public image cases, private feature/vote/grid boundary cases and frozen pre-refactor regression fixtures against the earlier production classifier. That exact historical revision reported 227/227 lines and 266/266 branches, 100%; no exclusions or threshold changes. Golden results matched the independently compiled pre-refactor classifier for 60 inputs and 3840 profile-availability combinations, including padded RGBA strides and alpha. Allocation-failure fallback and unavailable-profile behavior were covered; the same recorded suites passed ASan/UBSan. Recommendation JNI was 57/57 lines and 34/34 branches. This historical report does not establish 0.9 coverage or any changed-source PASS. Xiaomi, emulators and simulators are NOT RUN by explicit owner constraint.
+
+## TEST-905 — explicit Recreate model download and settings (FEAT-905)
+
+Required: no automatic model download; license terms are shown before first download; explicit acceptance starts a resumable/cancellable download; transient files never appear as installed; size, revision and both SHA-256 checks gate readiness; retry recovers safely; delete removes only the generation model; cache clear preserves it, gallery, settings and active-job files. JVM/native and JS source checks have run as listed in the current verification report; full Android/iOS bridge and Settings acceptance remains incomplete. The physical Xiaomi transfer/delete/re-download scenario passed on code 19, but b35 final-artifact repeats are pending. No claim is made that b35 has been downloaded or validated on-device.
+
+## TEST-906 — Recreate job lifecycle, privacy and output (FEAT-906)
+
+Required: only explicit Recreate selection invokes native generation; one-line prompt remains local and absent from telemetry; seed and pinned revision persist across interrupted-session recovery; 4/8 controls map to native `fast`/`quality`; generation canvas caps at 512 px long edge, pads/crops aspect ratio, then uses existing AI upscaler for 2×/4×. Cover low-memory/low-storage before launch, allocation/model/integrity failures, cancel/timeout/retry, partial-file cleanup, alpha separation, metadata removal and preservation of the original. Progress uses native stages and remains indeterminate when unknown. Current-source suites pass only where reported; strict Kotlin coverage remains failed and full lifecycle acceptance is incomplete. The 4-step Xiaomi job saved output; the 8-step job failed at its then-current deadline, and the third run did not run. The b35 final-artifact repeat and three-successful-job sequence are pending. CPU feasibility/latency and general inference quality remain unverified.
+
+## TEST-907 — Kinetik UI, Expo integration and event-driven effects (FEAT-907/908)
+
+Required UI scenarios: closed model selection independent of expansion, at most one expanded card, Compare Slider drag does not collapse it, recommendation only shows the model/action, no Original resolution choice, 2×/4× and format controls, theme/system and locale search/flags, actual storage usage/cache deletion, one-time notice, progress and background/Reduce Motion behavior. A fresh native `SUCCEEDED` result opens comparison and triggers Confetti once; restored results and exports do not replay effects. TypeScript and the recorded 388 JS tests pass, but strict JS coverage fails and final-artifact acceptance is pending. Verify Expo SDK 58/RN 0.88 routing and native compatibility, package ID/signature/version 0.9.0/code 19, model hashes, session/settings migration, splash readiness and Node 22/JDK 21 build environment. The final b35 build and device repeats are pending; a build/signature inspection does not replace runtime acceptance.
+
+## 0.9 overall status
+
+The initial 0.9 migration had a no-test/no-device boundary; the later owner-authorized code-19 checks supersede it only for the scenarios explicitly recorded below and in `docs/engineering/ux-090.md`. Current JS and Kotlin counts and failures are reported there; shared C++/JNI host coverage remains measured separately. No coverage result transfers across revisions. Final b35-artifact Xiaomi repeats remain pending; emulators and simulators were not run. A successful build proves only the checks that actually ran, not visual behavior, model quality, runtime, memory, speed or device acceptance.
+
+## Startup correction follow-up — NOT RUN
+
+Historical FEAT-907/TEST-907 follow-up: the owner observed two splash compositions and a crash. Existing Xiaomi crash logs identify the navigation-context mismatch; source correction switches route hooks/types to Expo Router. Later code-19 checks are recorded below. Current final-artifact launch and accessibility repeats remain pending.
+
+Remaining scenarios: final-artifact cold launch in light/dark/system themes, saved appearance override, slow initialization, retry, Reduce Motion, rotation, foreground restoration, and the full accessibility/font/RTL matrix. Source tests and bounded physical flows are recorded below; unlisted scenarios remain not run. Installation is not startup acceptance.
+
+## TEST-909–913 — current 0.9 UX and result rating (24 October 2026)
+
+The owner now authorizes tests and physical Xiaomi checks. Earlier `not_run` statements record the earlier delivery boundary and do not prohibit these runs. No emulator or simulator is authorized for this revision.
+
+- **TEST-909 / FEAT-909:** navigation/onboarding suites cover the 1500 ms visible-frame gate, initialization failure/retry, migration, three horizontal pages, skip, replay and reduced motion. Physical Xiaomi confirms all three passive compositions and replay return. Android launch-theme overrides match explicit app themes on subsequent cold starts. Full font/RTL/accessibility matrix remains open.
+- **TEST-910 / FEAT-910:** component tests verify independent closed-card selection, mounted-on-expand comparison, Segment Bar choices, speed mapping, one output prediction and preservation of the imported Recreate preview. Real native smoke tests run all eight presets at 2×/4×, including alpha boundaries; this is execution smoke evidence, not image-quality acceptance.
+- **TEST-911 / FEAT-911:** Kinetik controls/dialog/storage tests cover actions, disabled state, search, three theme choices, layout and disjoint categories. Physical Xiaomi confirms inline language, direct theme/format controls, dialogs and cache decrease while retaining the current session. Model download/resume/deletion on this phone remains unverified; host tests use deterministic transports.
+- **TEST-912 / FEAT-912:** component/native tests cover actual-display persistence, 300000 ms cooldown, new successful-job eligibility, dismissal, no preselected stars, stale callbacks, 1–4 support routing with retained stars, 5-star external Play routing and fallback. Physical Xiaomi confirmed support routing and the Play product page. Actual store review publication and real support email are not tested or triggered.
+- **TEST-913 / FEAT-913:** native/JS tests cover allowlisted numeric generation context, immutable recommendation state, opt-out behavior, one durable rating event and prohibited content. Recreate must not inherit an enhancement recommendation. Firebase ingestion/custom-definition registration is blocked by authentication; it is not inferred from producer tests.
+
+Current measured totals, artifact scope and remaining strict coverage/security/platform gates are recorded in [the bounded verification report](../engineering/ux-090.md). All 100% thresholds and source-presence requirements remain in force; a passing test count with a failing coverage gate is not a whole-app release pass.
+
+| Test ID | Current 0.9 bounded status |
+|---|---|
+| TEST-909 | Launch/onboarding assertions and Xiaomi replay pass; full font/RTL/motion matrix open |
+| TEST-910 | Model/scale assertions and all-eight-preset physical smoke pass; smoothness/quality acceptance open |
+| TEST-911 | Controls/dialog/storage assertions and physical cache/language/theme flows pass |
+| TEST-912 | Rating eligibility/routing assertions and physical support/Play/cooldown flows pass |
+| TEST-913 | Local telemetry filters/context/opt-outs pass; Firebase ingestion blocked by authentication |
+
+
+## Compact Recreate and UX follow-up — code 19
+
+| ID | Features | Acceptance | Current state |
+| --- | --- | --- | --- |
+| TEST-914 | FEAT-914 | Theme-matched cold launch, 1500 visible ms, Finish/Skip/replay/string params, mountains, reduced motion/background | Signed b37: cold launch, fresh-onboarding Finish/Skip, horizontal replay, 1.5× font and Reduce Motion passed; full locale/accessibility matrix open |
+| TEST-915 | FEAT-915 | Dedicated model route and independent expansion, keyboard, wrapped dialogs, Recreate action, scan-only processing and no Aperture | Signed b37: model selection/independent expansion, both keyboards, wrapped dialogs and Recreate action passed; long Recreate processing/completion checks in progress |
+| TEST-916 | FEAT-916 | Real 512-square diffusion/public-256 output: fixed seed, 512/768/1024 MiB managed budgets, 4/8 steps, three successful saves, cancellation and memory measurements | Host wrapper passed; original 256-canvas phone outputs rejected, corrected 512-square/public-256 first run saved; three full service jobs pending |
+| TEST-917 | FEAT-917 | Explicit in-place download, notification denial/rationale, cancel/resume/integrity, bytes, storage separation and decimal units | Host cases passed; signed b37 in-place notification-denied download, cancel/resume after force-stop, partial deletion and cache/model preservation passed; earlier candidate full re-download/integrity passed |
+| TEST-918 | FEAT-918 | Commit-only stars, immediate destination, 300000 ms boundary, stale/double gestures, opt-out/private schema and Firebase delivery | Host gate/gesture/privacy tests and signed b37 Feedback/Play routing, restart and before/after-cooldown checks passed; Firebase ingestion blocked by authentication |
+
+Code 19 verification update: TypeScript and 395 JS tests pass; global JS coverage remains failed (99.95% lines, 95.51% branches). Latest JVM run passes 248 tests, with strict coverage still failed (1731/1760 lines, 1788/1877 branches). Shared C++/JNI host coverage is 681/681 lines and 626/626 branches, including reconstruction JNI. Initial 256-canvas phone PNGs failed visual quality and were rejected. Corrected 512-square/reflected/no-VAE-tile phone verification has one full-service success with saved output and PNG/JPEG/WebP exports; the 8-step run failed at the 30-minute deadline and the third run did not run. Firebase delivery and current iOS acceptance remain blocked. See `docs/engineering/ux-090.md`.
+
+Final signed b37 checks passed for first-tap language search, Arabic/system switching without a screen reset, light/dark cold launch, fresh-onboarding Finish/Skip and large-font/reduced-motion replay, separate model selection, keyboard visibility, wrapped actions, real Enhance, cache preservation, in-place download interruption/resume and partial-package deletion. Rating checks confirmed no repeated prompt after restart or inside five minutes, then direct Feedback/Google Play routing after release. The current 512/768/1024 MiB Recreate matrix and the required three-successful-job sequence are in progress. No complete Recreate support or general image-quality acceptance is claimed.

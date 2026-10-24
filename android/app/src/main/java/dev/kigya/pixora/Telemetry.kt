@@ -11,8 +11,8 @@ object Telemetry {
     private lateinit var sink: TelemetrySink
     private var analyticsSuppressedForProcess = false
     private var crashesSuppressedForProcess = false
-    private val events = setOf("screen_view", "screen_engagement", "ui_action", "image_import_started", "image_import_finished", "profile_picker_opened", "profile_preview_interacted", "profile_selected", "processing_options_changed", "preparation_decision", "job_started", "job_backend_changed", "job_finished", "result_viewed", "comparison_used", "export_finished", "share_opened", "review_prompt_requested", "review_rating_selected", "review_submitted", "review_dismissed", "play_redirect_finished", "feedback_opened", "feedback_send_finished", "settings_changed", "remote_config_updated")
-    private val fields = setOf("screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile", "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase", "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms", "engagement_ms", "enabled_count")
+    private val events = setOf("screen_view", "screen_engagement", "ui_action", "image_import_started", "image_import_finished", "profile_picker_opened", "profile_preview_interacted", "profile_selected", "processing_options_changed", "preparation_decision", "job_started", "job_backend_changed", "job_finished", "result_viewed", "comparison_used", "export_finished", "share_opened", "review_prompt_requested", "review_prompt_shown", "review_rating_selected", "review_submitted", "result_rating_submitted", "review_dismissed", "play_redirect_finished", "recreate_model_download_started", "recreate_model_download_finished", "feedback_opened", "feedback_send_finished", "settings_changed", "remote_config_updated")
+    private val fields = setOf("screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile", "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase", "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms", "engagement_ms", "enabled_count", "image_width", "image_height", "recommended_profile", "recommendation_applied", "processing_kind", "source_width", "source_height", "input_width", "input_height", "output_width", "output_height", "source_format", "has_alpha", "steps", "strength", "cfg", "recreate_revision", "prompt_present", "compact_profile", "downloaded_bytes", "total_bytes", "installed_bytes")
     internal fun prepare(ctx: Context): Boolean {
         context = ctx.applicationContext
         // Reconcile SDK-level collection switches before eager Firebase components initialize.
@@ -84,7 +84,57 @@ object Telemetry {
     fun jobContext(job: JSONObject): JSONObject {
         val image = job.optJSONObject("image")
         val pixels = (image?.optLong("workWidth") ?: 0) * (image?.optLong("workHeight") ?: 0)
-        return JSONObject().put("attempt_token", job.optString("jobId")).put("profile_id", ProcessingProfiles.publicId(job.optString("mode"))).put("speed", job.optString("speed", "quality")).put("scale", job.optInt("scale")).put("backend", job.optString("backend")).put("model_version", job.optString("modelId")).put("size_bucket", if (pixels <= 262144) "small" else if (pixels <= 786432) "medium" else "large").put("phase", job.optString("phase"))
+        val input = inputDimensions(job, image)
+        return JSONObject().put("attempt_token", job.optString("jobId")).put("profile_id", ProcessingProfiles.publicId(job.optString("profileId", job.optString("mode")))).put("speed", job.optString("speed", "quality")).put("scale", job.optInt("scale")).put("backend", job.optString("backend")).put("model_version", job.optString("modelId")).put("size_bucket", if (pixels <= 262144) "small" else if (pixels <= 786432) "medium" else "large").put("phase", job.optString("phase")).put("image_width", image?.optInt("width", 0) ?: 0).put("image_height", image?.optInt("height", 0) ?: 0).put("recommended_profile", job.optString("recommendedProfile")).put("recommendation_applied", if (job.optBoolean("recommendationApplied")) 1 else 0).put("input_width", input.first).put("input_height", input.second).put("compact_profile", compactProfile(job))
+    }
+    /** Exact privacy-safe result-rating schema; never includes the prompt or image identifiers. */
+    fun ratingContext(job: JSONObject, rating: Int): JSONObject {
+        val image = job.optJSONObject("image")
+        val kind = if (job.optString("processingKind") == "recreate") "recreate" else "enhance"
+        val input = inputDimensions(job, image)
+        val context = JSONObject()
+            .put("attempt_token", job.optString("jobId"))
+            .put("processing_kind", kind)
+            .put("profile_id", ProcessingProfiles.publicId(job.optString("profileId", job.optString("mode"))))
+            .put("model_version", job.optString("modelId"))
+            .put("recommended_profile", job.optString("recommendedProfile").ifEmpty { "none" })
+            .put("recommendation_applied", if (job.optBoolean("recommendationApplied")) 1 else 0)
+            .put("speed", job.optString("speed", "quality"))
+            .put("scale", job.optInt("scale"))
+            .put("backend", job.optString("backend"))
+            .put("compact_profile", compactProfile(job))
+            .put("source_width", image?.optInt("width", 0) ?: 0)
+            .put("source_height", image?.optInt("height", 0) ?: 0)
+            .put("input_width", input.first)
+            .put("input_height", input.second)
+            .put("output_width", job.optInt("resultWidth"))
+            .put("output_height", job.optInt("resultHeight"))
+            .put("source_format", when (image?.optString("mime")) { "image/png" -> "png"; "image/jpeg" -> "jpeg"; "image/webp" -> "webp"; else -> "other" })
+            .put("has_alpha", if (image?.optBoolean("hasAlpha") == true) 1 else 0)
+            .put("duration_ms", job.optLong("elapsedMs"))
+            .put("rating", rating)
+        if (kind == "recreate") context
+            .put("steps", job.optInt("recreateSteps", 4))
+            .put("strength", 0.6)
+            .put("cfg", 1.0)
+            .put("recreate_revision", job.optString("recreateModelRevision"))
+            .put("prompt_present", if (job.optString("recreatePrompt").isNotBlank()) 1 else 0)
+        return context
+    }
+    private fun compactProfile(job: JSONObject): String = if (job.optString("processingKind") == "recreate") "compact256_sd512" else "none"
+    private fun inputDimensions(job: JSONObject, image: JSONObject?): Pair<Int, Int> {
+        val savedWidth = job.optInt("aiInputWidth", 0)
+        val savedHeight = job.optInt("aiInputHeight", 0)
+        if (savedWidth > 0 && savedHeight > 0) return savedWidth to savedHeight
+        val width = image?.optInt("workWidth", 0) ?: 0
+        val height = image?.optInt("workHeight", 0) ?: 0
+        if (width <= 0 || height <= 0) return 0 to 0
+        if (job.optString("processingKind") == "recreate") {
+            val factor = minOf(1.0, 256.0 / maxOf(width, height))
+            return maxOf(1, (width * factor).toInt()) to maxOf(1, (height * factor).toInt())
+        }
+        return if (job.optString("speed", "quality") == "fast" && job.optString("mode") != "pixel")
+            ProcessingProfiles.inputSize(width, height, "fast") else width to height
     }
     fun observeJob(previous: JSONObject, next: JSONObject) {
         if (!::context.isInitialized) return
@@ -96,16 +146,25 @@ object Telemetry {
         val job = next.optString("jobId")
         if (job.isEmpty() || prefs().getString("terminalJob", "") == job) return
         prefs().edit().putString("terminalJob", job).commit()
-        val status = when { state == "SUCCEEDED" -> "success"; state == "CANCELLED" -> "cancelled"; state == "INTERRUPTED" -> "interrupted"; next.optString("error") == "TIME_LIMIT" -> "time_limit"; else -> "error" }
+        val status = when { state == "SUCCEEDED" -> "success"; state == "CANCELLED" -> "cancelled"; state == "INTERRUPTED" -> "interrupted"; next.optString("error") in setOf("TIME_LIMIT", "RECREATE_TIME_LIMIT") -> "time_limit"; else -> "error" }
         event("job_finished", jobContext(next).put("status", status).put("duration_ms", next.optLong("elapsedMs")).put("error_code", next.optString("error")))
     }
     fun event(name: String, values: JSONObject = JSONObject()) {
         if (!::context.isInitialized || !::sink.isInitialized || !analyticsAllowed() || name !in events) return
-        val parameters = Bundle()
+        val accepted = mutableListOf<Pair<String, Any>>()
         values.keys().forEach { key ->
             if (key in fields) when (val value = values.opt(key)) {
-                is Number -> if (value.toDouble().isFinite()) parameters.putDouble(key, value.toDouble())
-                is String -> if (value.length <= 100 && Regex("^[a-zA-Z0-9_.:-]+$").matches(value)) parameters.putString(key, value)
+                is Number -> if (value.toDouble().isFinite()) accepted.add(key to value)
+                is String -> if (value.length <= 100 && Regex("^[a-zA-Z0-9_.:-]+$").matches(value)) accepted.add(key to value)
+            }
+        }
+        // Reject an overlarge event as a whole; never silently drop useful schema fields.
+        if (accepted.size > 25) return
+        val parameters = Bundle()
+        accepted.forEach { (key, value) ->
+            when (value) {
+                is Number -> parameters.putDouble(key, value.toDouble())
+                is String -> parameters.putString(key, value)
             }
         }
         sink.log(name, parameters)

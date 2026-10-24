@@ -61,8 +61,8 @@ class PixoraPresetsTest {
         estimate().begin(true);assertTrue(SessionStore.snapshot().getLong("remainingHighMs")>afterLoad)
         assertEquals(10,org.json.JSONArray(ctx.getSharedPreferences("processing-estimates",0).all.values.first() as String).length())
         estimate("CPU").begin();assertFalse(SessionStore.snapshot().has("remainingLowMs"))
-        ctx.getSharedPreferences("processing-estimates",0).edit().putString("${BuildConfig.VERSION_NAME}:test-model:GPU:64:standard:quality:4","broken").commit();estimate().begin();assertFalse(SessionStore.snapshot().has("remainingLowMs"))
-        ctx.getSharedPreferences("processing-estimates",0).edit().putString("${BuildConfig.VERSION_NAME}:test-model:GPU:64:standard:quality:4","[null,{}, {\"rate\":\"NaN\",\"overhead\":0},{\"rate\":1,\"overhead\":\"Infinity\"},{\"rate\":-1,\"overhead\":1},{\"rate\":1,\"overhead\":-1},{\"rate\":1,\"overhead\":0}]").commit()
+        ctx.getSharedPreferences("processing-estimates",0).edit().putString("${BuildConfig.VERSION_NAME}:test-model:GPU:64:standard:quality:4:pad64","broken").commit();estimate().begin();assertFalse(SessionStore.snapshot().has("remainingLowMs"))
+        ctx.getSharedPreferences("processing-estimates",0).edit().putString("${BuildConfig.VERSION_NAME}:test-model:GPU:64:standard:quality:4:pad64","[null,{}, {\"rate\":\"NaN\",\"overhead\":0},{\"rate\":1,\"overhead\":\"Infinity\"},{\"rate\":-1,\"overhead\":1},{\"rate\":1,\"overhead\":-1},{\"rate\":1,\"overhead\":0}]").commit()
         estimate().begin();assertTrue(SessionStore.snapshot().has("remainingLowMs"))
     }
     @Test fun powerAndThermalRestrictDecorativeWork() {

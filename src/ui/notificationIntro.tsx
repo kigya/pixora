@@ -7,7 +7,7 @@ import { useTheme } from './theme';
 import { useLocale } from './locale';
 
 /** Dismissal cancels the pending launch; a button is an explicit decision. */
-export function useNotificationIntro() {
+export function useNotificationIntro(purpose: 'processing' | 'download' = 'processing') {
   const [visible, setVisible] = useState(false);
   const resolver = useRef<((choice: boolean | null) => void) | null>(null);
   const { t } = useApp();
@@ -46,12 +46,12 @@ export function useNotificationIntro() {
         <Text accessibilityRole="header" style={s.heading}>
           {Platform.OS === 'ios'
             ? t.notificationIntroTitleIos
-            : t.notificationIntroTitle}
+            : purpose === 'download' ? t.recreate.downloading : t.notificationIntroTitle}
         </Text>
         <Text style={s.body}>
           {Platform.OS === 'ios'
             ? t.notificationIosBody
-            : t.notificationIntroBody}
+            : purpose === 'download' ? t.recreate.notificationBody : t.notificationIntroBody}
         </Text>
         <Button
           title={t.notificationEnableContinue}

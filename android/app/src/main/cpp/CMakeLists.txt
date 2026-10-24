@@ -3,17 +3,26 @@ project(appmodules)
 include(${REACT_ANDROID_DIR}/cmake-utils/ReactNative-application.cmake)
 set(ncnn_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../vendor/ncnn/arm64-v8a/lib/cmake/ncnn)
 find_package(ncnn REQUIRED)
+# Diffusion is an independent CPU backend. Do not alter ncnn/OpenMP initialization.
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(SD_METAL OFF CACHE BOOL "" FORCE)
+set(SD_VULKAN OFF CACHE BOOL "" FORCE)
+set(SD_OPENCL OFF CACHE BOOL "" FORCE)
+set(SD_CUDA OFF CACHE BOOL "" FORCE)
+set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
+set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
+add_subdirectory(../../../../../native/recreate pixora-recreate-build)
 # Keep allocation exceptions in the JNI wrapper; ncnn itself remains prebuilt.
 set_property(TARGET ncnn PROPERTY INTERFACE_COMPILE_OPTIONS -frtti -fexceptions)
 add_library(upscale SHARED engine/upscale.cpp
-  ../../../../../native/engine/engine.cpp ../../../../../native/engine/pixels.cpp
-  engine/recommendation_jni.cpp ../../../../../native/recommendation/recommendation.cpp)
+  ../../../../../native/engine/engine.cpp ../../../../../native/engine/pixels.cpp ../../../../../native/engine/raster.cpp
+  engine/raster_jni.cpp engine/recommendation_jni.cpp engine/recreate_jni.cpp ../../../../../native/recommendation/recommendation.cpp)
 target_include_directories(upscale PRIVATE ${FEEDBACK_GENERATED_DIR}
   ../../../../../native/engine
   ../../../../../native/recommendation/include)
 target_compile_features(upscale PRIVATE cxx_std_17)
 target_compile_options(upscale PRIVATE -fexceptions)
-target_link_libraries(upscale ncnn android jnigraphics log)
+target_link_libraries(upscale ncnn pixora-recreate android jnigraphics log z)
 target_link_options(upscale PRIVATE "-Wl,-z,max-page-size=16384")
 
 option(UPSCALE_COVERAGE "Instrument own native code for local tests" OFF)
