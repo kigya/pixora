@@ -6,6 +6,10 @@ import {
   Text,
   TextInput,
   Pressable,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+  type TextInputFocusEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from 'expo-router/native-stack';
@@ -48,7 +52,50 @@ export function FeedbackScreen({
     [submitted, setSubmitted] = useState(false),
     [validation, setValidation] = useState('');
   const [id, setId] = useState(feedbackId);
+  const scrollRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
   const { operation, error, run } = useOperation();
+  const focusedInput = React.useRef<TextInputFocusEvent['nativeEvent']['target'] | null>(null);
+  const emailInputRef = React.useRef<React.ComponentRef<typeof TextInput>>(null);
+  const messageInputRef = React.useRef<React.ComponentRef<typeof TextInput>>(null);
+  const focusedViewRef = React.useRef<React.ComponentRef<typeof TextInput> | null>(null);
+  const scrollOffsetRef = React.useRef(0);
+  useEffect(() => {
+    let firstFrame: number | null = null;
+    let secondFrame: number | null = null;
+    const cancelPendingFrames = () => {
+      if (firstFrame !== null) cancelAnimationFrame(firstFrame);
+      if (secondFrame !== null) cancelAnimationFrame(secondFrame);
+      firstFrame = null;
+      secondFrame = null;
+    };
+    const listener = Keyboard.addListener('keyboardDidShow', event => {
+      const focusedView = focusedViewRef.current;
+      if (!focusedView || !focusedView.isFocused()) return;
+      cancelPendingFrames();
+      const keyboardTop = event.endCoordinates.screenY;
+      firstFrame = requestAnimationFrame(() => {
+        firstFrame = null;
+        secondFrame = requestAnimationFrame(() => {
+          secondFrame = null;
+          if (focusedViewRef.current !== focusedView || !focusedView.isFocused()) return;
+          focusedView.measureInWindow((_x, y, _width, height) => {
+            if (focusedViewRef.current !== focusedView) return;
+            const delta = y + height + 24 - keyboardTop;
+            if (delta > 0) scrollRef.current?.scrollTo({ y: scrollOffsetRef.current + delta, animated: true });
+          });
+        });
+      });
+    });
+    return () => {
+      listener.remove();
+      cancelPendingFrames();
+    };
+  }, []);
+  const revealFocusedField = (event: TextInputFocusEvent, input: React.ComponentRef<typeof TextInput> | null) => {
+    focusedViewRef.current = input;
+    focusedInput.current = event.nativeEvent.target;
+    if (focusedInput.current !== null) scrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(focusedInput.current, 28, true);
+  };
   useEffect(() => {
     let mounted = true;
     Native.getFeedbackStatus()
@@ -80,8 +127,16 @@ export function FeedbackScreen({
   };
   return (
     <SafeAreaView style={s.screen} edges={['top', 'bottom', 'left', 'right']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
+        ref={scrollRef}
+        testID="feedback-scroll"
+        onScroll={event => { scrollOffsetRef.current = event.nativeEvent.contentOffset.y; }}
+        scrollEventThrottle={100}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        automaticallyAdjustKeyboardInsets
+        contentInsetAdjustmentBehavior="automatic"
         style={{
           width: pane.width,
           maxHeight: pane.height,
@@ -108,7 +163,10 @@ export function FeedbackScreen({
         <Text style={s.body}>{t.feedbackPrivacy}</Text>
         <Text style={s.label}>{t.email}</Text>
         <TextInput
+          ref={emailInputRef}
           accessibilityLabel={t.email}
+          onFocus={event => revealFocusedField(event, emailInputRef.current)}
+          onBlur={() => { if (focusedViewRef.current === emailInputRef.current) focusedViewRef.current = null; }}
           value={email}
           onChangeText={value => {
             setEmail(value);
@@ -124,7 +182,10 @@ export function FeedbackScreen({
         <Text style={s.caption}>{t.emailNote}</Text>
         <Text style={s.label}>{t.message}</Text>
         <TextInput
+          ref={messageInputRef}
           accessibilityLabel={t.message}
+          onFocus={event => revealFocusedField(event, messageInputRef.current)}
+          onBlur={() => { if (focusedViewRef.current === messageInputRef.current) focusedViewRef.current = null; }}
           value={message}
           onChangeText={value => {
             setMessage(value);
@@ -187,6 +248,7 @@ export function FeedbackScreen({
         />
         {!!operation && <ActivityIndicator color={colors.accent} />}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

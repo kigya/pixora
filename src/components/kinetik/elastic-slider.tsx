@@ -96,6 +96,9 @@ export function ElasticSlider({
   const decimals = Math.min(6, decimalsOf(stepSize));
   // Only tick on detents that are coarse enough to feel; continuous sliders tick at the ends.
   const tickSteps = range / stepSize <= 40;
+  const detents = tickSteps
+    ? Array.from({ length: Math.max(0, Math.floor(range / stepSize) - 1) }, (_, i) => ((i + 1) * stepSize) / range)
+    : [];
   const format = formatValue ?? ((v: number) => v.toFixed(decimals));
 
   const width = useSharedValue(0);
@@ -190,6 +193,15 @@ export function ElasticSlider({
     };
   });
   const fillStyle = useAnimatedStyle(() => ({ width: `${progress.get() * 100}%` }));
+  const thumbStyle = useAnimatedStyle(() => {
+    const w = width.get();
+    return {
+      transform: [
+        { translateX: Math.max(0, Math.min(Math.max(0, w - 20), progress.get() * w - 10)) },
+        { scale: 1 + active.get() * 0.12 },
+      ],
+    };
+  });
   // The whole control leans in a touch while held.
   const rowStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 + active.get() * 0.02 }] }));
   const leadingStyle = useAnimatedStyle(() => {
@@ -267,7 +279,20 @@ export function ElasticSlider({
                 trackStyle,
               ]}
             >
+              {detents.map((position) => (
+                <View
+                  key={position}
+                  testID="elastic-slider-detent"
+                  pointerEvents="none"
+                  style={[styles.detent, { left: `${position * 100}%`, backgroundColor: colors.textMuted }]}
+                />
+              ))}
               <Animated.View style={[styles.fill, { backgroundColor: fill }, fillStyle]} />
+              <Animated.View
+                pointerEvents="none"
+                testID="elastic-slider-thumb"
+                style={[styles.thumb, { backgroundColor: colors.surfaceRaised, borderColor: fill }, thumbStyle]}
+              />
             </Animated.View>
           </View>
         </GestureDetector>
@@ -286,6 +311,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
   icon: { minWidth: 20, alignItems: 'center', justifyContent: 'center' },
   hit: { flex: 1, justifyContent: 'center' },
-  track: { overflow: 'hidden' },
+  track: { overflow: 'visible' },
   fill: { height: '100%' },
+  detent: { position: 'absolute', top: '50%', width: 3, height: 3, marginLeft: -1.5, marginTop: -1.5, borderRadius: 2, opacity: 0.76, zIndex: 1 },
+  thumb: { position: 'absolute', left: 0, top: '50%', width: 20, height: 20, marginTop: -10, borderWidth: 2, borderRadius: 10, boxShadow: '0px 1px 3px rgba(0,0,0,0.32)', zIndex: 2 },
 });

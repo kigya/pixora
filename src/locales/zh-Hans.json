@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU 不可用，继续使用 CPU。",
     "INFERENCE_FAILED": "处理失败。请重试或选择其他文件。",
     "SERVICE_START_FAILED": "无法开始处理。请返回应用后重试。",
-    "TIME_LIMIT": "已达到 30 分钟处理上限。可以重试。",
+    "TIME_LIMIT": "已达到 {minutes} 分钟处理上限。可以重试。",
     "INTERRUPTED": "处理已中断。可以重新开始。",
     "EXPORT_FAILED": "无法保存或打开文件。结果仍保留在应用中。",
     "SHARE_FAILED": "无法分享文件。结果仍保留在应用中。",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "存储空间不足。",
     "notEnoughMemory": "内存不足。请关闭其他应用后重试。",
     "licenses": "许可证",
-    "languageSearch": "语言"
+    "languageSearch": "语言",
+    "notificationBody": "在 Pixora 后台运行时查看下载进度并取消下载。"
   },
   "notice": {
     "aiDetailsMayChange": "AI 可能改变细小细节"

@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU ora kasedhiya. Nerusake nganggo CPU.",
     "INFERENCE_FAILED": "Pangolahan gagal. Coba manèh utawa pilih gambar liya.",
     "SERVICE_START_FAILED": "Ora bisa miwiti pangolahan. Bali menyang app banjur coba manèh.",
-    "TIME_LIMIT": "Wates pangolahan 30 menit wis tekan. Bisa nyoba manèh.",
+    "TIME_LIMIT": "Wates pangolahan {minutes} menit wis tekan. Bisa nyoba manèh.",
     "INTERRUPTED": "Pangolahan mandheg. Wiwiti manèh.",
     "EXPORT_FAILED": "Berkas ora bisa disimpen utawa dibukak. Asil tetep ana ing app.",
     "SHARE_FAILED": "Berkas ora bisa dienggo bareng. Asil tetep ana ing app.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Papan panyimpenan ora cukup.",
     "notEnoughMemory": "Memori kurang. Tutup app liya banjur coba manèh.",
     "licenses": "Lisensi",
-    "languageSearch": "Basa"
+    "languageSearch": "Basa",
+    "notificationBody": "Deleng lan batalake undhuhan nalika Pixora mlaku ing latar mburi."
   },
   "notice": {
     "aiDetailsMayChange": "AI bisa ngowahi rincian cilik"

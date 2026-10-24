@@ -8,7 +8,6 @@ import { track, ratingContext } from '../application/telemetry';
 import { useTheme } from './theme';
 import { PopDialog } from '../components/kinetik/pop-dialog';
 import { StarRating } from '../components/kinetik/star-rating';
-import { Button } from './components';
 
 type Navigation = NativeStackScreenProps<Routes, 'Home'>['navigation'];
 /** Only a live completion may ask; native persists the five-minute/per-job gate. */
@@ -28,19 +27,24 @@ export function ResultRating({job, eligible, navigation}: {job:Session; eligible
   const writing = useRef(false);
   const mounted = useRef(true);
   const activePrompt=useRef({jobId:job.jobId,active:false});
+  const storeRequestJob=useRef('');
+  const backgroundedStoreRequest=useRef('');
   activePrompt.current={jobId:job.jobId,active:visible && promptJob===job.jobId && eligible && focused && foreground};
   const isCurrent=(jobId:string)=>mounted.current && activePrompt.current.active && activePrompt.current.jobId===jobId;
   useEffect(() => {
     mounted.current=true;
     const listener=AppState.addEventListener('change',state=>{
       const active=state==='active';setForeground(active);
-      if(!active){activePrompt.current.active=false;setVisible(false);}
+      if(!active){
+        if(storeRequestJob.current===activePrompt.current.jobId)backgroundedStoreRequest.current=storeRequestJob.current;
+        activePrompt.current.active=false;setVisible(false);
+      }
     });
     return () => {mounted.current=false;listener.remove();};
   }, []);
   useEffect(() => {
     const focus=navigation.addListener?.('focus',()=>setFocused(true));
-    const blur=navigation.addListener?.('blur',()=>{activePrompt.current.active=false;setFocused(false);setVisible(false);});
+    const blur=navigation.addListener?.('blur',()=>{activePrompt.current.active=false;backgroundedStoreRequest.current='';setFocused(false);setVisible(false);});
     return () => {focus?.();blur?.();};
   }, [navigation]);
   useEffect(() => {
@@ -61,24 +65,29 @@ export function ResultRating({job, eligible, navigation}: {job:Session; eligible
     track('review_dismissed', {attempt_token:job.jobId});
     setVisible(false);
   };
-  const submit=async () => {
-    if (!isCurrent(job.jobId) || !shown.current || !rating || writing.current) return;
+  const submit=async (committedRating:number) => {
+    if (!isCurrent(job.jobId) || !shown.current || !committedRating || writing.current) return;
     const submittedJob=job.jobId;
     writing.current=true;setSending(true);setFailed(false);
     try {
-      const updated=await Native.submitResultRating(submittedJob,rating);
+      const updated=await Native.submitResultRating(submittedJob,committedRating);
       if(!isCurrent(submittedJob))return;
       accept(updated);
-      if (rating < 5) {
+      if (committedRating < 5) {
         if (mounted.current) setVisible(false);
-        navigation.navigate('Feedback',{rating,source:'result_rating',context:ratingContext(updated)});
+        navigation.navigate('Feedback',{rating:committedRating,source:'result_rating',context:ratingContext(updated)});
       } else {
+        storeRequestJob.current=submittedJob;
+        backgroundedStoreRequest.current='';
         const opened=await Native.openStoreReview();
-        if(!isCurrent(submittedJob))return;
+        storeRequestJob.current='';
+        const completedAfterBackground=backgroundedStoreRequest.current===submittedJob;
+        backgroundedStoreRequest.current='';
+        if(!isCurrent(submittedJob) && !completedAfterBackground)return;
         track('play_redirect_finished',{attempt_token:job.jobId,status:opened?'success':'error'});
-        if (mounted.current) {setFailed(!opened);setVisible(!opened);}
+        if (isCurrent(submittedJob)) {setFailed(!opened);setVisible(!opened);}
       }
-    } catch {if(isCurrent(submittedJob))setFailed(true);}
+    } catch {storeRequestJob.current='';backgroundedStoreRequest.current='';if(isCurrent(submittedJob))setFailed(true);}
     finally {writing.current=false;if(mounted.current)setSending(false);}
   };
   return <PopDialog
@@ -97,10 +106,8 @@ export function ResultRating({job, eligible, navigation}: {job:Session; eligible
     actions={[]}
   >
     <View style={{alignItems:'center',gap:20,paddingVertical:12}}>
-      <StarRating testID="result-rating" accessibilityLabel={t.rating.title} value={rating} onValueChange={setRating} clearable={false} disabled={sending} color={colors.accent} />
+      <StarRating testID="result-rating" accessibilityLabel={t.rating.title} value={rating} onValueChange={setRating} onValueCommit={submit} clearable={false} disabled={sending || !ready} color={colors.accent} />
       {failed && <Text accessibilityRole="alert" style={{color:colors.red}}>{t.error}</Text>}
-      <Button testID="submit-rating" title={rating===5?t.rating.store:t.continue} disabled={!rating || sending || !ready} onPress={submit} />
-      <Button title={t.cancel} secondary disabled={sending} onPress={close} />
     </View>
   </PopDialog>;
 }

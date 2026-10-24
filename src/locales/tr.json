@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU kullanılamıyor. CPU ile devam ediliyor.",
     "INFERENCE_FAILED": "İşleme başarısız oldu. Tekrar deneyin veya başka bir dosya seçin.",
     "SERVICE_START_FAILED": "İşleme başlatılamadı. Uygulamaya dönüp tekrar deneyin.",
-    "TIME_LIMIT": "30 dakikalık işleme sınırına ulaşıldı. Tekrar deneyebilirsiniz.",
+    "TIME_LIMIT": "{minutes} dakikalık işleme sınırına ulaşıldı. Tekrar deneyebilirsiniz.",
     "INTERRUPTED": "İşleme yarıda kaldı. Yeniden başlatın.",
     "EXPORT_FAILED": "Dosya kaydedilemedi veya açılamadı. Sonuç uygulamada kalır.",
     "SHARE_FAILED": "Dosya paylaşılamadı. Sonuç uygulamada kalır.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Yeterli depolama alanı yok.",
     "notEnoughMemory": "Yeterli bellek yok. Diğer uygulamaları kapatıp tekrar deneyin.",
     "licenses": "Lisanslar",
-    "languageSearch": "Dil"
+    "languageSearch": "Dil",
+    "notificationBody": "Pixora arka plandayken indirmeyi takip edin ve iptal edin."
   },
   "notice": {
     "aiDetailsMayChange": "Yapay zekâ küçük ayrıntıları değiştirebilir"

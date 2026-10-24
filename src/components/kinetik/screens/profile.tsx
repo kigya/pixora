@@ -16,6 +16,7 @@ export function Profile({children,header,overlay,contentStyle}:ProfileProps) {
   return <>
     <ScrollView
       style={[styles.fill,{backgroundColor:colors.background}]}
+      keyboardShouldPersistTaps="always"
       contentContainerStyle={[{
         paddingTop:insets.top+space[8],paddingBottom:insets.bottom+space[8],
         paddingHorizontal:space[5],gap:space[6],

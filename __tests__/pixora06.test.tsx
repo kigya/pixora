@@ -137,8 +137,7 @@ test('pixel has no speed control or artificial ETA', async () => {
       <Home {...props} />
     </AppProvider>,
   );
-  await userEvent.press(await screen.findByTestId('select-model-pixel'));
-  expect(await screen.findByTestId('select-model-pixel')).toBeOnTheScreen();
+  expect(await screen.findByRole('button', { name: `${t.recreate.model}: ${t.presets.pixel.title}` })).toBeOnTheScreen();
   expect(screen.queryByRole('adjustable', { name: t.speedTitle })).toBeNull();
   await userEvent.press(screen.getByRole('button', { name: t.upscale }));
   expect(Native.startJobWithProfile).toHaveBeenCalledWith(

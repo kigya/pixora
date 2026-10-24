@@ -37,6 +37,7 @@ class ServiceLifecycleTest {
     private val ctx get()=RuntimeEnvironment.getApplication()
     private var cancelled=0
     @Before fun setup() {
+        cancelled=0
         for(name in listOf("context","journal"))SessionStore::class.java.getDeclaredField(name).apply{isAccessible=true}.set(SessionStore,null)
         SessionStore.listeners.clear();SessionStore.workerAlive=false;SessionStore.serviceAlive=false
         ctx.filesDir.deleteRecursively();ctx.filesDir.mkdirs();ctx.cacheDir.deleteRecursively();ctx.cacheDir.mkdirs()
@@ -49,6 +50,22 @@ class ServiceLifecycleTest {
         return controller
     }
     private fun stage(state:String,phase:String="upscaling",progress:Double=-1.0){SessionStore.update{it.put("jobId","job").put("state",state).put("phase",phase).put("progress",progress)}}
+    @Test fun defaultWorkerProcessesPreCancelledSessionAndPublishesTerminalCancellation() {
+        val source=java.io.File(ctx.filesDir,"sessions/default-worker/source").apply { parentFile!!.mkdirs(); writeText("source") }
+        SessionStore.replace(org.json.JSONObject().put("id","default-worker").put("sourcePath",source.path))
+        stage("CANCELLING")
+        val controller=create();val service=controller.get();val worker=ManualExecutor();service.executor=worker
+
+        service.onStartCommand(Intent().setAction("PROCESS"),0,1)
+        worker.task.run()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
+
+        assertEquals("CANCELLED",SessionStore.snapshot().getString("state"))
+        assertEquals("",SessionStore.snapshot().getString("error"))
+        assertFalse(SessionStore.workerAlive)
+        assertTrue(Shadows.shadowOf(service).isForegroundStopped)
+        controller.destroy()
+    }
     @Test fun foregroundProgressTitlesThrottlingAndRelease() {
         val controller=create();val service=controller.get()
         assertNull(service.onBind(null));stage("PREPARING")
@@ -85,6 +102,36 @@ class ServiceLifecycleTest {
         val deadlineController=create();val deadlineService=deadlineController.get();stage("PREPARING")
         deadlineService.runWork={_,_,_->Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(30));assertEquals("CANCELLING",SessionStore.snapshot().getString("state"))}
         deadlineService.onStartCommand(Intent().setAction("PROCESS"),0,8);Shadows.shadowOf(Looper.getMainLooper()).idle();deadlineController.destroy()
+    }
+    @Test fun recreateRunsPastEnhancementDeadlineThenCancelsAtItsOwnLimit() {
+        assertEquals(30L*60*1000,ProcessingService.timeoutFor("enhance"))
+        assertEquals(30L*60*1000,ProcessingService.timeoutFor(""))
+        assertEquals(45L*60*1000,ProcessingService.timeoutFor("recreate"))
+        assertEquals(30L*1000,ProcessingService.WAKE_LOCK_GRACE_MS)
+        assertEquals("TIME_LIMIT",timeoutErrorCode("enhance"))
+        assertEquals("RECREATE_TIME_LIMIT",timeoutErrorCode("recreate"))
+
+        val controller=create();val service=controller.get();stage("PREPARING")
+        SessionStore.update{it.put("processingKind","recreate")}
+        service.executor=ManualExecutor();service.onStartCommand(Intent().setAction("PROCESS"),0,9)
+        val wake=ProcessingService::class.java.getDeclaredField("wake").apply{isAccessible=true}.get(service) as android.os.PowerManager.WakeLock
+
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(30))
+        val expiredAtThirtyMinutes=ProcessingService::class.java.getDeclaredField("timeLimit").apply{isAccessible=true}.getBoolean(service)
+        assertFalse(expiredAtThirtyMinutes)
+        assertEquals("PREPARING",SessionStore.snapshot().getString("state"))
+        assertEquals(0,cancelled)
+        assertTrue(wake.isHeld)
+
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMinutes(15))
+        val expiredAtFortyFiveMinutes=ProcessingService::class.java.getDeclaredField("timeLimit").apply{isAccessible=true}.getBoolean(service)
+        assertTrue(expiredAtFortyFiveMinutes)
+        assertEquals("CANCELLING",SessionStore.snapshot().getString("state"))
+        assertEquals(1,cancelled)
+        assertTrue(wake.isHeld)
+
+        controller.destroy()
+        assertFalse(wake.isHeld)
     }
     @Test @Config(sdk=[29]) fun olderForegroundTypeAndStartupFailures() {
         for(error in listOf(SecurityException("denied"),IllegalStateException("failed"))) {

@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.core.content.ContextCompat
@@ -24,7 +25,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
-class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint()), private val recommendation:(String)->String={RecommendationEngine.analyze(it)}, private val recreateDownloadIo:java.util.concurrent.Executor=Executors.newSingleThreadExecutor()):NativeUpscaleSpec(ctx) {
+class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint()), private val recommendation:(String)->String={RecommendationEngine.analyze(it)}, private val recreateDownloadIo:java.util.concurrent.Executor=Executors.newSingleThreadExecutor(), private val recreateDownloadForeground:RecreateDownloadForeground=AndroidRecreateDownloadForeground):NativeUpscaleSpec(ctx) {
     companion object{
         const val NAME="NativeUpscale"; const val PICK=4301;const val NOTIFY=4302
         internal fun marketReviewIntent(packageId:String)=Intent(Intent.ACTION_VIEW,Uri.parse("market://details?id=$packageId")).setPackage("com.android.vending").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -34,7 +35,8 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     private val main=Handler(Looper.getMainLooper())
     private var pickerPromise:Promise?=null
     private var permissionPromise:Promise?=null
-    private val recreateModels=RecreateModelStore(ctx){json->main.post{if(ctx.hasActiveReactInstance()&&mEventEmitterCallback!=null)emitOnRecreateModelChanged(map(json))}}
+    private val recreateDownloadDispatching=java.util.concurrent.atomic.AtomicBoolean(false)
+    private val recreateModels=RecreateModelStore(ctx){json->recreateDownloadForeground.update(ctx,json);main.post{if(ctx.hasActiveReactInstance()&&mEventEmitterCallback!=null)emitOnRecreateModelChanged(map(json))}}
     private val listener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnSessionChanged(map(json))}}
     private val windowListener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnWindowLayoutChanged(map(json))}}
     private val availabilityListener:(JSONObject)->Unit={json->main.post{if(ctx.hasActiveReactInstance() && mEventEmitterCallback!=null)emitOnProfileAvailabilityChanged(map(json))}}
@@ -130,10 +132,55 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     override fun getRecreateModelState(p:Promise)=async(p){map(recreateModels.snapshot())}
     override fun downloadRecreateModel(p:Promise)=async(p){
         SessionStore.requireIdle()
-        if(!recreateModels.isDownloading()) recreateDownloadIo.execute { recreateModels.download() }
+        if(recreateDownloadDispatching.compareAndSet(false,true)) {
+            if(recreateModels.reserveDownload()) {
+                val attemptToken=UUID.randomUUID().toString()
+                val startedAt=SystemClock.elapsedRealtime()
+                val initial=recreateModels.snapshot()
+                Telemetry.event("recreate_model_download_started",JSONObject()
+                    .put("attempt_token",attemptToken)
+                    .put("model_version",RecreateModelStore.REVISION)
+                    .put("processing_kind","recreate")
+                    .put("downloaded_bytes",initial.optLong("downloadedBytes"))
+                    .put("total_bytes",initial.optLong("totalBytes"))
+                    .put("installed_bytes",initial.optLong("installedBytes")))
+                val settled=java.util.concurrent.atomic.AtomicBoolean(false)
+                fun finish(startError:String?=null) {
+                    if(!settled.compareAndSet(false,true))return
+                    if(startError!=null)recreateModels.failReserved(startError)
+                    val result=recreateModels.snapshot()
+                    val state=result.optString("state")
+                    val status=when(state){"ready"->"success";"paused"->"cancelled";else->"error"}
+                    val event=JSONObject()
+                        .put("attempt_token",attemptToken)
+                        .put("model_version",RecreateModelStore.REVISION)
+                        .put("processing_kind","recreate")
+                        .put("downloaded_bytes",result.optLong("downloadedBytes"))
+                        .put("total_bytes",result.optLong("totalBytes"))
+                        .put("installed_bytes",result.optLong("installedBytes"))
+                        .put("duration_ms",(SystemClock.elapsedRealtime()-startedAt).coerceAtLeast(0L))
+                        .put("status",status)
+                    if(result.optString("error").isNotBlank())event.put("error_code",result.optString("error"))
+                    Telemetry.event("recreate_model_download_finished",event)
+                    recreateDownloadForeground.finish(ctx)
+                    recreateDownloadDispatching.set(false)
+                }
+                try {
+                    recreateDownloadForeground.start(ctx,{recreateModels.cancel()},{
+                        if(!settled.get())try {
+                            recreateDownloadIo.execute {
+                                try { recreateModels.downloadReserved() }
+                                catch (_:Throwable) { recreateModels.failReserved("MODEL_DOWNLOAD_FAILED") }
+                                finally { finish() }
+                            }
+                        } catch (_:Exception) { finish("MODEL_DOWNLOAD_FAILED") }
+                    },{_->finish("SERVICE_START_FAILED")})
+                } catch (_:Exception) { finish("SERVICE_START_FAILED") }
+            } else recreateDownloadDispatching.set(false)
+        }
         map(recreateModels.snapshot())
     }
-    override fun cancelRecreateDownload(p:Promise)=async(p){recreateModels.cancel();map(recreateModels.snapshot())}
+    override fun cancelRecreateDownload(p:Promise)=async(p){recreateModels.cancel();recreateDownloadForeground.showCancelling(ctx);map(recreateModels.snapshot())}
     override fun deleteRecreateModel(p:Promise)=async(p){
         SessionStore.requireIdle();recreateModels.delete();map(recreateModels.snapshot())
     }
@@ -183,8 +230,8 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             val image=requireImage(id)
             if(image.optBoolean("needsPreparation")&&!preparationConfirmed)throw AppFailure("PREPARATION_REQUIRED")
             val mem=ActivityManager.MemoryInfo();(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(mem)
-            if(mem.totalMem<6L*1024*1024*1024 || mem.availMem<RecreateModelStore.TOTAL+1024L*1024*1024)throw AppFailure("LOW_MEMORY")
-            val factor=minOf(1.0,512.0/maxOf(image.getInt("workWidth"),image.getInt("workHeight")))
+            RecreateMemoryBudget.requireHeadroom(mem.availMem)
+            val factor=minOf(1.0,256.0/maxOf(image.getInt("workWidth"),image.getInt("workHeight")))
             val w=maxOf(1,(image.getInt("workWidth")*factor).toInt());val h=maxOf(1,(image.getInt("workHeight")*factor).toInt())
             if(ImageFiles.space(ctx)<ImageFiles.reserve(w,h,scale.toInt())+128L*1024*1024)throw AppFailure("LOW_STORAGE")
             val activity=ctx.currentActivity?:throw AppFailure("SERVICE_START_FAILED")

@@ -15,6 +15,8 @@ export function jobContext(job: Session): EventContext {
     speed: job.speed ?? 'quality',
     scale: job.scale,
     backend: job.backend,
+    processing_kind:job.processingKind === 'recreate' ? 'recreate' : 'enhance',
+    compact_profile:job.processingKind === 'recreate' ? 'compact256_sd512' : 'none',
     size_bucket:
       pixels <= 262144 ? 'small' : pixels <= 786432 ? 'medium' : 'large',
     model_version: job.modelId,
@@ -45,8 +47,11 @@ export function useTrackedScreen(
     [navigation],
   );
   const focused = useSyncExternalStore(subscribe, snapshot);
-  const latest = useRef(context);
-  latest.current = context;
+  // Screen events carry navigation context, not the full per-generation payload.
+  const compact = Object.fromEntries(Object.entries(context).filter(([key]) =>
+    ['attempt_token','processing_kind','profile_id','model_version','source','status','rating'].includes(key)));
+  const latest = useRef(compact);
+  latest.current = compact;
   useEffect(() => {
     if (!focused) return;
     let start = AppState.currentState === 'active' ? Date.now() : null;
@@ -96,7 +101,7 @@ export function ratingContext(job: Session): EventContext {
     has_alpha:job.image?.hasAlpha ? 1 : 0, duration_ms:job.elapsedMs,
   };
   if(job.processingKind === 'recreate') Object.assign(context,{
-    steps:job.recreateSteps ?? 4, strength:0.6, cfg:1,
+    steps:job.recreateSteps ?? 4, strength:0.6, cfg:1, compact_profile:'compact256_sd512',
     recreate_revision:job.recreateModelRevision ?? '', prompt_present:job.recreatePrompt?.trim() ? 1 : 0,
   });
   return context;

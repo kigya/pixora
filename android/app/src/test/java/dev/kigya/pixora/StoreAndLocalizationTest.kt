@@ -7,6 +7,8 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.SharedPreferences
 import android.content.res.AssetManager
+import android.app.LocaleManager
+import android.os.LocaleList
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -79,6 +81,48 @@ class StoreAndLocalizationTest {
         assertEquals(Localizer.text(ctx,"processing"),"Processing")
         cache.remove("ru");if(original!=null)cache["ru"]=original
         ctx.getSharedPreferences("settings",0).edit().putInt("language",123).commit();assertEquals("en",Localizer.language(ctx))
+    }
+    @Test fun systemLanguageComesFromSystemLocaleManagerInsteadOfAppLocaleResources() {
+        SessionStore.init(ctx)
+        val systemLanguage = ctx.getSystemService(LocaleManager::class.java).systemLocales[0].toLanguageTag()
+        val appConfiguration = ctx.resources.configuration
+        try {
+            appConfiguration.setLocales(LocaleList.forLanguageTags("ar"))
+            ctx.resources.updateConfiguration(appConfiguration, ctx.resources.displayMetrics)
+            assertEquals(systemLanguage, SessionStore.settings(ctx).getString("systemLanguage"))
+        } finally {
+            appConfiguration.setLocales(LocaleList.getDefault())
+            ctx.resources.updateConfiguration(appConfiguration, ctx.resources.displayMetrics)
+        }
+    }
+    @Test @Config(sdk=[32]) fun preAndroid13SystemLanguageIgnoresAppCompatDefaultLocaleOverride() {
+        val systemResources = android.content.res.Resources.getSystem()
+        val originalSystemConfiguration = systemResources.configuration
+        val originalDefaultLocales = LocaleList.getDefault()
+        try {
+            val systemConfiguration = android.content.res.Configuration(originalSystemConfiguration)
+            systemConfiguration.setLocales(LocaleList.forLanguageTags("en-GB"))
+            systemResources.updateConfiguration(systemConfiguration, systemResources.displayMetrics)
+            LocaleList.setDefault(LocaleList.forLanguageTags("ar")) // AppCompat changes this global default before API 33.
+
+            assertEquals("en-GB", SessionStore.systemLanguage(ctx))
+        } finally {
+            systemResources.updateConfiguration(originalSystemConfiguration, systemResources.displayMetrics)
+            LocaleList.setDefault(originalDefaultLocales)
+        }
+    }
+    @Test fun missingLocaleManagerUsesTheSystemResourceLocaleFallback() {
+        SessionStore.init(ctx)
+        val app = ctx.applicationContext as Application
+        val shadow = org.robolectric.Shadows.shadowOf(app)
+        val manager = ctx.getSystemService(LocaleManager::class.java)
+        val expected = android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()
+        try {
+            shadow.setSystemService(Context.LOCALE_SERVICE, null)
+            assertEquals(expected, SessionStore.settings(ctx).getString("systemLanguage"))
+        } finally {
+            shadow.setSystemService(Context.LOCALE_SERVICE, manager)
+        }
     }
     @Test fun portugueseSystemFallbackUsesEnglishWhenBrazilianLocaleIsUnavailable() {
         val assets=mock(AssetManager::class.java)

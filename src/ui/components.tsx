@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,6 +6,8 @@ import {
   AccessibilityInfo,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Rect, Path } from 'react-native-svg';
+import Animated, {cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, Easing} from 'react-native-reanimated';
+import {useReduceMotion} from '../lib/kinetik/hooks/use-reduce-motion';
 import { track, type EventContext } from '../application/telemetry';
 import type { Copy } from './i18n';
 import { useTheme } from './theme';
@@ -123,44 +125,36 @@ export function Segments({
     />
   );
 }
-export function UploadArt() {
+export function UploadArt({active = true}: {active?: boolean}) {
   const { colors } = useTheme();
   const { rtl } = useLocale();
   const styles = createStyles(colors, rtl);
+  const reduced = useReduceMotion();
+  const float = useSharedValue(0);
+  useEffect(() => {
+    if (active && !reduced) float.set(withRepeat(withSequence(withTiming(1,{duration:2200,easing:Easing.inOut(Easing.sin)}),withTiming(0,{duration:2200,easing:Easing.inOut(Easing.sin)})),-1,false));
+    else {cancelAnimation(float);float.set(0);}
+    return () => cancelAnimation(float);
+  },[active,reduced,float]);
+  const motion = useAnimatedStyle(() => ({transform:[{translateY:-5*float.get()},{rotate:`${-1+2*float.get()}deg`}]}));
+  const sparkle = useAnimatedStyle(() => ({transform:[{translateY:3*float.get()},{scale:1+0.07*float.get()}]}));
   return (
-    <View style={styles.art}>
+    <View style={styles.art} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <Svg width="100%" height="100%" viewBox="0 0 320 170">
-        <Defs>
-          <LinearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#7C3AED" stopOpacity=".35" />
-            <Stop offset="1" stopColor="#22D3EE" stopOpacity=".12" />
-          </LinearGradient>
-        </Defs>
-        <Rect x="0" y="0" width="320" height="170" rx="24" fill="url(#g)" />
-        <Rect
-          x="99"
-          y="27"
-          width="122"
-          height="116"
-          rx="24"
-          fill={colors.surface}
-          stroke="#7C3AED"
-          strokeWidth="1.5"
-        />
-        <Path
-          d="M125 111l21-24 18 17 19-29 18 36 M181 62h1"
-          fill="none"
-          stroke="#A78BFA"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
+        <Defs><LinearGradient id="g" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#7C3AED" stopOpacity=".35"/><Stop offset="1" stopColor="#22D3EE" stopOpacity=".12"/></LinearGradient></Defs>
+        <Rect x="0" y="0" width="320" height="170" rx="24" fill="url(#g)"/>
       </Svg>
-      <View style={styles.spark}>
-        <Icon name="spark" color={colors.cyan} size={25} />
-      </View>
+      <Animated.View style={[StyleSheet.absoluteFill,motion]}>
+        <Svg width="100%" height="100%" viewBox="0 0 320 170">
+          <Rect x="99" y="27" width="122" height="116" rx="24" fill={colors.surface} stroke="#7C3AED" strokeWidth="1.5"/>
+          <Path d="M125 111l21-24 18 17 19-29 18 36 M181 62h1" fill="none" stroke="#A78BFA" strokeWidth="3" strokeLinecap="round"/>
+        </Svg>
+      </Animated.View>
+      <Animated.View style={[styles.spark,sparkle]}><Icon name="spark" color={colors.cyan} size={25}/></Animated.View>
     </View>
   );
 }
+
 export function Comparison({
   before,
   after,

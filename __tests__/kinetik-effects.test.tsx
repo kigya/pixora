@@ -1,11 +1,27 @@
 import React, { createRef } from 'react';
 import { act, fireEvent, render, userEvent } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { AccessibilityInfo, Text } from 'react-native';
 import { ApertureCard } from '../src/components/kinetik/aperture-card';
 import { AuroraVeil } from '../src/components/kinetik/aurora-veil';
 import { ConfettiBurst, type ConfettiHandle } from '../src/components/kinetik/confetti-burst';
 import { useShaderClock } from '../src/lib/kinetik/hooks/use-shader-clock';
+import { useReduceMotion } from '../src/lib/kinetik/hooks/use-reduce-motion';
+import { useCountUp, type CountUpOptions } from '../src/lib/kinetik/hooks/use-count-up';
 import { KinetikProvider } from '../src/lib/kinetik/tokens/theme';
+
+const mockRSXformCallbacks: Array<(value: never, index: number) => void> = [];
+jest.mock('@shopify/react-native-skia', () => {
+  const canvasKit = (globalThis as typeof globalThis & { CanvasKit: unknown }).CanvasKit;
+  const actual = require('@shopify/react-native-skia/lib/module/mock').Mock(canvasKit);
+  return {
+    ...actual,
+    useTexture: () => ({value: null, get: () => null}),
+    useRSXformBuffer: jest.fn((count: number, callback: (value: never, index: number) => void) => {
+      mockRSXformCallbacks.push(callback);
+      return actual.useRSXformBuffer(count, callback);
+    }),
+  };
+});
 
 type FrameHandle = { active: boolean; frame: (timestamp: number) => void };
 type FrameRegistry = typeof globalThis & { __pixoraFrameCallbacks?: Set<FrameHandle> };
@@ -18,9 +34,10 @@ function newFrameSince(prior: FrameHandle[]): FrameHandle {
 }
 beforeEach(() => {
   (globalThis as FrameRegistry).__pixoraFrameCallbacks?.clear();
+  mockRSXformCallbacks.length = 0;
 });
-const renderKinetik = (children: React.ReactNode, reduceMotion: 'always' | 'never' = 'never') =>
-  render(<KinetikProvider scheme="light" reduceMotion={reduceMotion} haptics={false}>{children}</KinetikProvider>);
+const renderKinetik = (children: React.ReactNode, reduceMotion: 'always' | 'never' = 'never', scheme: 'light' | 'dark' = 'light') =>
+  render(<KinetikProvider scheme={scheme} reduceMotion={reduceMotion} haptics={false}>{children}</KinetikProvider>);
 
 function ClockReadout({ running, speed = 1, frameRate = 60, start = 0 }: {
   running: boolean;
@@ -30,6 +47,15 @@ function ClockReadout({ running, speed = 1, frameRate = 60, start = 0 }: {
 }) {
   const time = useShaderClock({ running, speed, frameRate, start });
   return <Text testID="clock-time">{time.get().toFixed(3)}</Text>;
+}
+
+function MotionReadout() {
+  const reduced = useReduceMotion();
+  return <Text>{reduced ? 'Reduced motion' : 'Motion allowed'}</Text>;
+}
+
+function CountReadout({ target, options }: { target: number; options?: CountUpOptions }) {
+  return <Text testID="count-time">{useCountUp(target, options).toFixed(3)}</Text>;
 }
 
 async function advanceFrame(handle: FrameHandle, timestamp: number) {
@@ -65,6 +91,64 @@ test('useShaderClock publishes every other frame at 30 fps, applies speed, and c
   await view.rerender(<KinetikProvider scheme="light" reduceMotion="never" haptics={false}><ClockReadout running start={2} speed={2} frameRate={30} /></KinetikProvider>);
   expect(view.getByTestId('clock-time')).toHaveTextContent('2.296');
   await view.unmount();
+});
+
+test('useShaderClock defaults to 60 fps and useReduceMotion follows system changes after a settings read fails', async () => {
+  const priorFrames = frames();
+  const handle = jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockRejectedValueOnce(new Error('system setting unavailable'));
+  let reportChange: ((enabled: boolean) => void) | undefined;
+  jest.spyOn(AccessibilityInfo, 'addEventListener').mockImplementation((event, listener) => {
+    if (event === 'reduceMotionChanged') reportChange = listener as (enabled: boolean) => void;
+    return { remove: jest.fn() } as never;
+  });
+  const view = await renderKinetik(<>
+    <ClockReadout running start={1} />
+    <MotionReadout />
+  </>);
+  const frame = newFrameSince(priorFrames);
+  await advanceFrame(frame, 0);
+  await advanceFrame(frame, 16);
+  await view.rerender(
+    <KinetikProvider scheme="light" reduceMotion="system" haptics={false}>
+      <><ClockReadout running start={1} /><MotionReadout /></>
+    </KinetikProvider>,
+  );
+  expect(view.getByTestId('clock-time')).toHaveTextContent('1.032');
+  expect(handle).toHaveBeenCalledTimes(1);
+  expect(view.getByText('Motion allowed')).toBeOnTheScreen();
+  await act(async () => reportChange?.(true));
+  expect(view.getByText('Reduced motion')).toBeOnTheScreen();
+  await view.unmount();
+});
+
+test('useCountUp eases from its default start and ignores a queued frame after unmount', async () => {
+  const originalRequest = globalThis.requestAnimationFrame;
+  const originalCancel = globalThis.cancelAnimationFrame;
+  const callbacks = new Map<number, FrameRequestCallback>();
+  let nextId = 1;
+  globalThis.requestAnimationFrame = callback => {
+    const id = nextId++;
+    callbacks.set(id, callback);
+    return id;
+  };
+  globalThis.cancelAnimationFrame = id => { if (typeof id === 'number') callbacks.delete(id); };
+  const clock = jest.spyOn(Date, 'now').mockReturnValue(1_000);
+  try {
+    const view = await renderKinetik(<CountReadout target={100} />);
+    const first = callbacks.get(1);
+    expect(first).toEqual(expect.any(Function));
+    clock.mockReturnValue(1_450);
+    await act(async () => first?.(450));
+    expect(view.getByTestId('count-time')).toHaveTextContent('96.875');
+    const queuedAfterUnmount = callbacks.values().next().value as FrameRequestCallback | undefined;
+    expect(queuedAfterUnmount).toEqual(expect.any(Function));
+    await view.unmount();
+    await act(async () => queuedAfterUnmount?.(500));
+  } finally {
+    clock.mockRestore();
+    globalThis.requestAnimationFrame = originalRequest;
+    globalThis.cancelAnimationFrame = originalCancel;
+  }
 });
 
 test('AuroraVeil stops frame work for reduced motion and explicit still effects', async () => {
@@ -115,6 +199,37 @@ test('ConfettiBurst fires only on a later trigger change and reduced motion supp
   await reduced.unmount();
 });
 
+test('ConfettiBurst sends missing, ribbon, dot, and expired particles to the right atlas transforms', async () => {
+  const ref = createRef<ConfettiHandle>();
+  const view = await renderKinetik(
+    <ConfettiBurst ref={ref} count={3} power={0.8} origin={{ x: 0.25, y: 0.75 }} haptics={false}>
+      <Text>Particles</Text>
+    </ConfettiBurst>,
+  );
+  const transform = mockRSXformCallbacks.at(-1);
+  expect(transform).toEqual(expect.any(Function));
+
+  const missing = { set: jest.fn() };
+  transform!(missing as never, 0);
+  expect(missing.set).toHaveBeenCalledWith(0, 0, -100, -100);
+
+  await act(async () => ref.current?.burst({ x: 18, y: 22 }));
+  const dot = { set: jest.fn() };
+  const ribbon = { set: jest.fn() };
+  transform!(dot as never, 0);
+  transform!(ribbon as never, 1);
+  expect(dot.set).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+  expect(ribbon.set).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), expect.any(Number), expect.any(Number));
+  expect(dot.set.mock.calls[0]).not.toEqual(ribbon.set.mock.calls[0]);
+
+  const frame = newFrameSince([]);
+  for (let timestamp = 0; timestamp <= 3_200; timestamp += 50) await advanceFrame(frame, timestamp);
+  const expired = { set: jest.fn() };
+  transform!(expired as never, 0);
+  expect(expired.set).toHaveBeenCalledWith(0, 0, -100, -100);
+  await view.unmount();
+});
+
 test('ApertureCard supports controlled state, user taps, and its accessible activate action', async () => {
   const onOpenChange = jest.fn();
   const view = await renderKinetik(
@@ -163,4 +278,19 @@ test('ApertureCard uncontrolled default and toggleOnPress=false expose correct s
   const staticCard = staticView.getByTestId('static-card');
   await fireEvent(staticCard, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(onOpenChange).not.toHaveBeenCalled();
+});
+
+test('ApertureCard renders the dark, reduced-motion iris with its maximum supported blade count', async () => {
+  const view = await renderKinetik(
+    <ApertureCard testID="dark-aperture" defaultOpen accessibilityLabel="Dark result" blades={12} cover={<Text>Preview</Text>} haptics={false}>
+      <Text>Generated image</Text>
+    </ApertureCard>,
+    'always',
+    'dark',
+  );
+  const card = view.getByTestId('dark-aperture');
+  expect(card.props.accessibilityState.expanded).toBe(true);
+  expect(view.getByText('Generated image')).toBeOnTheScreen();
+  expect(view.getByText('Preview')).toBeOnTheScreen();
+  await view.unmount();
 });

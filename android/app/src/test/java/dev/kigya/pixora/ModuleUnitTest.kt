@@ -52,6 +52,8 @@ class ModuleUnitTest {
     private var modelFailure:Throwable?=null
     private var resets=0
     private var cancels=0
+    private lateinit var recreateExecutor:QueuedExecutor
+    private lateinit var recreateForeground:FakeRecreateDownloadForeground
     class BoundaryContext(context:Context):BridgeReactContext(context) {
         var rejectService=false;var rejectActivity=false;var active=false
         var rejectSettingsWrite=false
@@ -80,6 +82,21 @@ class ModuleUnitTest {
         var callback:PermissionListener?=null
         override fun requestPermissions(permissions:Array<String>,requestCode:Int,listener:PermissionListener?){callback=listener}
     }
+    private class QueuedExecutor:java.util.concurrent.Executor {
+        val tasks=mutableListOf<Runnable>()
+        var rejectWith:RuntimeException?=null
+        override fun execute(command:Runnable){rejectWith?.let{throw it};tasks.add(command)}
+        fun runNext(){tasks.removeAt(0).run()}
+    }
+    private class FakeRecreateDownloadForeground:RecreateDownloadForeground {
+        var starts=0;var finishes=0;var updates=0;var cancelling=0
+        var startFailure:RuntimeException?=null
+        var cancel:()->Unit={};var started:()->Unit={};var failed:(String)->Unit={_ -> Unit}
+        override fun start(context:Context,cancel:()->Unit,started:()->Unit,failed:(String)->Unit){starts++;this.cancel=cancel;this.started=started;this.failed=failed;startFailure?.let{throw it}}
+        override fun update(context:Context,state:JSONObject){updates++}
+        override fun showCancelling(context:Context){cancelling++}
+        override fun finish(context:Context){finishes++}
+    }
     private class Reply {
         val latch=CountDownLatch(1);var value:Any?=null;var error:String?=null
         val promise=Proxy.newProxyInstance(Promise::class.java.classLoader,arrayOf(Promise::class.java)){_,method,args ->
@@ -102,7 +119,8 @@ class ModuleUnitTest {
         memory(4L*1024*1024*1024)
         ReflectionHelpers.setStaticField(Build::class.java,"SUPPORTED_ABIS",arrayOf("arm64-v8a"))
         react=BoundaryContext(ctx)
-        module=UpscaleModule(react,javaBridge,ModelVerifier{modelFailure?.let{throw it};valid},object:JobControl {override fun reset(){resets++};override fun cancel(){cancels++}},feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),recreateDownloadIo=java.util.concurrent.Executor { })
+        recreateExecutor=QueuedExecutor();recreateForeground=FakeRecreateDownloadForeground()
+        module=UpscaleModule(react,javaBridge,ModelVerifier{modelFailure?.let{throw it};valid},object:JobControl {override fun reset(){resets++};override fun cancel(){cancels++}},feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),recreateDownloadIo=recreateExecutor,recreateDownloadForeground=recreateForeground)
     }
     private fun memory(bytes:Long){Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(ActivityManager.MemoryInfo().apply{totalMem=bytes})}
     private fun resetStore(){for(name in listOf("context","journal"))SessionStore::class.java.getDeclaredField(name).apply{isAccessible=true}.set(SessionStore,null);SessionStore.listeners.clear();SessionStore.workerAlive=false;SessionStore.serviceAlive=false;WindowLayout.listeners.clear()}
@@ -120,16 +138,313 @@ class ModuleUnitTest {
         SessionStore.update{it.put("state","RUNNING")}
         fails("BUSY",module::clearCache)
     }
+    @Test fun clearCacheTreatsAnAlreadyAbsentCacheAsSuccessful() {
+        val session=File(ctx.filesDir,"sessions/keep/result.png").apply{parentFile!!.mkdirs();writeText("session")}
+        ctx.cacheDir.deleteRecursively()
+
+        assertEquals(0.0,call(module::clearCache))
+        assertTrue(session.exists())
+    }
     @Test fun recreateBridgeStateDeleteCancelDownloadAndNoticeStayOfflineAndIdleOnly() {
         assertEquals("absent", (call(module::getRecreateModelState) as ReadableMap).getString("state"))
-        assertEquals("absent", (call(module::downloadRecreateModel) as ReadableMap).getString("state"))
-        assertEquals("absent", (call(module::cancelRecreateDownload) as ReadableMap).getString("state"))
+        val initial=call(module::downloadRecreateModel) as ReadableMap
+        assertEquals("downloading",initial.getString("state"));assertEquals(1,recreateForeground.starts)
+        assertEquals("downloading",(call(module::downloadRecreateModel) as ReadableMap).getString("state"))
+        assertEquals(1,recreateForeground.starts);assertTrue(recreateExecutor.tasks.isEmpty())
+        org.robolectric.shadows.ShadowStatFs.registerStats(ctx.filesDir.path,10_000_000,4_096,10_000_000)
+        call(module::cancelRecreateDownload)
+        assertEquals(1,recreateForeground.cancelling)
+        recreateForeground.started()
+        assertEquals(1,recreateExecutor.tasks.size)
+        recreateExecutor.runNext()
+        val paused=call(module::getRecreateModelState) as ReadableMap
+        assertEquals("paused",paused.getString("state"));assertEquals(1,recreateForeground.finishes)
         assertEquals("absent", (call(module::deleteRecreateModel) as ReadableMap).getString("state"))
         val settings = call(module::markAiDetailNoticeSeen) as ReadableMap
         assertTrue(settings.getBoolean("aiDetailNoticeSeen"))
         SessionStore.update { it.put("state", "RUNNING") }
         fails("BUSY", module::downloadRecreateModel)
         fails("BUSY", module::deleteRecreateModel)
+    }
+    @Test fun recreateJobRejectsUnsupportedScaleAndUnavailableOptionalModelBeforeStartingWork() {
+        fails("INFERENCE_FAILED") { module.startRecreateJob("missing-image", 1.0, "fast", "private prompt", true, it) }
+        fails("INFERENCE_FAILED") { module.startRecreateJob("missing-image", 2.0, "turbo", "private prompt", true, it) }
+        fails("RECREATE_MODEL_MISSING") { module.startRecreateJob("missing-image", 2.0, "fast", "private prompt", true, it) }
+        assertTrue(recreateExecutor.tasks.isEmpty())
+        assertEquals(0, recreateForeground.starts)
+        assertEquals("EMPTY", SessionStore.snapshot().optString("state"))
+    }
+    @Test fun recreateJobRequiresExplicitPreparationConfirmationForPreparedInputs() {
+        val id=image()
+        SessionStore.update { it.getJSONObject("image").put("needsPreparation", true) }
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.isReady()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react,
+                javaBridge,
+                ModelVerifier { true },
+                object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=QueuedExecutor(),
+                recreateDownloadForeground=FakeRecreateDownloadForeground(),
+            )
+            try {
+                fails("PREPARATION_REQUIRED") {
+                    additional.startRecreateJob(id, 2.0, "quality", "a short prompt", false, it)
+                }
+                assertEquals(1, mocked.constructed().size)
+                org.mockito.Mockito.verify(mocked.constructed().single()).verifyInstalled()
+                assertTrue(recreateExecutor.tasks.isEmpty())
+                assertEquals("READY", SessionStore.snapshot().getString("state"))
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun recreateJobRejectsInsufficientHeadroomBeforeOpeningTheProcessingService() {
+        val id=image()
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.isReady()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=QueuedExecutor(), recreateDownloadForeground=FakeRecreateDownloadForeground(),
+            )
+            try {
+                Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(
+                    ActivityManager.MemoryInfo().apply { totalMem=4L*1024*1024*1024; availMem=1024L*1024*1024 },
+                )
+                fails("LOW_MEMORY") { additional.startRecreateJob(id, 2.0, "fast", "", true, it) }
+                assertEquals(1, mocked.constructed().size)
+                org.mockito.Mockito.verify(mocked.constructed().single()).verifyInstalled()
+                assertEquals("READY", SessionStore.snapshot().getString("state"))
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun recreateJobRejectsInsufficientDiskReserveBeforeAllocatingGenerationOutput() {
+        val id=image()
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.isReady()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=QueuedExecutor(), recreateDownloadForeground=FakeRecreateDownloadForeground(),
+            )
+            try {
+                Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(
+                    ActivityManager.MemoryInfo().apply { totalMem=4L*1024*1024*1024; availMem=4L*1024*1024*1024 },
+                )
+                org.robolectric.shadows.ShadowStatFs.registerStats(ctx.filesDir.path,1,0,0)
+                fails("LOW_STORAGE") { additional.startRecreateJob(id, 4.0, "quality", "", true, it) }
+                assertEquals(1, mocked.constructed().size)
+                org.mockito.Mockito.verify(mocked.constructed().single()).verifyInstalled()
+                assertEquals("READY", SessionStore.snapshot().getString("state"))
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun recreateJobRequiresAnActiveActivityBeforeCreatingTheProcessingService() {
+        val id=image()
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.isReady()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=QueuedExecutor(), recreateDownloadForeground=FakeRecreateDownloadForeground(),
+            )
+            try {
+                assertNull("the service launch guard is specifically the missing-Activity path",react.currentActivity)
+                org.robolectric.shadows.ShadowStatFs.registerStats(ctx.filesDir.path,1_000_000,4_096,1_000_000)
+                Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(
+                    ActivityManager.MemoryInfo().apply { totalMem=4L*1024*1024*1024; availMem=4L*1024*1024*1024 },
+                )
+                fails("SERVICE_START_FAILED") { additional.startRecreateJob(id,2.0,"quality","",true,it) }
+                assertEquals("READY",SessionStore.snapshot().getString("state"))
+                assertTrue("a failed preflight must not enqueue service work",recreateExecutor.tasks.isEmpty())
+                org.mockito.Mockito.verify(mocked.constructed().single()).verifyInstalled()
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun recreateJobRejectsFinishingAndDestroyedCurrentActivities() {
+        val id=image()
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.isReady()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.verifyInstalled()).thenReturn(true)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=QueuedExecutor(), recreateDownloadForeground=FakeRecreateDownloadForeground(),
+            )
+            try {
+                org.robolectric.shadows.ShadowStatFs.registerStats(ctx.filesDir.path,1_000_000,4_096,1_000_000)
+                Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(
+                    ActivityManager.MemoryInfo().apply { totalMem=4L*1024*1024*1024; availMem=4L*1024*1024*1024 },
+                )
+                for (destroy in listOf(false,true)) {
+                    val controller=Robolectric.buildActivity(Activity::class.java).setup()
+                    val activity=controller.get()
+                    if (destroy) controller.destroy() else activity.finish()
+                    react.onHostResume(activity)
+                    if (destroy) assertTrue(activity.isDestroyed) else assertTrue(activity.isFinishing)
+                    fails("SERVICE_START_FAILED") { additional.startRecreateJob(id,2.0,"quality","",true,it) }
+                    assertEquals("READY",SessionStore.snapshot().getString("state"))
+                    if (!destroy) controller.destroy()
+                }
+                assertEquals(1,mocked.constructed().size)
+                assertTrue(recreateExecutor.tasks.isEmpty())
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun recreateForegroundFailureReleasesReservationWithoutLeakingPlatformError() {
+        Telemetry.init(ctx, object : TelemetrySink {
+            override fun configure(analytics:Boolean, crashes:Boolean) {}
+            override fun log(name:String, parameters:android.os.Bundle) {}
+        })
+        call(module::downloadRecreateModel)
+        recreateForeground.failed("permission denied: /private/model")
+        val state=call(module::getRecreateModelState) as ReadableMap
+        assertEquals("failed",state.getString("state"))
+        assertEquals("SERVICE_START_FAILED",state.getString("error"))
+        assertEquals(1,recreateForeground.finishes)
+        assertTrue(recreateExecutor.tasks.isEmpty())
+        assertFalse(state.getString("error").orEmpty().contains("private"))
+        assertEquals("absent",(call(module::deleteRecreateModel) as ReadableMap).getString("state"))
+        for(name in listOf("context","sink")) Telemetry::class.java.getDeclaredField(name).apply{isAccessible=true}.set(Telemetry,null)
+    }
+    @Test fun thrownForegroundDispatcherFailureReleasesReservationWithSafeError() {
+        recreateForeground.startFailure=SecurityException("private service permission detail")
+
+        val initial=call(module::downloadRecreateModel) as ReadableMap
+        val result=call(module::getRecreateModelState) as ReadableMap
+
+        assertEquals("failed",initial.getString("state"))
+        assertEquals("failed",result.getString("state"))
+        assertEquals("SERVICE_START_FAILED",result.getString("error"))
+        assertEquals(1,recreateForeground.finishes)
+        assertTrue(recreateExecutor.tasks.isEmpty())
+        assertFalse(result.getString("error").orEmpty().contains("private"))
+    }
+    @Test fun workerQueueRejectionFinishesTheReservedDownloadWithSafeError() {
+        recreateExecutor.rejectWith=IllegalStateException("private executor detail")
+
+        call(module::downloadRecreateModel)
+        recreateForeground.started()
+        val result=call(module::getRecreateModelState) as ReadableMap
+
+        assertEquals("failed",result.getString("state"))
+        assertEquals("MODEL_DOWNLOAD_FAILED",result.getString("error"))
+        assertEquals(1,recreateForeground.finishes)
+        assertTrue(recreateExecutor.tasks.isEmpty())
+        assertFalse(result.getString("error").orEmpty().contains("private"))
+    }
+    @Test fun completedDownloadFinishesOnceAndReportsReadyState() {
+        val telemetry=object:TelemetrySink {
+            val events=mutableListOf<Pair<String,android.os.Bundle>>()
+            override fun configure(analytics:Boolean,crashes:Boolean) {}
+            override fun log(name:String,parameters:android.os.Bundle){events.add(name to parameters)}
+        }
+        Telemetry.init(ctx,telemetry)
+        Telemetry.update(true,true,true)
+        val downloading=JSONObject().put("state","downloading").put("error","")
+            .put("downloadedBytes",1_024).put("totalBytes",RecreateModelStore.TOTAL).put("installedBytes",0)
+        val ready=JSONObject().put("state","ready").put("error","")
+            .put("downloadedBytes",RecreateModelStore.TOTAL).put("totalBytes",RecreateModelStore.TOTAL).put("installedBytes",RecreateModelStore.TOTAL)
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.reserveDownload()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.snapshot()).thenReturn(downloading,downloading,ready,ready)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=recreateExecutor, recreateDownloadForeground=recreateForeground,
+            )
+            try {
+                assertEquals("downloading",(call(additional::downloadRecreateModel) as ReadableMap).getString("state"))
+                recreateForeground.started()
+                assertEquals(1,recreateExecutor.tasks.size)
+                recreateExecutor.runNext()
+                assertEquals(1,recreateForeground.finishes)
+                assertEquals("ready",(call(additional::getRecreateModelState) as ReadableMap).getString("state"))
+                recreateForeground.failed("late failure callback")
+                assertEquals(1,recreateForeground.finishes)
+                assertEquals("ready",(call(additional::getRecreateModelState) as ReadableMap).getString("state"))
+                org.mockito.Mockito.verify(mocked.constructed().single()).downloadReserved()
+                assertEquals(listOf("recreate_model_download_started","recreate_model_download_finished"),telemetry.events.map{it.first})
+                val started=telemetry.events[0].second
+                val finished=telemetry.events[1].second
+                assertTrue(started.getString("attempt_token").orEmpty().isNotBlank())
+                assertEquals(started.getString("attempt_token"),finished.getString("attempt_token"))
+                assertEquals(RecreateModelStore.REVISION,started.getString("model_version"))
+                assertEquals("recreate",finished.getString("processing_kind"))
+                assertEquals(1_024.0,started.getDouble("downloaded_bytes"),0.0)
+                assertEquals(RecreateModelStore.TOTAL.toDouble(),finished.getDouble("installed_bytes"),0.0)
+                assertTrue(finished.getDouble("duration_ms")>=0.0)
+                assertTrue(finished.size()<=25)
+            } finally {
+                additional.invalidate()
+                for(name in listOf("context","sink")) Telemetry::class.java.getDeclaredField(name).apply{isAccessible=true}.set(Telemetry,null)
+            }
+        }
+    }
+    @Test fun workerFailureIsSanitizedAndAlwaysFinishesTheDownload() {
+        val downloading=JSONObject().put("state","downloading").put("error","")
+        val failed=JSONObject().put("state","failed").put("error","MODEL_DOWNLOAD_FAILED")
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.reserveDownload()).thenReturn(true)
+            org.mockito.Mockito.`when`(store.snapshot()).thenReturn(downloading,failed,failed)
+            org.mockito.Mockito.doThrow(IllegalStateException("private filesystem path" )).`when`(store).downloadReserved()
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=recreateExecutor, recreateDownloadForeground=recreateForeground,
+            )
+            try {
+                call(additional::downloadRecreateModel)
+                recreateForeground.started()
+                recreateExecutor.runNext()
+                val state=call(additional::getRecreateModelState) as ReadableMap
+                assertEquals("failed",state.getString("state"))
+                assertEquals("MODEL_DOWNLOAD_FAILED",state.getString("error"))
+                assertFalse(state.getString("error").orEmpty().contains("private"))
+                assertEquals(1,recreateForeground.finishes)
+                org.mockito.Mockito.verify(mocked.constructed().single()).failReserved("MODEL_DOWNLOAD_FAILED")
+            } finally { additional.invalidate() }
+        }
+    }
+    @Test fun rejectedDownloadReservationCanBeRetriedWithoutStartingTwoServices() {
+        val downloading=JSONObject().put("state","downloading").put("error","")
+        val construction=org.mockito.Mockito.mockConstruction(RecreateModelStore::class.java) { store, _ ->
+            org.mockito.Mockito.`when`(store.reserveDownload()).thenReturn(false,true)
+            org.mockito.Mockito.`when`(store.snapshot()).thenReturn(downloading)
+        }
+        construction.use { mocked ->
+            val additional=UpscaleModule(
+                react, javaBridge, ModelVerifier { true }, object:JobControl { override fun reset(){}; override fun cancel(){} },
+                feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),
+                recreateDownloadIo=recreateExecutor, recreateDownloadForeground=recreateForeground,
+            )
+            try {
+                assertEquals("downloading",(call(additional::downloadRecreateModel) as ReadableMap).getString("state"))
+                assertEquals(0,recreateForeground.starts)
+                assertEquals("downloading",(call(additional::downloadRecreateModel) as ReadableMap).getString("state"))
+                assertEquals(1,recreateForeground.starts)
+                org.mockito.Mockito.verify(mocked.constructed().single(),org.mockito.Mockito.times(2)).reserveDownload()
+            } finally { additional.invalidate() }
+        }
     }
     @Test fun reviewPromptWriteFailureDoesNotReserveTheJob() {
         image(); SessionStore.update { it.put("jobId", "review-write").put("state", "SUCCEEDED") }
@@ -139,6 +454,14 @@ class ModuleUnitTest {
         assertEquals(true, call { module.claimReviewPrompt("review-write", it) })
         assertEquals(true, call { module.markReviewPromptShown("review-write", it) })
         assertEquals(false, call { module.claimReviewPrompt("review-write", it) })
+    }
+    @Test fun aiDetailNoticeIsNotReportedSeenWhenSettingsWriteFails() {
+        react.rejectSettingsWrite = true
+
+        fails("INFERENCE_FAILED", module::markAiDetailNoticeSeen)
+
+        react.rejectSettingsWrite = false
+        assertFalse(ctx.getSharedPreferences("settings",Context.MODE_PRIVATE).getBoolean("aiDetailNoticeSeen",false))
     }
     @Test fun storageUsageReportsDisjointManagedCategoriesAndRealFilesystemSpace() {
         val payload=ByteArray(17){it.toByte()}
@@ -173,6 +496,15 @@ class ModuleUnitTest {
         fails("FEEDBACK_INVALID"){module.submitResultRating("rated-job",3.5,it)}
         fails("FEEDBACK_INVALID"){module.submitResultRating("rated-job",6.0,it)}
         fails("SOURCE_UNAVAILABLE"){module.submitResultRating("another-job",3.0,it)}
+    }
+    @Test fun recommendationContextAcceptsAnExplicitNoSuggestion() {
+        image();SessionStore.update{it.put("jobId","no-suggestion-job").put("state","RUNNING")}
+
+        val context=call{module.setRecommendationContext("no-suggestion-job","",false,it)} as ReadableMap
+
+        assertEquals("",context.getString("recommendedProfile"))
+        assertFalse(context.getBoolean("recommendationApplied"))
+        assertEquals("",(call{module.setRecommendationContext("no-suggestion-job","",false,it)} as ReadableMap).getString("recommendedProfile"))
     }
     private fun image():String {
         val b=Bitmap.createBitmap(8,8,Bitmap.Config.ARGB_8888)
@@ -325,6 +657,7 @@ class ModuleUnitTest {
         assertEquals(Intent.ACTION_VIEW,intent.action)
         assertTrue(intent.dataString!!.startsWith("market://details?id=") || intent.dataString!!.startsWith("https://play.google.com/store/apps/details?id="))
         if(intent.dataString!!.startsWith("market://"))assertEquals("com.android.vending",intent.`package`)
+        assertEquals(true,call(module::requestReview))
         react.rejectActivity=true
         assertEquals(false,call(module::openStoreReview))
     }

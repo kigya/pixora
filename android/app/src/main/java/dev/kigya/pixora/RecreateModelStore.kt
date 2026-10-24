@@ -5,6 +5,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
@@ -16,6 +17,8 @@ class RecreateModelStore internal constructor(
     private val changed: (JSONObject) -> Unit,
     private val assets: List<Asset>,
     private val openConnection: (URL) -> HttpURLConnection,
+    private val openOutput: (File, Boolean) -> FileOutputStream = { file, append -> FileOutputStream(file, append) },
+    private val openHashInput: (File) -> InputStream = ::FileInputStream,
     private val availableBytes: () -> Long,
 ) {
     data class Asset(val name: String, val url: String, val size: Long, val sha256: String)
@@ -31,6 +34,8 @@ class RecreateModelStore internal constructor(
     constructor(context: Context, changed: (JSONObject) -> Unit) : this(
         context, changed, ASSETS,
         { url -> url.openConnection() as HttpURLConnection },
+        { file, append -> FileOutputStream(file, append) },
+        ::FileInputStream,
         { android.os.StatFs(context.filesDir.path).availableBytes },
     )
 
@@ -67,19 +72,39 @@ class RecreateModelStore internal constructor(
 
     @Synchronized fun snapshot(): JSONObject {
         val ready = isReady()
-        if (ready) { state = "ready"; error = "" }
-        val downloaded = assets.sumOf { File(directory, it.name).takeIf(File::isFile)?.length() ?: File(directory, "${it.name}.part").length() }
-        val installed = assets.sumOf { File(directory, it.name).takeIf(File::isFile)?.length() ?: 0L }
-        if (!ready && (state == "ready" || state == "absent" && downloaded > 0L))
+        // Keep active verification observable until the worker has completed its final checks.
+        if (ready && !running.get()) { state = "ready"; error = "" }
+        val downloaded = assets.sumOf { asset ->
+            val installedFile = File(directory, asset.name)
+            val partialFile = File(directory, "${asset.name}.part")
+            maxOf(installedFile.takeIf(File::isFile)?.length() ?: 0L, partialFile.takeIf(File::isFile)?.length() ?: 0L)
+        }
+        val installed = assets.sumOf { asset ->
+            val file = File(directory, asset.name)
+            if (file.isFile && file.length() == asset.size && preferences.getString(asset.name, null) == asset.sha256) asset.size else 0L
+        }
+        if (!ready && (state == "ready" || state == "absent" && downloaded > 0L || state == "downloading" && !running.get()))
             state = if (downloaded > 0L) "paused" else "absent"
         return JSONObject().put("state", state).put("downloadedBytes", downloaded).put("totalBytes", assets.sumOf(Asset::size))
             .put("installedBytes", installed).put("error", error)
     }
 
-    fun download() {
-        if (!running.compareAndSet(false, true)) return
+    /** Atomically reserve the one optional transfer before a service/executor is dispatched. */
+    @Synchronized fun reserveDownload(): Boolean {
+        if (!running.compareAndSet(false, true)) return false
         cancelled.set(false)
         state = "downloading"; error = ""; notifyChanged()
+        return true
+    }
+
+    /** Direct helper for store tests and non-service callers. App UI uses reserve + foreground service. */
+    fun download() {
+        if (reserveDownload()) downloadReserved()
+    }
+
+    /** Runs only after the service has entered foreground; preserves cancellation before dispatch. */
+    fun downloadReserved() {
+        if (!running.get()) return
         try {
             val remaining = assets.sumOf { asset ->
                 val installed = File(directory, asset.name).takeIf(File::isFile)?.length() ?: 0L
@@ -91,8 +116,11 @@ class RecreateModelStore internal constructor(
                 if (cancelled.get()) throw AppFailure("CANCELLED")
                 val target = File(directory, asset.name)
                 if (target.isFile && target.length() == asset.size && preferences.getString(asset.name, null) == asset.sha256) continue
-                if (target.isFile && target.length() == asset.size && sha256(target) == asset.sha256) {
-                    check(preferences.edit().putString(asset.name, asset.sha256).commit()) { throw AppFailure("LOW_STORAGE") }
+                if (target.isFile && target.length() == asset.size && sha256(target, stopWhenCancelled = true) == asset.sha256) {
+                    synchronized(this) {
+                        if (cancelled.get()) throw AppFailure("CANCELLED")
+                        if (!preferences.edit().putString(asset.name, asset.sha256).commit()) throw AppFailure("LOW_STORAGE")
+                    }
                     continue
                 }
                 if (target.exists()) target.delete()
@@ -111,7 +139,14 @@ class RecreateModelStore internal constructor(
         } finally { active?.disconnect(); active = null; running.set(false); notifyChanged() }
     }
 
-    fun cancel() { cancelled.set(true); active?.disconnect() }
+    @Synchronized fun failReserved(code: String) {
+        if (!running.compareAndSet(true, false)) return
+        state = "failed"
+        error = code
+        notifyChanged()
+    }
+
+    @Synchronized fun cancel() { cancelled.set(true); active?.disconnect() }
 
     @Synchronized fun delete() {
         if (running.get() || state == "downloading" || state == "verifying") throw AppFailure("BUSY")
@@ -131,7 +166,8 @@ class RecreateModelStore internal constructor(
         var offset = part.takeIf(File::exists)?.length() ?: 0L
         if (offset > asset.size) { part.delete(); offset = 0L }
         if (offset == asset.size) {
-            if (sha256(part) == asset.sha256) { installVerified(asset, part); return }
+            if (cancelled.get()) throw AppFailure("CANCELLED")
+            if (sha256(part, stopWhenCancelled = true) == asset.sha256) { installVerified(asset, part); return }
             part.delete(); offset = 0L
         }
         if (availableBytes() < asset.size - offset + 64L * 1024 * 1024) throw AppFailure("LOW_STORAGE")
@@ -153,35 +189,69 @@ class RecreateModelStore internal constructor(
                 }
             }
             var written = offset
-            connection.inputStream.use { input -> FileOutputStream(part, offset > 0).use { output ->
+            connection.inputStream.use { input ->
+                val output = try { openOutput(part, offset > 0) }
+                catch (failure: java.io.IOException) { throw storageOrIoFailure(failure) }
+                output.use {
                 val buffer = ByteArray(256 * 1024)
                 try {
                     while (true) {
                         if (cancelled.get()) throw AppFailure("CANCELLED")
                         val count = input.read(buffer); if (count < 0) break
                         if (written + count > asset.size) throw AppFailure("MODEL_INTEGRITY_FAILED")
-                        output.write(buffer, 0, count); written += count
+                        try { output.write(buffer, 0, count) }
+                        catch (failure: java.io.IOException) { throw storageOrIoFailure(failure) }
+                        written += count
                         if (written % (8L * 1024 * 1024) < count) notifyChanged()
                     }
-                } finally { output.flush(); output.fd.sync() }
-            } }
+                } finally {
+                    try { output.flush(); output.fd.sync() }
+                    catch (failure: java.io.IOException) { throw storageOrIoFailure(failure) }
+                }
+                }
+            }
             if (written != asset.size) throw AppFailure("MODEL_DOWNLOAD_FAILED")
-            if (sha256(part) != asset.sha256) { part.delete(); throw AppFailure("MODEL_INTEGRITY_FAILED") }
+            if (sha256(part, stopWhenCancelled = true) != asset.sha256) { part.delete(); throw AppFailure("MODEL_INTEGRITY_FAILED") }
             installVerified(asset, part)
         } finally { connection.disconnect(); active = null }
     }
 
-    private fun installVerified(asset: Asset, part: File) {
+    /** Cancellation and promotion share a short lock so a cancel either wins before promotion or
+     * observes an already-committed atomic rename; it can never report a canceled download that
+     * subsequently installs its model. */
+    @Synchronized private fun installVerified(asset: Asset, part: File) {
+        if (cancelled.get()) throw AppFailure("CANCELLED")
         val target = File(directory, asset.name)
         if (target.exists() && !target.delete()) throw AppFailure("LOW_STORAGE")
+        if (cancelled.get()) throw AppFailure("CANCELLED")
         if (!part.renameTo(target)) throw AppFailure("LOW_STORAGE")
         if (!preferences.edit().putString(asset.name, asset.sha256).commit()) throw AppFailure("LOW_STORAGE")
     }
 
     private fun notifyChanged() { try { changed(snapshot()) } catch (_: Exception) {} }
-    private fun sha256(file: File): String {
+    private fun storageOrIoFailure(failure: java.io.IOException): Throwable {
+        var cause: Throwable? = failure
+        val visited = java.util.Collections.newSetFromMap(java.util.IdentityHashMap<Throwable, Boolean>())
+        while (cause != null && visited.add(cause)) {
+            if (cause is android.system.ErrnoException &&
+                (cause.errno == android.system.OsConstants.ENOSPC || cause.errno == android.system.OsConstants.EDQUOT))
+                return AppFailure("LOW_STORAGE")
+            cause = cause.cause
+        }
+        return failure
+    }
+    private fun sha256(file: File, stopWhenCancelled: Boolean = false): String {
         val digest = MessageDigest.getInstance("SHA-256")
-        FileInputStream(file).use { input -> val buffer = ByteArray(1024 * 1024); while (true) { val count=input.read(buffer); if(count<0)break;digest.update(buffer,0,count) } }
+        openHashInput(file).use { input ->
+            val buffer = ByteArray(1024 * 1024)
+            while (true) {
+                if (stopWhenCancelled && cancelled.get()) throw AppFailure("CANCELLED")
+                val count = input.read(buffer)
+                if (stopWhenCancelled && cancelled.get()) throw AppFailure("CANCELLED")
+                if (count < 0) break
+                digest.update(buffer, 0, count)
+            }
+        }
         return digest.digest().joinToString("") { "%02x".format(it) }
     }
 }

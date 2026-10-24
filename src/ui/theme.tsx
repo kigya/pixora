@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { KinetikProvider } from '../lib/kinetik/tokens/theme';
 export const darkColors = {
@@ -44,10 +44,11 @@ function blend(from: string, to: string, amount: number): string {
 }
 
 /** One palette transition drives app-owned and copied Kinetik controls together. */
-export function PixoraThemeProvider({dark, children}: {dark: boolean; children: React.ReactNode}) {
+export function PixoraThemeProvider({dark, resolved = true, children}: {dark: boolean; resolved?: boolean; children: React.ReactNode}) {
   const target = dark ? darkColors : lightColors;
   const [colors, setColors] = useState<Colors>(target);
   const previous = useRef<Colors>(target);
+  const hasResolvedTheme = useRef(false);
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
     let mounted = true;
@@ -55,8 +56,13 @@ export function PixoraThemeProvider({dark, children}: {dark: boolean; children: 
     const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduced);
     return () => {mounted = false; listener.remove();};
   }, []);
-  useEffect(() => {
-    if (reduced) {previous.current = target; setColors(target); return;}
+  useLayoutEffect(() => {
+    if (!resolved || !hasResolvedTheme.current || reduced) {
+      previous.current = target;
+      setColors(target);
+      if (resolved) hasResolvedTheme.current = true;
+      return;
+    }
     if (previous.current === target) return;
     const from = previous.current;
     let frame = 0;
@@ -74,7 +80,7 @@ export function PixoraThemeProvider({dark, children}: {dark: boolean; children: 
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [target, reduced]);
+  }, [target, reduced, resolved]);
   return <ThemeContext.Provider value={{colors, dark}}>
     <KinetikProvider scheme={dark ? 'dark' : 'light'} colors={{
       background: colors.bg, surface: colors.surface, surfaceRaised: colors.raised,

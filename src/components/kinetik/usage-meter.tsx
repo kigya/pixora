@@ -13,7 +13,7 @@ import { useReduceMotion } from '../../lib/kinetik/hooks/use-reduce-motion';
 import { spring } from '../../lib/kinetik/motion/motion';
 import { useKinetikTheme } from '../../lib/kinetik/tokens/theme';
 
-export type UsageSegment = { label: string; value: number };
+export type UsageSegment = { label: string; value: number; displayValue?: string };
 
 export type UsageMeterProps = {
   /** What fills the allowance, in the same unit as `total`. */
@@ -99,7 +99,7 @@ export function UsageMeter({
         max: total,
         now: Math.min(used, total),
         text: `${breakdown ? `${formatValue(used)}${u}` : `${formatValue(used)} of ${formatValue(total)}${u} used, ${leftText}`}. ${segments
-          .map((s) => `${s.label} ${formatValue(s.value)}${u}`)
+          .map((s) => `${s.label} ${s.displayValue ?? `${formatValue(s.value)}${u}`}`)
           .join(', ')}`,
       }}
       style={[{ gap: space[3] }, style]}
@@ -162,8 +162,7 @@ export function UsageMeter({
                   fontVariant: ['tabular-nums'],
                 }}
               >
-                {formatValue(s.value)}
-                {u}
+                {s.displayValue ?? `${formatValue(s.value)}${u}`}
               </Text>
             </View>
           ))}

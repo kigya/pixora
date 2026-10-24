@@ -9,6 +9,15 @@ import androidx.core.app.ServiceCompat
 import java.util.concurrent.Executors
 
 class ProcessingService : Service() {
+    internal companion object {
+        const val ENHANCE_TIMEOUT_MS = 30L * 60 * 1000
+        const val RECREATE_TIMEOUT_MS = 45L * 60 * 1000
+        const val WAKE_LOCK_GRACE_MS = 30L * 1000
+
+        fun timeoutFor(processingKind: String): Long =
+            if (processingKind == "recreate") RECREATE_TIMEOUT_MS else ENHANCE_TIMEOUT_MS
+    }
+
     internal var executor:java.util.concurrent.ExecutorService=Executors.newSingleThreadExecutor()
     internal var control:JobControl=NativeJobControl
     internal var runWork:(android.content.Context,(Boolean)->Unit,()->Boolean)->Unit={context,notice,timeout->ImageProcessor(context,notice,timeout).process()}
@@ -28,12 +37,13 @@ class ProcessingService : Service() {
         if(intent?.action!="PROCESS" || SessionStore.workerAlive) { if(!SessionStore.workerAlive) stopSelf(); return START_NOT_STICKY }
         SessionStore.workerAlive=true
         try {
+            val timeoutMs=timeoutFor(SessionStore.snapshot().optString("processingKind"))
             createChannel()
             val type=if(Build.VERSION.SDK_INT>=35) ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING else ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             // minSdk29 supports the platform overload. ServiceCompat masks newer types.
             startForeground(1001,notification(),type)
-            wake=(getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"UpscaleImage:inference").apply{acquire(1_830_000)}
-            handler.postDelayed(deadline,1_800_000)
+            wake=(getSystemService(POWER_SERVICE) as PowerManager).newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"UpscaleImage:inference").apply{acquire(timeoutMs+WAKE_LOCK_GRACE_MS)}
+            handler.postDelayed(deadline,timeoutMs)
             executor.execute {
                 try { runWork(applicationContext, {force -> notice(force)}, {timeLimit}) }
                 finally { handler.post { finish() } }

@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU를 사용할 수 없어 CPU로 계속 처리합니다.",
     "INFERENCE_FAILED": "처리에 실패했습니다. 다시 시도하거나 다른 파일을 선택하세요.",
     "SERVICE_START_FAILED": "처리를 시작하지 못했습니다. 앱으로 돌아와 다시 시도하세요.",
-    "TIME_LIMIT": "처리 시간 한도인 30분에 도달했습니다. 다시 시도할 수 있습니다.",
+    "TIME_LIMIT": "처리 시간 한도인 {minutes}분에 도달했습니다. 다시 시도할 수 있습니다.",
     "INTERRUPTED": "처리가 중단되었습니다. 다시 시작하세요.",
     "EXPORT_FAILED": "파일을 저장하거나 열지 못했습니다. 결과는 앱에 남아 있습니다.",
     "SHARE_FAILED": "파일을 공유하지 못했습니다. 결과는 앱에 남아 있습니다.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "저장 공간이 부족합니다.",
     "notEnoughMemory": "메모리가 부족합니다. 다른 앱을 닫고 다시 시도하세요.",
     "licenses": "라이선스",
-    "languageSearch": "언어"
+    "languageSearch": "언어",
+    "notificationBody": "Pixora가 백그라운드에 있을 때도 다운로드 진행 상황을 확인하고 취소하세요."
   },
   "notice": {
     "aiDetailsMayChange": "AI가 작은 세부 사항을 바꿀 수 있습니다"

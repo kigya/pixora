@@ -7,6 +7,23 @@ import java.io.File
 import kotlin.math.min
 import kotlin.math.max
 
+/** SDK runner budget for calibration; separate from the measured OS headroom guard. */
+internal object RecreateMemoryBudget {
+    // The 512-square phone run peaked near 2.5 GiB PSS, including reclaimable mapped weights.
+    // Keep at least 2 GiB available before starting; the runner budget is not a RAM cap.
+    fun requireHeadroom(availableBytes: Long) {
+        if (availableBytes < 2L * 1024 * 1024 * 1024) throw AppFailure("LOW_MEMORY")
+    }
+    @Volatile var limitMiB: Int = 512
+        set(value) {
+            require(value == 512 || value == 768 || value == 1024)
+            field = value
+        }
+}
+
+internal fun timeoutErrorCode(processingKind: String): String =
+    if (processingKind == "recreate") "RECREATE_TIME_LIMIT" else "TIME_LIMIT"
+
 /** Owns image buffers for one job; the service owns lifetime and notifications. */
 class ImageProcessor(private val context:Context, private val notice:(Boolean)->Unit, private val timedOut:()->Boolean, private val backend:ProcessingBackend=OnDeviceBackend, private val files:WorkFiles=AndroidWorkFiles) {
     private var lastProgress=0L
@@ -15,6 +32,7 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
         var input: Bitmap?=null; var full: Bitmap?=null; var result: Bitmap?=null; var original:Bitmap?=null
         val start=SystemClock.elapsedRealtime()
         val snapshot=SessionStore.snapshot(); val image=snapshot.getJSONObject("image"); val dir=File(image.getString("sourcePath")).parentFile!!
+        val timeoutCode=timeoutErrorCode(snapshot.optString("processingKind"))
         val partial=File(dir,"result.png")
         try {
             if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure("CANCELLED")
@@ -31,14 +49,14 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
                 val recreateModels=RecreateModelStore(context,{})
                 if(!recreateModels.verifyInstalled())throw AppFailure("MODEL_INTEGRITY_FAILED")
                 val source=input
-                val factor=min(1.0,512.0/max(source.width,source.height))
+                val factor=min(1.0,256.0/max(source.width,source.height))
                 val generationInput=if(factor<1.0) Bitmap.createScaledBitmap(source,max(1,(source.width*factor).toInt()),max(1,(source.height*factor).toInt()),true) else source
                 val generated=Bitmap.createBitmap(generationInput.width,generationInput.height,Bitmap.Config.ARGB_8888)
                 try {
                     SessionStore.update{it.put("state","RUNNING").put("backend","CPU").put("phase","loading_model").put("progress",-1).put("aiInputWidth",generationInput.width).put("aiInputHeight",generationInput.height)}
                     notice(true)
                     val generationCode=NativeEngine.recreate(recreateModels.diffusionModel().path,recreateModels.loraModel().path,
-                        snapshot.optString("recreatePrompt"),snapshot.optInt("recreateSteps",8),snapshot.optLong("recreateSeed"),generationInput,generated,object:ProgressCallback {
+                        snapshot.optString("recreatePrompt"),snapshot.optInt("recreateSteps",8),snapshot.optLong("recreateSeed"),RecreateMemoryBudget.limitMiB,generationInput,generated,object:ProgressCallback {
                             override fun onProgress(done:Int,total:Int):Boolean {
                                 if(timedOut() || SessionStore.snapshot().optString("state")=="CANCELLING")return false
                                 val now=SystemClock.elapsedRealtime()
@@ -50,7 +68,7 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
                                 return true
                             }
                         })
-                    if(generationCode==1 || timedOut() || SessionStore.snapshot().optString("state")=="CANCELLING")throw AppFailure(if(timedOut())"TIME_LIMIT" else "CANCELLED")
+                    if(generationCode==1 || timedOut() || SessionStore.snapshot().optString("state")=="CANCELLING")throw AppFailure(if(timedOut())timeoutCode else "CANCELLED")
                     if(generationCode!=0)throw AppFailure(when(generationCode){-4->"RECREATE_MODEL_LOAD_FAILED";-5->"LOW_MEMORY";-6->"RECREATE_INVALID_INPUT";-7->"RECREATE_GENERATION_FAILED";else->"RECREATE_INTERNAL_ERROR"})
                     input=generated
                 } catch(error:Throwable) { generated.recycle();throw error }
@@ -84,7 +102,7 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
                 }
                 code=runModel(input,full,gpu,tile,start,targetWidth.toLong()*targetHeight)
             }
-            if(code==1 || SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())"TIME_LIMIT" else "CANCELLED")
+            if(code==1 || SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())timeoutCode else "CANCELLED")
             if(code!=0) throw AppFailure(when(code){-4->"MODEL_INVALID";-5->"LOW_MEMORY";else->"INFERENCE_FAILED"})
             SessionStore.update{it.put("state","FINALIZING").put("phase","building_result").put("progress",-1).put("error","")}; notice(true)
             val resultStart=SystemClock.elapsedRealtime()
@@ -95,17 +113,17 @@ class ImageProcessor(private val context:Context, private val notice:(Boolean)->
             files.write(result,partial)
             val bounds=files.dimensions(partial)
             if(bounds.first!=result.width || bounds.second!=result.height || partial.length()==0L) throw AppFailure("INFERENCE_FAILED")
-            if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())"TIME_LIMIT" else "CANCELLED")
+            if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())timeoutCode else "CANCELLED")
             val uri=files.preview(result,dir)
             synchronized(SessionStore.lock) {
-                if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())"TIME_LIMIT" else "CANCELLED")
+            if(SessionStore.snapshot().getString("state")=="CANCELLING") throw AppFailure(if(timedOut())timeoutCode else "CANCELLED")
                 SessionStore.update{it.put("state","SUCCEEDED").put("phase","complete").put("progress",100).put("resultPath",partial.path).put("resultUri",uri)
                     .put("timings",it.getJSONObject("timings").put("writeAndPreviewMs",SystemClock.elapsedRealtime()-writeStart)).put("resultWidth",result.width).put("resultHeight",result.height).put("elapsedMs",SystemClock.elapsedRealtime()-start).put("error","")}
             }
             if(!pixel) {val metrics=SessionStore.snapshot().getJSONObject("timings");estimate.remember(metrics.optDouble("inferenceMs",0.0)+metrics.optDouble("preprocessingMs",0.0)+metrics.optDouble("assemblyMs",0.0),metrics.optLong("resizeMs",0)+metrics.optLong("writeAndPreviewMs",0),metrics.optDouble("modelLoadMs",0.0)+metrics.optDouble("gpuCheckMs",0.0))}
         } catch(e: Throwable) {
             partial.delete(); File(dir,"result.png.partial").delete(); File(dir,"after.png").delete()
-            val code=if(e is AppFailure){if(e.code=="CANCELLED" && timedOut())"TIME_LIMIT" else e.code} else if(e is OutOfMemoryError)"LOW_MEMORY" else "INFERENCE_FAILED"
+            val code=if(e is AppFailure){if(e.code=="TIME_LIMIT" || e.code=="CANCELLED" && timedOut())timeoutCode else e.code} else if(e is OutOfMemoryError)"LOW_MEMORY" else "INFERENCE_FAILED"
             val terminal:(org.json.JSONObject)->Unit={it.put("state",if(code=="CANCELLED")"CANCELLED" else "FAILED").put("error",if(code=="CANCELLED")"" else code)
                 .put("progress",-1).put("elapsedMs",SystemClock.elapsedRealtime()-start)}
             SessionStore.updateProcessingState(terminal)

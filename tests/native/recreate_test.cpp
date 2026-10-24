@@ -35,6 +35,19 @@ sd_progress_callback_t progress = nullptr;
 sd_progress_callback_t last_progress = nullptr;
 void* progress_user = nullptr;
 void* last_progress_user = nullptr;
+sd_preview_callback_t preview = nullptr;
+sd_preview_callback_t last_preview = nullptr;
+void* preview_user = nullptr;
+sd_preview_info_t preview_info{};
+uint8_t reflected_padding_sample = 0;
+uint8_t reflected_content_sample = 0;
+int preview_mode = -1;
+int preview_interval = 0;
+int configured_preview_mode = -1;
+int configured_preview_interval = 0;
+bool preview_denoised = true;
+bool preview_noisy = true;
+int preview_set_calls = 0;
 std::mutex mutex;
 std::condition_variable condition;
 void reset() {
@@ -45,6 +58,10 @@ void reset() {
     entered_generate = false; release_generate = false; context_frees = image_frees = cancellations = log_callbacks = 0;
     last_context = {}; last_request = {}; last_lora = {}; progress = last_progress = nullptr;
     progress_user = last_progress_user = nullptr;
+    preview = last_preview = nullptr; preview_user = nullptr; preview_info = {};
+    preview_mode = configured_preview_mode = -1; preview_interval = configured_preview_interval = 0;
+    preview_denoised = preview_noisy = true; preview_set_calls = 0;
+    reflected_padding_sample = reflected_content_sample = 0;
 }
 }
 
@@ -65,10 +82,29 @@ void sd_set_progress_callback(sd_progress_callback_t callback, void* data) {
     pixora_fake_sd::progress = callback; pixora_fake_sd::progress_user = data;
     if (callback) { pixora_fake_sd::last_progress = callback; pixora_fake_sd::last_progress_user = data; }
 }
+void sd_set_preview_callback(sd_preview_callback_t callback, int mode, int interval, bool denoised, bool noisy, void* data) {
+    using namespace pixora_fake_sd;
+    preview = callback; preview_user = data; preview_info = {};
+    preview_mode = mode; preview_interval = interval; preview_denoised = denoised; preview_noisy = noisy;
+    ++preview_set_calls;
+    if (callback) {
+        last_preview = callback;
+        configured_preview_mode = mode;
+        configured_preview_interval = interval;
+    }
+}
+sd_preview_info_t sd_get_preview_info() { return pixora_fake_sd::preview_info; }
 void sd_cancel_generation(sd_ctx_t*, int mode) { assert(mode == SD_CANCEL_ALL); ++pixora_fake_sd::cancellations; }
 bool generate_image(sd_ctx_t*, sd_img_gen_params_t* params, sd_image_t** images, int* count) {
     using namespace pixora_fake_sd;
     last_request = *params;
+    if (params->width == 512 && params->height == 512 && params->init_image.data != nullptr) {
+        const auto* pixels = static_cast<const uint8_t*>(params->init_image.data);
+        const size_t padding_sample = (125u * 512u + 256u) * 3u;
+        const size_t content_sample = (127u * 512u + 256u) * 3u;
+        reflected_padding_sample = pixels[padding_sample];
+        reflected_content_sample = pixels[content_sample];
+    }
     if (params->lora_count > 0 && params->loras != nullptr) {
         last_lora = params->loras[0];
         last_request.loras = &last_lora;
@@ -81,9 +117,30 @@ bool generate_image(sd_ctx_t*, sd_img_gen_params_t* params, sd_image_t** images,
     if (progress) {
         progress(0, 0, 0, progress_user); // Invalid zero-total callbacks are ignored.
         progress(0, 1000, 0, progress_user); // SDK lazy-load callback must not leak as generation progress.
-        progress(0, params->sample_params.sample_steps, 0, progress_user);
-        for (int step = 1; step <= params->sample_params.sample_steps; ++step)
-            progress(step, params->sample_params.sample_steps, static_cast<float>(step), progress_user);
+        const int actual_steps = (params->sample_params.sample_steps * 3) / 5 + 1;
+        progress(0, actual_steps, 0, progress_user); // matching-looking callback without sampling metadata is ignored.
+        preview_info = {2, actual_steps};
+        progress(0, actual_steps, 0, progress_user); // a later sampling pass is not selected.
+        preview_info = {1, 0};
+        progress(0, 0, 0, progress_user); // empty sampling metadata is ignored.
+        preview_info = {1, params->sample_params.sample_steps + 1};
+        progress(0, params->sample_params.sample_steps + 1, 0, progress_user); // excessive SDK totals are ignored.
+        preview_info = {1, actual_steps + 1};
+        progress(0, actual_steps, 0, progress_user); // mismatched total for the active pass is ignored.
+        preview_info = {1, actual_steps};
+        progress(-1, actual_steps, 0, progress_user); // negative callback steps are ignored.
+        progress(0, actual_steps + 1, 0, progress_user); // a callback total must exactly match the active pass.
+        progress(actual_steps + 1, actual_steps, 0, progress_user); // steps beyond the active total are ignored.
+        progress(0, actual_steps, 0, progress_user);
+        progress(-1, actual_steps, 0, progress_user); // negative progress after pass recognition is ignored.
+        progress(0, actual_steps, 0, progress_user); // duplicate steps do not break monotonic progress.
+        progress(actual_steps + 1, actual_steps, 0, progress_user); // out-of-range steps are ignored.
+        for (int step = 1; step <= actual_steps; ++step)
+            progress(step, actual_steps, static_cast<float>(step), progress_user);
+        progress(0, actual_steps, 0, progress_user); // VAE progress cannot rearm completed sampling progress.
+        preview_info = {2, actual_steps};
+        progress(0, actual_steps, 0, progress_user); // a later sampling pass is not reported.
+        preview_info = {};
         progress(0, 1000, 0, progress_user); // tiled VAE callback is also filtered.
     }
     if (mode == GenerateMode::ThrowBadAlloc) throw std::bad_alloc();
@@ -139,18 +196,40 @@ Status run(const Request& req, Result* result = nullptr, pixora::recreate::Progr
 int main() {
     using namespace pixora::recreate;
     using pixora_fake_sd::GenerateMode;
-    const std::vector<uint8_t> rgba(65u * 33u * 4u, 127);
+    std::vector<uint8_t> rgba(65u * 33u * 4u, 127);
+    for (uint32_t y = 0; y < 33; ++y) {
+        for (uint32_t x = 0; x < 65; ++x) {
+            const size_t offset = (static_cast<size_t>(y) * 65u + x) * 4u;
+            rgba[offset] = static_cast<uint8_t>(y * 5u);
+            rgba[offset + 1u] = static_cast<uint8_t>(x * 3u);
+            rgba[offset + 2u] = static_cast<uint8_t>((x + y) % 255u);
+            rgba[offset + 3u] = 255;
+        }
+    }
     Result result;
 
     assert(run(request(rgba), nullptr) == Status::Ok);
     Request req = request(rgba);
     assert(run(req, &result, on_progress) == Status::Ok);
-    assert(progress_calls == 5 && last_total == 4 && last_step == 4);
+    assert(progress_calls == 4 && last_total == 3 && last_step == 3);
+    assert(pixora_fake_sd::last_preview != nullptr);
+    assert(pixora_fake_sd::preview == nullptr);
+    assert(pixora_fake_sd::configured_preview_mode == PREVIEW_NONE && pixora_fake_sd::configured_preview_interval == 1);
+    assert(!pixora_fake_sd::preview_denoised && !pixora_fake_sd::preview_noisy);
+    pixora_fake_sd::last_preview(0, 0, nullptr, false, nullptr); // The installed PREVIEW_NONE callback is a safe no-op.
     assert(pixora_fake_sd::last_context.model_path == req.model_path);
     assert(std::string(pixora_fake_sd::last_context.backend) == "cpu");
+    assert(std::string(pixora_fake_sd::last_context.params_backend) == "disk");
+    assert(pixora_fake_sd::last_context.enable_mmap);
+    assert(pixora_fake_sd::last_context.disable_prefetch);
+    assert(!pixora_fake_sd::last_context.eager_load);
+    assert(pixora_fake_sd::last_context.conditioning_cache_size == 0);
+    assert(std::string(pixora_fake_sd::last_context.max_vram) == "0.5");
     assert(pixora_fake_sd::last_context.n_threads == 2);
     const auto& sent = pixora_fake_sd::last_request;
-    assert(sent.width == 128 && sent.height == 64 && sent.init_image.channel == 3);
+    assert(sent.width == 512 && sent.height == 512 && sent.init_image.channel == 3);
+    assert(sent.vae_tiling_params.enabled == false);
+    assert(pixora_fake_sd::reflected_padding_sample == pixora_fake_sd::reflected_content_sample);
     assert(sent.lora_count == 1 && sent.loras[0].path == req.lora_path);
     assert(std::string(sent.prompt) == "high quality detailed photograph");
     assert(std::string(sent.negative_prompt).find("watermark") != std::string::npos);
@@ -158,6 +237,13 @@ int main() {
     assert(pixora_fake_sd::log_callbacks > 0);
     assert(result.width == 65 && result.height == 33 && result.rgb != nullptr);
     free_result(&result); assert(!result.rgb && result.width == 0 && result.height == 0);
+    req.memory_budget_mib = 768;
+    assert(run(req) == Status::Ok);
+    assert(std::string(pixora_fake_sd::last_context.max_vram) == "0.75");
+    req.memory_budget_mib = 1024;
+    assert(run(req) == Status::Ok);
+    assert(std::string(pixora_fake_sd::last_context.max_vram) == "1.0");
+    req.memory_budget_mib = 512;
     assert(run(Request{req.model_path, req.lora_path, nullptr, req.rgba, req.width, req.height}, &result) == Status::Ok);
     assert(std::string(pixora_fake_sd::last_request.prompt) == "high quality detailed photograph");
     free_result(&result);
@@ -167,17 +253,24 @@ int main() {
     reset_cancel();
     free_result(nullptr);
     Result empty_result; free_result(&empty_result);
-    const std::vector<uint8_t> oversized_side(513u * 32u * 4u, 90);
-    Request shrink = request(oversized_side, 513, 32);
+    const std::vector<uint8_t> oversized_side(513u * 64u * 4u, 90);
+    Request shrink = request(oversized_side, 513, 64);
     assert(run(shrink, &result) == Status::Ok);
-    assert(result.width == 512 && result.height == 32);
-    assert(pixora_fake_sd::last_request.width == 512 && pixora_fake_sd::last_request.height == 64);
+    assert(result.width == 256 && result.height == 32);
+    assert(pixora_fake_sd::last_request.width == 512 && pixora_fake_sd::last_request.height == 512);
+    assert(pixora_fake_sd::last_request.vae_tiling_params.enabled == false);
+    free_result(&result);
+    const std::vector<uint8_t> one_by_thousand(1u * 1000u * 4u, 90);
+    Request narrow = request(one_by_thousand, 1, 1000);
+    assert(run(narrow, &result) == Status::Ok);
+    assert(result.width == 1 && result.height == 256);
+    assert(pixora_fake_sd::last_request.width == 512 && pixora_fake_sd::last_request.height == 512);
     free_result(&result);
     req.prompt = "a specific prompt";
     assert(run(req) == Status::Ok);
     assert(std::string(pixora_fake_sd::last_request.prompt) == "a specific prompt");
     req.steps = 8; pixora_fake_sd::reset(); progress_calls = 0;
-    assert(run(req, nullptr, on_progress) == Status::Ok && last_total == 8 && progress_calls == 9);
+    assert(run(req, nullptr, on_progress) == Status::Ok && last_total == 5 && last_step == 5 && progress_calls == 6);
 
     assert(run(req, nullptr, cancel_on_step) == Status::Cancelled);
     assert(pixora_fake_sd::cancellations > 0);
@@ -193,8 +286,11 @@ int main() {
     invalid_case([](Request& r) { r.width = 0; });
     invalid_case([](Request& r) { r.height = 0; });
     invalid_case([](Request& r) { r.steps = 6; });
-    invalid_case([](Request& r) { r.max_side = 513; });
+    invalid_case([](Request& r) { r.max_side = 257; });
     invalid_case([](Request& r) { r.max_side = 0; });
+    invalid_case([](Request& r) { r.memory_budget_mib = 256; });
+    invalid_case([](Request& r) { r.memory_budget_mib = 640; });
+    invalid_case([](Request& r) { r.memory_budget_mib = 2048; });
     invalid_case([](Request& r) { r.cfg = 0; });
     invalid_case([](Request& r) { r.cfg = __builtin_nanf(""); });
     invalid_case([](Request& r) { r.strength = 0; });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 import {
   render,
   screen,
@@ -68,9 +68,47 @@ test('feedback unavailable is clear and cannot pretend to send', async () => {
     </AppProvider>,
   );
   expect(await screen.findByText(t.feedbackUnavailable)).toBeOnTheScreen();
+  expect(screen.getByTestId('feedback-scroll').props.keyboardShouldPersistTaps).toBe('handled');
+  expect(screen.getByTestId('feedback-scroll').props.automaticallyAdjustKeyboardInsets).toBe(true);
   expect(screen.getByRole('button', { name: t.send })).toBeDisabled();
   await userEvent.press(screen.getByRole('button', { name: t.back }));
   expect(navigation.goBack).toHaveBeenCalled();
+});
+test('feedback preserves automatic scroll insets when iOS keyboard avoidance is not needed', async () => {
+  jest.replaceProperty(Platform, 'OS', 'android');
+  Native.getFeedbackStatus.mockResolvedValue(true);
+  await render(
+    <AppProvider>
+      <FeedbackScreen {...props} />
+    </AppProvider>,
+  );
+  const scroll = await screen.findByTestId('feedback-scroll');
+  expect(Platform.OS).toBe('android');
+  expect(scroll.props.automaticallyAdjustKeyboardInsets).toBe(true);
+});
+test('feedback re-scrolls the focused field after keyboard resize and removes its listener', async () => {
+  const remove = jest.fn();
+  let keyboardDidShow: (() => void) | undefined;
+  let subscriptions = 0;
+  jest.spyOn(Keyboard, 'addListener').mockImplementation((_event, listener) => {
+    subscriptions += 1;
+    keyboardDidShow = listener as () => void;
+    return { remove } as any;
+  });
+  Native.getFeedbackStatus.mockResolvedValue(true);
+  const view = await render(
+    <AppProvider>
+      <FeedbackScreen {...props} />
+    </AppProvider>,
+  );
+  const field = await screen.findByLabelText(t.message);
+  await act(async () => keyboardDidShow?.()); // No focused field: the late keyboard event is ignored.
+  await fireEvent(field, 'focus', { nativeEvent: { target: 731 } });
+  expect(keyboardDidShow).toEqual(expect.any(Function));
+  await act(async () => keyboardDidShow?.());
+  await view.unmount();
+  expect(subscriptions).toBeGreaterThan(0);
+  expect(remove).toHaveBeenCalledTimes(subscriptions);
 });
 test('feedback email is optional; failures retain text and retry id', async () => {
   Native.getFeedbackStatus.mockResolvedValue(true);
@@ -354,8 +392,7 @@ test('pixel profile does not show an AI modification warning', async () => {
       <Home {...props} />
     </AppProvider>,
   );
-  await userEvent.press(await screen.findByRole('button', { name: t.presets.pixel.title }));
-  expect(await screen.findByText(t.presets.pixel.note)).toBeOnTheScreen();
+  await userEvent.press(await screen.findByRole('button', { name: `Model: ${t.presets.pixel.title}` }));
   expect(screen.queryByText(t.aiNote)).toBeNull();
 });
 

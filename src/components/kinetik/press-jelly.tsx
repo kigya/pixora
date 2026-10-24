@@ -137,12 +137,13 @@ export function PressJelly({
   const label =
     typeof children === 'string' ? (
       <Text
-        numberOfLines={1}
         style={{
           color: palette.fg,
           fontSize: size === 'lg' ? font.size.lg : font.size.md,
           fontWeight: font.weight.bold,
           letterSpacing: -0.2,
+          flexShrink: 1,
+          textAlign: 'center',
         }}
       >
         {children}
@@ -168,9 +169,11 @@ export function PressJelly({
         style={[
           styles.button,
           {
-            height: HEIGHT[size],
+            minHeight: HEIGHT[size],
             minWidth: Math.max(minTouchTarget, HEIGHT[size] * 2),
             paddingHorizontal: size === 'lg' ? space[8] : space[6],
+            paddingVertical: space[2],
+            maxWidth: '100%',
             borderRadius: radius.pill,
             backgroundColor: palette.bg,
             borderColor: palette.border,
@@ -202,6 +205,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
   },
-  content: { flexDirection: 'row', alignItems: 'center' },
+  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flexShrink: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
 });

@@ -27,7 +27,7 @@ for target in project.pbxproj.nativeTargets {
   config.buildSettings["PIXORA_APP_INFO_PLIST"] = "Pixora/Info.plist"
   config.buildSettings["INFOPLIST_FILE"] = "$(PIXORA_APP_INFO_PLIST)"
   config.buildSettings["PRODUCT_BUNDLE_IDENTIFIER"] = config.name == "Debug" ? "dev.kigya.pixora.debug" : "dev.kigya.pixora"
-  config.buildSettings["CURRENT_PROJECT_VERSION"] = "18"
+  config.buildSettings["CURRENT_PROJECT_VERSION"] = "19"
   config.buildSettings["MARKETING_VERSION"] = "0.9.0"
   config.buildSettings["IPHONEOS_DEPLOYMENT_TARGET"] = "16.4"
   config.buildSettings["ENABLE_USER_SCRIPT_SANDBOXING"] = "NO"

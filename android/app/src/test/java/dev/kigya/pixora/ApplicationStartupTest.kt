@@ -41,6 +41,21 @@ class ApplicationStartupTest {
 
     @Test fun introductionMarkerDiskFailureStillLoadsOfflineApplication() = startup(2, "ready", true)
 
+    @Test fun applicationForwardsConfigurationChangesToExpoLifecycle() {
+        val app=MainApplication()
+        org.robolectric.util.ReflectionHelpers.callInstanceMethod<Void>(app,"attach",
+            org.robolectric.util.ReflectionHelpers.ClassParameter.from(Context::class.java,org.robolectric.RuntimeEnvironment.getApplication()))
+        val configuration=android.content.res.Configuration().apply {
+            setLocales(android.os.LocaleList.forLanguageTags("ar"))
+        }
+
+        mockStatic(expo.modules.ApplicationLifecycleDispatcher::class.java).use { dispatcher ->
+            app.onConfigurationChanged(configuration)
+
+            dispatcher.verify { expo.modules.ApplicationLifecycleDispatcher.onConfigurationChanged(app,configuration) }
+        }
+    }
+
     private fun startup(version: Int, outcome: String, introFailure: Boolean = false) {
         val app = MainApplication()
         org.robolectric.util.ReflectionHelpers.callInstanceMethod<Void>(app, "attach",

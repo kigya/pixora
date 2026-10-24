@@ -4,13 +4,15 @@ cd "$(dirname "$0")/.."
 mkdir -p coverage/native-core
 rm -f coverage/native-core/coverage.json coverage/native-core/combined.profdata \
   coverage/native-core/core.profraw coverage/native-core/adapter.profraw coverage/native-core/raster.profraw \
-  coverage/native-core/raster-jni.profraw coverage/native-core/recreate.profraw
+  coverage/native-core/raster-jni.profraw coverage/native-core/recreate.profraw \
+  coverage/native-core/recreate-jni.profraw
 SHARED_ENGINE_DIR="$(cd "${SHARED_ENGINE_DIR:-native/engine}" && pwd)"
 ANDROID_ENGINE_DIR="$(cd "${ANDROID_ENGINE_DIR:-android/app/src/main/cpp/engine}" && pwd)"
 SHARED_SOURCES=("$SHARED_ENGINE_DIR/engine.cpp" "$SHARED_ENGINE_DIR/pixels.cpp")
 RASTER_SOURCE="$SHARED_ENGINE_DIR/raster.cpp"
 RASTER_SHIM="$ANDROID_ENGINE_DIR/raster_jni.cpp"
 RECREATE_SOURCE="$(cd native/recreate && pwd)/recreate.cpp"
+RECREATE_JNI_SOURCE="$(cd android/app/src/main/cpp/engine && pwd)/recreate_jni.cpp"
 SHARED_HEADERS=("$SHARED_ENGINE_DIR/engine.h" "$SHARED_ENGINE_DIR/pixels.h")
 ANDROID_SHIM="$ANDROID_ENGINE_DIR/upscale.cpp"
 SHIM_DEFINE=(-DUPSCALE_ANDROID_SHIM=\"$ANDROID_SHIM\")
@@ -30,9 +32,14 @@ xcrun clang++ -std=c++17 -O0 -g -pthread -DPIXORA_RECREATE_TESTING -fprofile-ins
   -Itests/native/fakes -Inative/recreate tests/native/recreate_test.cpp "$RECREATE_SOURCE" \
   -o coverage/native-core/recreate-tests
 LLVM_PROFILE_FILE=coverage/native-core/recreate.profraw coverage/native-core/recreate-tests
-xcrun llvm-profdata merge -sparse coverage/native-core/core.profraw coverage/native-core/adapter.profraw coverage/native-core/raster.profraw coverage/native-core/raster-jni.profraw coverage/native-core/recreate.profraw -o coverage/native-core/combined.profdata
+xcrun clang++ -std=c++17 -O0 -g -fprofile-instr-generate -fcoverage-mapping \
+  -Itests/native/recreate_jni_fakes -Itests/native/fakes -Inative/recreate \
+  tests/native/recreate_jni_test.cpp -o coverage/native-core/recreate-jni-tests
+LLVM_PROFILE_FILE=coverage/native-core/recreate-jni.profraw coverage/native-core/recreate-jni-tests
+xcrun llvm-profdata merge -sparse coverage/native-core/core.profraw coverage/native-core/adapter.profraw coverage/native-core/raster.profraw coverage/native-core/raster-jni.profraw coverage/native-core/recreate.profraw coverage/native-core/recreate-jni.profraw -o coverage/native-core/combined.profdata
 xcrun llvm-cov export coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
-  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM" "$RASTER_SOURCE" "$RASTER_SHIM" "$RECREATE_SOURCE" \
-  -object coverage/native-core/raster-tests -object coverage/native-core/raster-jni-tests -object coverage/native-core/recreate-tests > coverage/native-core/coverage.json
+  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM" "$RASTER_SOURCE" "$RASTER_SHIM" "$RECREATE_SOURCE" "$RECREATE_JNI_SOURCE" \
+  -object coverage/native-core/raster-tests -object coverage/native-core/raster-jni-tests -object coverage/native-core/recreate-tests -object coverage/native-core/recreate-jni-tests > coverage/native-core/coverage.json
 xcrun llvm-cov report coverage/native-core/adapter-tests -instr-profile=coverage/native-core/combined.profdata \
-  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM" "$RASTER_SOURCE" "$RASTER_SHIM" "$RECREATE_SOURCE" -object coverage/native-core/raster-tests -object coverage/native-core/raster-jni-tests -object coverage/native-core/recreate-tests
+  "${SHARED_SOURCES[@]}" "${SHARED_HEADERS[@]}" "$ANDROID_SHIM" "$RASTER_SOURCE" "$RASTER_SHIM" "$RECREATE_SOURCE" "$RECREATE_JNI_SOURCE" \
+  -object coverage/native-core/raster-tests -object coverage/native-core/raster-jni-tests -object coverage/native-core/recreate-tests -object coverage/native-core/recreate-jni-tests

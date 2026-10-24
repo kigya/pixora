@@ -1,16 +1,18 @@
 import React from 'react';
 import {render, screen, userEvent, act, fireEvent, within} from '@testing-library/react-native';
-import {AppState, Platform} from 'react-native';
-import {AppProvider} from '../src/application/AppProvider';
+import {AppState, Platform, StyleSheet, Text} from 'react-native';
+import {AppProvider, useApp} from '../src/application/AppProvider';
 import {Home} from '../src/screens/Home';
 import {SettingsScreen} from '../src/screens/Settings';
 import {emptySession} from '../src/domain/session';
 import {strings} from '../src/ui/i18n';
 import {errorText} from '../src/application/errors';
+import {formatStorage} from '../src/domain/storage';
 import {LocaleContext} from '../src/ui/locale';
 import {Comparison, Icon, Button} from '../src/ui/components';
 import {BackgroundNotice, HelpLink, InformationProvider} from '../src/ui/information';
-import Native, {seed, emitSession, capabilities, sessionListeners} from '../tests/nativeMock';
+import Native, {seed, emitSession, emitRecreateModel, capabilities, sessionListeners} from '../tests/nativeMock';
+import {PixoraThemeProvider, useTheme} from '../src/ui/theme';
 const t = strings.en;
 const image = {id:'image',mime:'image/png',size:128,width:64,height:48,workWidth:64,workHeight:48,hasAlpha:false,previewUri:'file:///before.png',needsPreparation:false};
 const exported = {id:'export',mime:'image/png',format:'png',uri:'content://result',width:128,height:96,size:123,createdAt:1};
@@ -18,6 +20,88 @@ const navigation = {navigate:jest.fn(),goBack:jest.fn()};
 const props = {navigation,route:{key:'home',name:'Home'}} as any;
 const viewHome = () => render(<AppProvider><Home {...props}/></AppProvider>);
 beforeEach(() => {jest.clearAllMocks(); seed(); Native.getNotificationStatus.mockResolvedValue(false);});
+
+test('notification status failure falls back to disabled while startup succeeds', async () => {
+  Native.getNotificationStatus.mockRejectedValueOnce(new Error('permission status unavailable'));
+  function Probe() {
+    const {notifications, startupError, loading} = useApp();
+    return <Text>{`${loading}:${startupError}:${notifications}`}</Text>;
+  }
+  await render(<AppProvider><Probe /></AppProvider>);
+  expect(await screen.findByText('false:false:false')).toBeOnTheScreen();
+});
+
+test('failed startup refresh reports recovery state and a later foreground refresh clears it', async () => {
+  const changes: Array<(state: string) => void> = [];
+  jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, listener) => {
+    changes.push(listener as (state: string) => void);
+    return {remove: jest.fn()};
+  });
+  Native.getSettings.mockRejectedValueOnce(new Error('settings read failed'));
+  function Probe() {
+    const {loading, startupError, message, settings} = useApp();
+    return <Text>{`${loading}:${startupError}:${message}:${settings.language}`}</Text>;
+  }
+  const view = await render(<AppProvider><Probe /></AppProvider>);
+  expect(await screen.findByText('false:true:modelInvalid:system')).toBeOnTheScreen();
+
+  await act(async () => {
+    changes.forEach(change => change('active'));
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  expect(view.getByText('false:false:modelInvalid:en')).toBeOnTheScreen();
+
+  Native.getCapabilities.mockRejectedValueOnce(new Error('foreground capability refresh failed'));
+  await act(async () => {
+    changes.forEach(change => change('active'));
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  expect(view.getByText('false:false:modelInvalid:en')).toBeOnTheScreen();
+});
+
+test('first resolved app theme is applied immediately while later theme changes remain animated', async () => {
+  function PaletteProbe() {
+    const {dark, colors} = useTheme();
+    return <Text testID="palette-probe">{`${dark}:${colors.bg}`}</Text>;
+  }
+  const animationFrame = jest.spyOn(globalThis, 'requestAnimationFrame');
+  const view = await render(
+    <PixoraThemeProvider dark={false} resolved={false}>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+
+  await view.rerender(
+    <PixoraThemeProvider dark resolved>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  expect(view.getByTestId('palette-probe')).toHaveTextContent('true:#09090B');
+  expect(animationFrame).not.toHaveBeenCalled();
+
+  await view.rerender(
+    <PixoraThemeProvider dark={false} resolved>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  expect(animationFrame).toHaveBeenCalled();
+  expect(view.getByTestId('palette-probe')).toHaveTextContent('false:#09090B');
+
+  await view.unmount();
+  animationFrame.mockClear();
+  const reverse = await render(
+    <PixoraThemeProvider dark resolved={false}>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  await reverse.rerender(
+    <PixoraThemeProvider dark={false} resolved>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  expect(reverse.getByTestId('palette-probe')).toHaveTextContent('false:#FAFAFC');
+  expect(animationFrame).not.toHaveBeenCalled();
+});
 
 test.each(['READY','CANCELLED','FAILED','INTERRUPTED'])('input state %s can retry', async state => {
  seed({state,image,error:state==='FAILED'?'DECODE_FAILED':state==='INTERRUPTED'?'INTERRUPTED':''});
@@ -81,6 +165,14 @@ test('exported result opens and changing format permits a new export', async () 
  expect(screen.getByRole('button',{name:t.saved})).toBeDisabled();
  await userEvent.press(screen.getByRole('radio',{name:'JPEG'}));await userEvent.press(screen.getByRole('button',{name:t.save}));expect(Native.exportResult).toHaveBeenCalledWith('job','jpeg');
 });
+test('legacy original-resolution results still export through PNG after that option is removed', async () => {
+ seed({state:'SUCCEEDED',image,jobId:'legacy-original',resolution:'original',resultUri:'file:///old-result.png',resultWidth:128,resultHeight:96});
+ await viewHome();
+ expect(screen.getByRole('radio',{name:'PNG',checked:true})).toBeOnTheScreen();
+ expect(screen.queryByText('Original resolution')).not.toBeOnTheScreen();
+ await userEvent.press(await screen.findByRole('button',{name:t.save}));
+ expect(Native.exportResult).toHaveBeenCalledWith('legacy-original','png');
+});
 test('transparent JPEG requires confirmation for export and share', async () => {
  seed({state:'SUCCEEDED',image:{...image,hasAlpha:true},jobId:'job',resultUri:'file:///after.png'});
  await viewHome();await userEvent.press(await screen.findByRole('button',{name:t.continue}));await userEvent.press(await screen.findByRole('radio',{name:'JPEG'}));
@@ -105,8 +197,38 @@ test('events ignore stale snapshot and unsubscribe after unmount', async () => {
  await act(()=>{emitSession({state:'READY',image});sessionListeners.forEach(listener=>listener({...emptySession,sequence:0}));});
  expect(screen.getByRole('button',{name:t.upscale})).toBeOnTheScreen();await view.unmount();expect(sessionListeners.size).toBe(0);
 });
+test('Home remains usable when an older native bridge has no Recreate status API', async () => {
+ const native = Native as any;
+ const original = native.getRecreateModelState;
+ native.getRecreateModelState = undefined;
+ try {
+  await viewHome();
+  expect(await screen.findByRole('button',{name:t.choose})).toBeOnTheScreen();
+  expect(Native.onRecreateModelChanged).not.toHaveBeenCalled();
+ } finally {
+  native.getRecreateModelState = original;
+ }
+});
+test('recreate setup returns safely to image selection if its source image disappears', async () => {
+ seed({state:'READY',image});
+ emitSession({state:'READY',image});
+ await viewHome();
+ await userEvent.press(await screen.findByRole('radio',{name:t.recreate.title}));
+ expect(screen.getByRole('button',{name:t.recreate.title})).toBeDisabled();
+ await act(async()=>{emitSession({state:'EMPTY',image:undefined});});
+ expect(await screen.findByRole('button',{name:t.choose})).toBeOnTheScreen();
+ expect(screen.queryByRole('button',{name:t.recreate.title})).not.toBeOnTheScreen();
+ expect(Native.startRecreateJob).not.toHaveBeenCalled();
+});
 test.each([undefined,{code:'BOGUS'},{code:'DECODE_FAILED'},{localKey:'busyClear'}])('errors have a safe translated fallback %#', error => {
  expect(errorText(error,'en')).toBe(error && 'localKey' in error?t.busyClear:error && error.code==='DECODE_FAILED'?t.errors.DECODE_FAILED:t.errors.INFERENCE_FAILED);
+});
+test.each(Object.keys(strings) as Array<keyof typeof strings>)('processing deadlines use the actual mode limit in %s', lang => {
+ for(const [code,minutes] of [['TIME_LIMIT',30],['RECREATE_TIME_LIMIT',45]] as const) {
+  const message=errorText({code},lang);
+  expect(message).toBe(strings[lang].errors.TIME_LIMIT.replace('{minutes}',new Intl.NumberFormat(lang).format(minutes)));
+  expect(message).not.toContain('{minutes}');
+ }
 });
 test('comparison supports buttons without a gesture', async () => {
  await render(<Comparison before="file:///b" after="file:///a" ratio={1} t={t}/>);
@@ -148,11 +270,54 @@ test('settings selects every language and preserves session', async () => {
 });
 test('settings supports licenses, clear, discard and back', async () => {
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
- await userEvent.press(await screen.findByRole('button',{name:t.licenses}));expect(await screen.findByText('Local license text')).toBeOnTheScreen();
- await userEvent.press(screen.getByRole('button',{name:t.back}));await userEvent.press(screen.getByRole('button',{name:t.recreate.clearCache}));expect(Native.clearCache).toHaveBeenCalled();
- await userEvent.press(screen.getByRole('button',{name:t.discard}));await userEvent.press(screen.getByRole('button',{name:t.cancel}));expect(Native.discardSession).not.toHaveBeenCalled();
+ const licenses=(await screen.findAllByRole('button',{name:t.licenses}))[0]!;
+ expect(StyleSheet.flatten(licenses.props.style)).toMatchObject({backgroundColor:'transparent',borderWidth:0,boxShadow:'none',paddingHorizontal:0,minWidth:0,borderRadius:0});
+ await userEvent.press(licenses);expect(await screen.findByText('Local license text')).toBeOnTheScreen();
+ await userEvent.press((await screen.findAllByRole('button',{name:t.back})).at(-1)!);await userEvent.press(screen.getByRole('button',{name:t.recreate.clearCache}));expect(Native.clearCache).toHaveBeenCalled();
+ await userEvent.press(screen.getByRole('button',{name:t.discard}));await userEvent.press((await screen.findAllByRole('button',{name:t.cancel})).at(-1)!);expect(Native.discardSession).not.toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.discard}));await userEvent.press(screen.getByRole('button',{name:t.delete}));expect(Native.discardSession).toHaveBeenCalled();
- await userEvent.press(screen.getByRole('button',{name:t.back}));expect(navigation.goBack).toHaveBeenCalled();
+ await userEvent.press((await screen.findAllByRole('button',{name:t.back}))[0]);expect(navigation.goBack).toHaveBeenCalled();
+});
+test('the Settings About license link opens the locally bundled legal text', async () => {
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ const aboutLicense=(await screen.findAllByRole('button',{name:t.licenses})).at(-1)!;
+ expect(aboutLicense).toHaveProp('accessibilityLabel',t.licenses);
+ await userEvent.press(aboutLicense);
+ expect(await screen.findByText('Local license text')).toBeOnTheScreen();
+ expect(Native.getLegalText).toHaveBeenCalledTimes(1);
+ await userEvent.press(screen.getByRole('button',{name:t.back}));
+ expect(screen.getByText(t.about)).toBeOnTheScreen();
+});
+test('a failed local-license read leaves Settings open and reports a retryable error', async () => {
+ Native.getLegalText.mockRejectedValueOnce({code:'INFERENCE_FAILED'});
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ await userEvent.press((await screen.findAllByRole('button',{name:t.licenses}))[0]!);
+ expect(await screen.findByText(t.errors.INFERENCE_FAILED)).toBeOnTheScreen();
+ expect(screen.getByText(t.settings)).toBeOnTheScreen();
+});
+test('Settings back on its root page returns to the previous route', async () => {
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ await userEvent.press(await screen.findByRole('button',{name:t.back}));
+ expect(navigation.goBack).toHaveBeenCalledTimes(1);
+});
+test('settings refreshes storage on model state changes, throttles duplicate events, and unsubscribes', async () => {
+ const now=jest.spyOn(Date,'now').mockReturnValue(1000);
+ const view=await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ await screen.findByRole('button',{name:t.back});
+ const baseline=Native.getStorageUsage.mock.calls.length;
+ await act(async()=>{emitRecreateModel({state:'downloading'});});
+ expect(Native.getStorageUsage).toHaveBeenCalledTimes(baseline+1);
+ await act(async()=>{emitRecreateModel({state:'downloading'});});
+ expect(Native.getStorageUsage).toHaveBeenCalledTimes(baseline+1);
+ now.mockReturnValue(2001);
+ await act(async()=>{emitRecreateModel({state:'downloading'});});
+ expect(Native.getStorageUsage).toHaveBeenCalledTimes(baseline+2);
+ await act(async()=>{emitRecreateModel({state:'ready'});});
+ expect(Native.getStorageUsage).toHaveBeenCalledTimes(baseline+3);
+ await view.unmount();
+ await act(async()=>{emitRecreateModel({state:'failed'});});
+ expect(Native.getStorageUsage).toHaveBeenCalledTimes(baseline+3);
+ now.mockRestore();
 });
 test('settings protects an active session from deletion', async () => {
  seed({state:'RUNNING',image});await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
@@ -163,10 +328,14 @@ test('help explains the model and closes with one action', async () => {
  await userEvent.press(screen.getByRole('button',{name:t.how}));
  expect(screen.getByText(t.howTitle)).toBeOnTheScreen();await userEvent.press(screen.getByRole('button',{name:t.understood}));expect(screen.queryByText(t.howTitle)).not.toBeOnTheScreen();
 });
-test('fast selection is available only when capabilities allow it', async () => {
+test('fast inference can be selected independently from the model', async () => {
  seed({state:'READY',image});capabilities.modes=['quality','fast'];await viewHome();
- await userEvent.press(await screen.findByTestId('select-model-lite'));expect(screen.getByTestId('select-model-lite')).toBeDisabled();
- await userEvent.press(screen.getByRole('button',{name:t.upscale}));expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id,2,'lite','quality',true);
+ expect(await screen.findByRole('button',{name:`${t.recreate.model}: ${t.presets.standard.title}`})).toBeOnTheScreen();
+ const speed = await screen.findByRole('adjustable', {name:t.speedTitle});
+ await fireEvent(speed, 'accessibilityAction', {nativeEvent:{actionName:'increment'}});
+ expect(screen.getByRole('adjustable', {name:t.speedTitle})).toHaveAccessibilityValue({now:1});
+ await userEvent.press(screen.getByRole('button',{name:t.upscale}));
+ expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id,2,'standard','fast',true);
 });
 test('Home opens settings and JPEG share cancellation retains result',async()=>{
  seed({state:'SUCCEEDED',image:{...image,hasAlpha:true},jobId:'job',resultUri:'file:///after.png'});await viewHome();
@@ -177,6 +346,26 @@ test.each([null,1e7])('settings shows unavailable or large storage %#',async byt
  if(bytes!==null)capabilities.workBytes=bytes;else Native.getCapabilities.mockResolvedValueOnce(null as any);
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);await screen.findByRole('button',{name:t.clear});
 });
+test('storage display switches to decimal GB at the boundary without duplicate heading or MiB units',async()=>{
+ expect(formatStorage(999_999_999,'en')).toBe('1,000 MB');
+ expect(formatStorage(1_000_000_000,'en')).toBe('1 GB');
+ Native.getStorageUsage.mockResolvedValue({cacheBytes:120000000,sessionBytes:300000000,temporaryBytes:0,recreateModelBytes:400000000,otherBytes:180000000,totalBytes:1000000000,freeBytes:2500000000});
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ expect(await screen.findByRole('progressbar',{name:t.storageUsage.total})).toBeOnTheScreen();
+ expect(screen.getAllByText(t.storageUsage.total)).toHaveLength(1);
+ expect(screen.queryByText(/MiB/)).not.toBeOnTheScreen();
+ expect(screen.getByText(new RegExp(`${t.storageUsage.free}:.*2\.5 GB`))).toBeOnTheScreen();
+});
+test('large storage total keeps sub-gigabyte categories in MB and the model category in GB',async()=>{
+ Native.getStorageUsage.mockResolvedValue({cacheBytes:0,sessionBytes:11_500_000,temporaryBytes:0,recreateModelBytes:1_900_000_000,otherBytes:0,totalBytes:1_911_500_000,freeBytes:2_000_000_000});
+ await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
+ const meter=await screen.findByRole('progressbar',{name:t.storageUsage.total});
+ expect(meter.props.accessibilityValue.text).toContain(`${t.storageUsage.sessions} 11.5 MB`);
+ expect(meter.props.accessibilityValue.text).toContain(`${t.storageUsage.model} 1.9 GB`);
+ expect(screen.getByText('11.5 MB')).toBeOnTheScreen();
+ expect(screen.getAllByText('1.9 GB').length).toBeGreaterThan(0);
+ expect(meter.props.accessibilityValue.text).not.toContain('0 GB');
+});
 test('shared styles also support their default LTR argument',()=>{const {createStyles}=require('../src/ui/components');const {darkColors}=require('../src/ui/theme');expect(createStyles(darkColors).row.flexDirection).toBe('row')});
 test('a restored image remains visible if device capabilities are unavailable',async()=>{
  seed({state:'READY',image});Native.getCapabilities.mockResolvedValueOnce(null as any);await viewHome();expect(await screen.findByRole('button',{name:t.upscale})).toBeDisabled();
@@ -184,7 +373,7 @@ test('a restored image remains visible if device capabilities are unavailable',a
 
 test('retry restores the persisted fast mode and scale after interruption', async () => {
  seed({state:'INTERRUPTED',image,mode:'fast',scale:4,error:'INTERRUPTED'});capabilities.modes=['quality','fast'];await viewHome();
- expect(await screen.findByTestId('select-model-lite')).toBeDisabled();
+ expect(await screen.findByRole('button',{name:`${t.recreate.model}: ${t.presets.lite.title}`})).toBeOnTheScreen();
  expect(screen.getByRole('radio',{name:'4×',checked:true})).toBeOnTheScreen();
  await userEvent.press(screen.getByRole('button',{name:t.retry}));
  expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id,4,'lite','quality',true);

@@ -108,7 +108,7 @@
     "GPU_FAILED": "A GPU nem érhető el. CPU-val folytatjuk.",
     "INFERENCE_FAILED": "A feldolgozás sikertelen. Próbáld újra, vagy válassz másik fájlt.",
     "SERVICE_START_FAILED": "A feldolgozás nem indítható el. Térj vissza az alkalmazásba, majd próbáld újra.",
-    "TIME_LIMIT": "Elértük a 30 perces feldolgozási időkorlátot. Újra próbálkozhatsz.",
+    "TIME_LIMIT": "Elértük a {minutes} perces feldolgozási időkorlátot. Újra próbálkozhatsz.",
     "INTERRUPTED": "A feldolgozás megszakadt. Indítsd újra.",
     "EXPORT_FAILED": "A fájl nem menthető vagy nem nyitható meg. Az eredmény az alkalmazásban marad.",
     "SHARE_FAILED": "A fájl nem osztható meg. Az eredmény az alkalmazásban marad.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Nincs elég tárhely.",
     "notEnoughMemory": "Nincs elég memória. Zárj be más alkalmazásokat, majd próbáld újra.",
     "licenses": "Licencek",
-    "languageSearch": "Nyelv"
+    "languageSearch": "Nyelv",
+    "notificationBody": "Kövesd és szakítsd meg a letöltést, amikor a Pixora a háttérben fut."
   },
   "notice": {
     "aiDetailsMayChange": "Az MI apró részleteket módosíthat"

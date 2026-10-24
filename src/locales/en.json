@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU unavailable. Continuing on CPU.",
     "INFERENCE_FAILED": "Processing failed. Try again or choose another file.",
     "SERVICE_START_FAILED": "Could not start processing. Return to the app and try again.",
-    "TIME_LIMIT": "The 30-minute processing limit was reached. You can try again.",
+    "TIME_LIMIT": "The {minutes}-minute processing limit was reached. You can try again.",
     "INTERRUPTED": "Processing was interrupted. Start it again.",
     "EXPORT_FAILED": "Could not save or open the file. Your result stays in the app.",
     "SHARE_FAILED": "Could not share the file. Your result stays in the app.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Not enough storage space.",
     "notEnoughMemory": "Not enough memory. Close other apps and try again.",
     "licenses": "Licenses",
-    "languageSearch": "Language"
+    "languageSearch": "Language",
+    "notificationBody": "Show download progress and cancel the download while Pixora is in the background."
   },
   "notice": {
     "aiDetailsMayChange": "AI may change small details"

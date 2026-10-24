@@ -14,6 +14,7 @@ jest.mock('../src/components/kinetik/pop-dialog', () => {
   return {
     PopDialog: ({ visible, title, children, onClose, onShow }: any) => {
       mockLastRatingClose = onClose;
+      mockLastRatingShow = onShow;
       ReactModule.useEffect(() => {
         if (visible) onShow?.();
       }, [visible]);
@@ -32,6 +33,7 @@ jest.mock('../src/components/kinetik/pop-dialog', () => {
 });
 
 let mockLastRatingClose: (() => void) | undefined;
+let mockLastRatingShow: (() => void) | undefined;
 
 const t = strings.en;
 type Listener = () => void;
@@ -103,6 +105,12 @@ async function addStars(count: number) {
   for (let i = 0; i < count; i++) {
     await fireEvent(stars, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
   }
+  await fireEvent(stars, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await act(async () => { await Promise.resolve(); });
+}
+async function commitSelectedRating() {
+  await fireEvent(screen.getByRole('adjustable', { name: t.rating.title }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await act(async () => { await Promise.resolve(); });
 }
 function setupUser() {
   return userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
@@ -110,6 +118,8 @@ function setupUser() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockLastRatingClose = undefined;
+  mockLastRatingShow = undefined;
   seed({
     state: 'SUCCEEDED', jobId: 'rating-job', resultWidth: 640, resultHeight: 480,
     processingKind: 'enhance', mode: 'standard', profileId: 'standard',
@@ -175,6 +185,30 @@ test('claim false, claim error, ineligible job, and lost focus never show a prom
   expect(navigation.navigate).not.toHaveBeenCalled();
 });
 
+test('a delayed eligibility claim for a replaced job cannot open or mark a stale prompt', async () => {
+  let resolveClaim!: (value: boolean) => void;
+  (Native.claimReviewPrompt as jest.Mock).mockReturnValueOnce(
+    new Promise(resolve => { resolveClaim = resolve; }),
+  );
+  const navigation = makeNavigation();
+  const view = await render(
+    <AppProvider>
+      <ResultRating job={successfulJob()} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await advanceRatingDelay();
+  expect(Native.claimReviewPrompt).toHaveBeenCalledWith('rating-job');
+
+  await view.rerender(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'replacement-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await act(async () => { resolveClaim(true); await Promise.resolve(); });
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+  expect(Native.markReviewPromptShown).not.toHaveBeenCalled();
+});
+
 test('backgrounding cancels the pending prompt timer until the app returns to foreground', async () => {
   const changes: Array<(state: 'active' | 'background' | 'inactive') => void> = [];
   jest.spyOn(AppState, 'addEventListener').mockImplementation((_, listener: any) => {
@@ -192,12 +226,11 @@ test('backgrounding cancels the pending prompt timer until the app returns to fo
   expect(Native.claimReviewPrompt).toHaveBeenCalledTimes(1);
 });
 
-test('dismissal records dismissal, and zero rating is disabled until a star is selected', async () => {
+test('dismissal records dismissal, and an uncommitted zero rating is never submitted', async () => {
   const user = setupUser();
   const navigation = await renderRating();
   await advanceRatingDelay();
-  const submit = screen.getByTestId('submit-rating');
-  expect(submit).toBeDisabled();
+  expect(screen.getByRole('adjustable', { name: t.rating.title })).toBeEnabled();
   await user.press(screen.getByTestId('rating-dismiss'));
   expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
   expect(Native.logTelemetryEvent).toHaveBeenCalledWith(
@@ -207,7 +240,7 @@ test('dismissal records dismissal, and zero rating is disabled until a star is s
   expect(navigation.navigate).not.toHaveBeenCalled();
 });
 
-test('submit stays disabled while marking the visible prompt is pending', async () => {
+test('rating choices stay disabled until the visible prompt is durably marked', async () => {
   let resolveMark!: (value: boolean) => void;
   (Native.markReviewPromptShown as jest.Mock).mockReturnValueOnce(
     new Promise(resolve => { resolveMark = resolve; }),
@@ -215,15 +248,26 @@ test('submit stays disabled while marking the visible prompt is pending', async 
   await renderRating();
   await advanceRatingDelay();
   await screen.findByTestId('rating-dialog');
-  await addStars(2);
-  const submit = screen.getByTestId('submit-rating');
-  expect(submit).toBeDisabled();
-  await fireEvent.press(submit);
+  const stars = screen.getByRole('adjustable', { name: t.rating.title });
+  expect(stars.props.accessibilityState.disabled).toBe(true);
+  await fireEvent(stars, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+  await fireEvent(stars, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(Native.submitResultRating).not.toHaveBeenCalled();
   await act(async () => resolveMark(true));
-  expect(submit).toBeEnabled();
-  await fireEvent.press(submit);
+  expect(screen.getByRole('adjustable', { name: t.rating.title }).props.accessibilityState.disabled).toBe(false);
+  await addStars(2);
   expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 2);
+});
+
+test.each(['false', 'rejected'] as const)('a mark that is %s closes the prompt without enabling rating', async outcome => {
+  if (outcome === 'false') (Native.markReviewPromptShown as jest.Mock).mockResolvedValueOnce(false);
+  else (Native.markReviewPromptShown as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
+  await renderRating();
+  await advanceRatingDelay();
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+  expect(Native.submitResultRating).not.toHaveBeenCalled();
+  expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith('review_prompt_requested', expect.anything());
 });
 
 test('low ratings persist once, then route to feedback with star count and privacy-safe context', async () => {
@@ -231,7 +275,6 @@ test('low ratings persist once, then route to feedback with star count and priva
   const navigation = await renderRating();
   await advanceRatingDelay();
   await addStars(2);
-  await user.press(screen.getByTestId('submit-rating'));
   expect(Native.submitResultRating).toHaveBeenCalledTimes(1);
   expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 2);
   const [route, params] = navigation.navigate.mock.calls[0] as any[];
@@ -260,24 +303,54 @@ test('low ratings persist once, then route to feedback with star count and priva
   expect(Native.sendFeedback).toHaveBeenCalledWith('', 'The image still looks soft.', 2, expect.any(String));
 });
 
-test('five stars open the store, report failure, and can retry after a transient store error', async () => {
-  const user = setupUser();
+test('a rejected rating write stays in the prompt and reports a retryable error', async () => {
+  (Native.submitResultRating as jest.Mock).mockRejectedValueOnce(new Error('storage unavailable'));
+  await renderRating();
+  await advanceRatingDelay();
+  await addStars(2);
+  expect(screen.getByRole('alert')).toHaveTextContent(t.error);
+  expect(screen.getByTestId('rating-dialog')).toBeOnTheScreen();
+  expect(Native.submitResultRating).toHaveBeenCalledTimes(1);
+  expect(Native.openStoreReview).not.toHaveBeenCalled();
+});
+
+test('a failed rating write can be retried without losing the chosen value', async () => {
+  (Native.submitResultRating as jest.Mock)
+    .mockRejectedValueOnce(new Error('temporary storage error'))
+    .mockResolvedValueOnce(emitSession({ resultRating: 2 }));
+  const navigation = await renderRating();
+  await advanceRatingDelay();
+  await addStars(2);
+
+  expect(screen.getByRole('alert')).toHaveTextContent(t.error);
+  expect(screen.getByRole('adjustable', { name: t.rating.title })).toHaveAccessibilityValue({
+    min: 0,
+    max: 5,
+    now: 2,
+    text: '2 of 5 stars',
+  });
+  await commitSelectedRating();
+
+  expect(Native.submitResultRating).toHaveBeenCalledTimes(2);
+  expect(Native.submitResultRating).toHaveBeenLastCalledWith('rating-job', 2);
+  expect(navigation.navigate).toHaveBeenCalledWith('Feedback', expect.objectContaining({ rating: 2 }));
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+});
+
+test('five committed stars open the store directly and can retry a transient store error', async () => {
   (Native.openStoreReview as jest.Mock)
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true);
   await renderRating();
   await advanceRatingDelay();
   await addStars(5);
-  const submit = screen.getByTestId('submit-rating');
-  expect(submit).toHaveTextContent(t.rating.store);
-  await user.press(submit);
   expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 5);
   expect(Native.openStoreReview).toHaveBeenCalledTimes(1);
   expect(screen.getByRole('alert')).toHaveTextContent(t.error);
   expect(Native.logTelemetryEvent).toHaveBeenCalledWith(
     'play_redirect_finished', expect.stringContaining('error'),
   );
-  await user.press(screen.getByTestId('submit-rating'));
+  await commitSelectedRating();
   expect(Native.submitResultRating).toHaveBeenCalledTimes(2);
   expect(Native.openStoreReview).toHaveBeenCalledTimes(2);
   expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
@@ -286,15 +359,16 @@ test('five stars open the store, report failure, and can retry after a transient
   );
 });
 
-test('double submit is guarded while the native rating write is unresolved', async () => {
+test('repeated rating activation is guarded while the native write is unresolved', async () => {
   let resolveWrite!: (value: typeof session) => void;
   (Native.submitResultRating as jest.Mock).mockReturnValueOnce(new Promise(resolve => { resolveWrite = resolve; }));
   await renderRating();
   await advanceRatingDelay();
   await addStars(1);
-  const submit = screen.getByTestId('submit-rating');
-  await fireEvent.press(submit);
-  await fireEvent.press(submit);
+  await fireEvent.press(screen.getByTestId('rating-dismiss'));
+  expect(screen.getByTestId('rating-dialog')).toBeOnTheScreen();
+  expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith('review_dismissed', expect.anything());
+  await commitSelectedRating();
   expect(Native.submitResultRating).toHaveBeenCalledTimes(1);
   await act(async () => resolveWrite(emitSession({ resultRating: 1 })));
 });
@@ -318,10 +392,60 @@ test('a delayed mark for a previous job cannot unlock a prompt for a newer job',
   await act(async () => resolveOldMark(true));
 
   await addStars(1);
-  expect(screen.getByTestId('submit-rating')).toBeEnabled();
-  await fireEvent.press(screen.getByTestId('submit-rating'));
   expect(Native.submitResultRating).toHaveBeenCalledWith('new-job', 1);
   expect(Native.submitResultRating).not.toHaveBeenCalledWith('old-job', expect.anything());
+});
+
+test('a late native modal show callback for a replaced job cannot mark the new prompt', async () => {
+  const navigation = makeNavigation();
+  const view = await render(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'old-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await advanceRatingDelay();
+  expect(Native.markReviewPromptShown).toHaveBeenCalledWith('old-job');
+  const staleShow = mockLastRatingShow;
+  expect(staleShow).toBeDefined();
+
+  await view.rerender(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'new-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  Native.markReviewPromptShown.mockClear();
+  await act(async () => staleShow?.());
+
+  expect(Native.markReviewPromptShown).not.toHaveBeenCalled();
+  expect(Native.submitResultRating).not.toHaveBeenCalled();
+});
+
+test('a stale mark rejection cannot close the prompt currently shown for another job', async () => {
+  let rejectOldMark!: (reason: Error) => void;
+  (Native.markReviewPromptShown as jest.Mock)
+    .mockReturnValueOnce(new Promise((_resolve, reject) => { rejectOldMark = reject; }))
+    .mockResolvedValueOnce(true);
+  const navigation = makeNavigation();
+  const view = await render(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'old-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await advanceRatingDelay();
+
+  await view.rerender(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'new-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await advanceRatingDelay();
+  expect(await screen.findByTestId('rating-dialog')).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: t.rating.title })).toBeEnabled();
+
+  await act(async () => { rejectOldMark(new Error('stale storage failure')); });
+
+  expect(screen.getByTestId('rating-dialog')).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: t.rating.title })).toBeEnabled();
 });
 
 test('a stale close callback after switching jobs does not record dismissal for the new job', async () => {
@@ -340,11 +464,9 @@ test('a stale close callback after switching jobs does not record dismissal for 
 test('a pending rating write resolved after blur does not navigate or open the store', async () => {
   let resolveWrite!: (value: typeof session) => void;
   (Native.submitResultRating as jest.Mock).mockReturnValueOnce(new Promise(resolve => { resolveWrite = resolve; }));
-  const user = setupUser();
   const navigation = await renderRating();
   await advanceRatingDelay();
   await addStars(1);
-  await user.press(screen.getByTestId('submit-rating'));
   expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 1);
 
   await act(async () => navigation.emit('blur'));
@@ -353,20 +475,60 @@ test('a pending rating write resolved after blur does not navigate or open the s
   expect(Native.openStoreReview).not.toHaveBeenCalled();
 });
 
+test('a pending native rating write settling after unmount does not restore the dialog', async () => {
+  let resolveWrite!: (value: typeof session) => void;
+  (Native.submitResultRating as jest.Mock).mockReturnValueOnce(
+    new Promise(resolve => { resolveWrite = resolve; }),
+  );
+  await renderRating();
+  await advanceRatingDelay();
+  await addStars(2);
+  expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 2);
+
+  await screen.unmount();
+  await act(async () => resolveWrite(emitSession({ resultRating: 2 })));
+
+  expect(Native.openStoreReview).not.toHaveBeenCalled();
+  expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith('review_dismissed', expect.anything());
+  expect(screen.queryByTestId('rating-dialog')).toBeNull();
+});
+
 test('a store request resolving after the dialog loses focus does not emit stale telemetry', async () => {
   let resolveStore!: (value: boolean) => void;
   (Native.openStoreReview as jest.Mock).mockReturnValueOnce(new Promise(resolve => { resolveStore = resolve; }));
-  const user = setupUser();
   const navigation = await renderRating();
   await advanceRatingDelay();
   await addStars(5);
-  await user.press(screen.getByTestId('submit-rating'));
   expect(Native.openStoreReview).toHaveBeenCalledTimes(1);
 
   await act(async () => navigation.emit('blur'));
   await act(async () => resolveStore(true));
   expect(navigation.navigate).not.toHaveBeenCalled();
   expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith('play_redirect_finished', expect.anything());
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+});
+
+test('a completed Play Store request records its outcome after backgrounding without restoring the dialog', async () => {
+  let resolveStore!: (value: boolean) => void;
+  const appStateListeners:Array<(state:string)=>void>=[];
+  jest.spyOn(AppState,'addEventListener').mockImplementation((_event,listener)=>{
+    appStateListeners.push(listener as (state:string)=>void);
+    return {remove:jest.fn()};
+  });
+  (Native.openStoreReview as jest.Mock).mockReturnValueOnce(new Promise(resolve=>{resolveStore=resolve;}));
+  await renderRating();
+  await advanceRatingDelay();
+  await addStars(5);
+  expect(Native.openStoreReview).toHaveBeenCalledTimes(1);
+  expect(screen.getByTestId('rating-dialog')).toBeOnTheScreen();
+
+  await act(async()=>{appStateListeners.forEach(listener=>listener('background'));});
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+  await act(async()=>resolveStore(true));
+
+  const outcomes=Native.logTelemetryEvent.mock.calls.filter(([event])=>event==='play_redirect_finished');
+  expect(outcomes).toHaveLength(1);
+  expect(outcomes[0]?.[1]).toContain('success');
   expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
 });
 

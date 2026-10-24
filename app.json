@@ -9,11 +9,11 @@
     "newArchEnabled": true,
     "android": {
       "package": "dev.kigya.pixora",
-      "versionCode": 18
+      "versionCode": 19
     },
     "ios": {
       "bundleIdentifier": "dev.kigya.pixora",
-      "buildNumber": "18",
+      "buildNumber": "19",
       "supportsTablet": true
     },
     "plugins": [

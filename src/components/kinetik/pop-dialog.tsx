@@ -41,7 +41,7 @@ export type PopDialogProps = {
   message?: string;
   /** Extra content between the message and the actions. */
   children?: ReactNode;
-  /** One to three actions; two sit side by side, more are stacked. */
+  /** Actions are stacked vertically so long localized labels remain readable. */
   actions: readonly PopDialogAction[];
   /** A tap outside closes it. Defaults to true. */
   dismissable?: boolean;
@@ -106,8 +106,6 @@ export function PopDialog({
     };
   });
 
-  const stacked = actions.length > 2;
-
   return (
     <Modal
       testID={testID ? `${testID}-modal` : undefined}
@@ -166,9 +164,9 @@ export function PopDialog({
             </Text>
           ) : null}
           {children}
-          {actions.length > 0 && <View style={[stacked ? styles.stack : styles.pair, { marginTop: space[4] }]}>
+          {actions.length > 0 && <View style={[styles.stack, { marginTop: space[4] }]}>
             {actions.map((a) => (
-              <ActionButton key={a.label} action={a} fill={!stacked} />
+              <ActionButton key={a.label} action={a} />
             ))}
           </View>}
         </Animated.View>
@@ -177,7 +175,7 @@ export function PopDialog({
   );
 }
 
-function ActionButton({ action, fill }: { action: PopDialogAction; fill: boolean }) {
+function ActionButton({ action }: { action: PopDialogAction }) {
   const tone = action.tone ?? 'default';
   const {colors,font}=useKinetikTheme();
   return (
@@ -186,10 +184,10 @@ function ActionButton({ action, fill }: { action: PopDialogAction; fill: boolean
       accessibilityLabel={action.label}
       variant={tone === 'primary' ? 'ember' : 'surface'}
       size="md"
-      block={fill}
-      style={[fill ? { flex: 1 } : undefined,tone==='danger'?{backgroundColor:colors.danger}:undefined]}
+      block
+      style={[styles.action,tone==='danger'?{backgroundColor:colors.danger}:undefined]}
     >
-      {tone==='danger'?<Text style={{color:colors.background,fontSize:font.size.sm,fontWeight:font.weight.semibold}}>{action.label}</Text>:action.label}
+      <Text style={{color:tone==='danger'?colors.background:tone==='primary'?colors.onEmber:colors.text,fontSize:font.size.sm,fontWeight:font.weight.semibold,textAlign:'center',flexShrink:1,flexWrap:'wrap'}}>{action.label}</Text>
     </PressJelly>
   );
 }
@@ -197,6 +195,6 @@ function ActionButton({ action, fill }: { action: PopDialogAction; fill: boolean
 const styles = StyleSheet.create({
   root: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   card: { borderWidth: 1 },
-  pair: { flexDirection: 'row', gap: 10 },
   stack: { gap: 8 },
+  action: { width: '100%', minHeight: 48, height: 'auto', paddingVertical: 10 },
 });

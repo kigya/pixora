@@ -95,8 +95,9 @@ export function MorphSelect({
   const selected = index >= 0 ? options[index] : undefined;
 
   const searchable = options.length > maxVisible;
-  const visibleOptions = searchable && query.trim()
-    ? options.filter((option) => option.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleOptions = searchable && normalizedQuery
+    ? options.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuery) || option.value.toLocaleLowerCase().includes(normalizedQuery))
     : options;
   const selectedIndex = visibleOptions.findIndex((option) => option.value === value);
   const rows = Math.min(visibleOptions.length, maxVisible);
@@ -269,6 +270,7 @@ export function MorphSelect({
             <ScrollView
               style={styles.grow}
               contentContainerStyle={{ padding: PAD }}
+              keyboardShouldPersistTaps="handled"
               scrollEnabled={visibleOptions.length > maxVisible}
               showsVerticalScrollIndicator={false}
             >

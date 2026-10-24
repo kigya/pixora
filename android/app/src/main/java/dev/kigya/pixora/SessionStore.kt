@@ -1,6 +1,8 @@
 package dev.kigya.pixora
 
 import android.content.Context
+import android.os.Build
+import android.os.LocaleList
 import android.util.AtomicFile
 import org.json.JSONArray
 import org.json.JSONObject
@@ -103,6 +105,18 @@ object SessionStore {
         try { stream.write(candidate.toString().toByteArray()); journal.finishWrite(stream) }
         catch (e: Exception) { journal.failWrite(stream); throw e }
     }
+    /** AppCompat's per-app locale can replace Resources.getSystem() on newer Android versions.
+     * Read the system list from LocaleManager so the Settings "System" choice stays distinct. */
+    internal fun systemLanguage(ctx: Context): String {
+        val systemLocales = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ctx.getSystemService(android.app.LocaleManager::class.java)?.systemLocales
+        } else null
+        val locale = systemLocales?.takeUnless { it.isEmpty }?.get(0)
+            ?: android.content.res.Resources.getSystem().configuration.locales.takeUnless { it.isEmpty }?.get(0)
+            ?: LocaleList.getDefault().takeUnless { it.isEmpty }?.get(0)
+            ?: java.util.Locale.getDefault()
+        return locale.toLanguageTag()
+    }
     fun settings(ctx: Context): JSONObject {
         val p = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val storedLanguage = p.getString("language", "system") ?: "system"
@@ -112,6 +126,6 @@ object SessionStore {
         val upgradedInstall = appInfo.lastUpdateTime > appInfo.firstInstallTime
         val languageChosen = p.contains("language") || p.all.isNotEmpty() || File(context.filesDir, "session.json").exists() || upgradedInstall
         return JSONObject().put("onboardingVersion",OnboardingStore.version(ctx)).put("cacheLimitMiB",p.getInt("cacheLimitMiB",-1)).put("notificationHintCount",p.getInt("notificationHintCount",0)).put("theme", p.getString("theme", "system")).put("language", language)
-            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("aiDetailNoticeSeen", p.getBoolean("aiDetailNoticeSeen", false)).put("systemLanguage", android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
+            .put("format", p.getString("format", "png")).put("notificationAsked", p.getBoolean("notificationAsked", false)).put("notificationIntroSeen", p.getBoolean("notificationIntroSeen", false)).put("aiDetailNoticeSeen", p.getBoolean("aiDetailNoticeSeen", false)).put("systemLanguage", systemLanguage(ctx)).put("languageChosen", languageChosen).put("notificationDismissedSession", p.getString("notificationDismissedSession", ""))
     }
 }

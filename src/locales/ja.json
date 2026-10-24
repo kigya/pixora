@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPUを使えないため、CPUで続行します。",
     "INFERENCE_FAILED": "処理に失敗しました。再試行するか別のファイルを選んでください。",
     "SERVICE_START_FAILED": "処理を開始できませんでした。アプリに戻って再試行してください。",
-    "TIME_LIMIT": "処理の上限時間30分に達しました。再試行できます。",
+    "TIME_LIMIT": "処理の上限時間{minutes}分に達しました。再試行できます。",
     "INTERRUPTED": "処理が中断されました。最初から再実行できます。",
     "EXPORT_FAILED": "保存または表示できませんでした。結果はアプリに残っています。",
     "SHARE_FAILED": "共有できませんでした。結果はアプリに残っています。",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "ストレージの空き容量が不足しています。",
     "notEnoughMemory": "メモリが不足しています。他のアプリを閉じて再試行してください。",
     "licenses": "ライセンス",
-    "languageSearch": "言語"
+    "languageSearch": "言語",
+    "notificationBody": "Pixoraがバックグラウンドで動作中も、ダウンロード状況の確認とキャンセルができます。"
   },
   "notice": {
     "aiDetailsMayChange": "AIが細部を変更する場合があります"

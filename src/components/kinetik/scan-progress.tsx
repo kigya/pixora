@@ -25,7 +25,7 @@ import { useReduceMotion } from '../../lib/kinetik/hooks/use-reduce-motion';
 import { useShaderClock } from '../../lib/kinetik/hooks/use-shader-clock';
 import { durations, easings, spring, timing } from '../../lib/kinetik/motion/motion';
 import { useKinetikTheme } from '../../lib/kinetik/tokens/theme';
-import { glow, withAlpha } from '../../lib/kinetik/tokens/tokens';
+import { withAlpha } from '../../lib/kinetik/tokens/tokens';
 
 export type ScanProgressProps = {
   /** The image being analysed. Or pass `children` for any other media. */
@@ -43,7 +43,7 @@ export type ScanProgressProps = {
   label: string;
   /** Shown once done. Defaults to "Analysis complete". */
   doneLabel?: string;
-  /** Colour of the wash over the image, the ring and the glow. Defaults to the theme success green. */
+  /** Colour of the progress ring and completion mark. Defaults to the theme success green. */
   tint?: string;
   /** Read by screen readers for the image. */
   imageLabel?: string;
@@ -63,11 +63,10 @@ const hash = (x: number, y: number) => {
 };
 
 /**
- * An "analysing" state for media: a tinted wash over the image while a scan
- * band rolls down it, lighting a field of pixel squares that twinkle in its
- * wake; under it, a pill whose outline fills with progress and a dashed
- * spinner. When it is done the pixels clear, the ring closes and the spinner
- * turns into a check.
+ * An "analysing" state for media: a scan band rolls down the image, lighting
+ * a field of pixel squares that twinkle in its wake. A separate pill shows
+ * native-reported progress (or an indeterminate spinner); when done, the
+ * pixels clear, the ring closes and the spinner turns into a check.
  */
 export function ScanProgress({
   source,
@@ -93,25 +92,9 @@ export function ScanProgress({
     live.set(withTiming(done ? 0 : 1, { ...timing('slow', reduced), duration: 700 }));
   }, [done, reduced, live]);
 
-  const wash = useAnimatedStyle(() => ({ opacity: live.get() }));
 
   return (
     <View style={[{ gap: space[5] }, style]}>
-      {/* The glow sits on its own layer behind the card, so the pixel field
-          redrawing every frame never makes the blurred shadow redraw too. */}
-      <View
-        pointerEvents="none"
-        style={[
-          styles.glow,
-          {
-            height,
-            borderRadius: radius.xl,
-            backgroundColor: colors.surface,
-            boxShadow: glow(color),
-            opacity: done ? 0 : 1,
-          },
-        ]}
-      />
       <View
         style={[styles.card, { height, borderRadius: radius.xl, backgroundColor: colors.surface }]}
         accessible={!!imageLabel}
@@ -122,13 +105,9 @@ export function ScanProgress({
         }
       >
         {source ? (
-          <Image source={source} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <Image source={source} style={StyleSheet.absoluteFill} resizeMode="contain" />
         ) : null}
         {children}
-        <Animated.View
-          pointerEvents="none"
-          style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(color, 0.3) }, wash]}
-        />
         {media.width > 0 && !reduced ? (
           <Pixels width={media.width} height={media.height} running={active && !done} live={live} />
         ) : null}
@@ -316,15 +295,14 @@ function Ring({
   const reduced = useReduceMotion();
   const path = useMemo(() => ringPath(width, PILL), [width]);
   const end = useSharedValue(0);
-  const known = true;
-
   useEffect(() => {
     if (done) {
       end.set(withTiming(1, { ...timing('slow', reduced), duration: 600 }));
-    } else if (known) {
+    } else {
+      // Ring only mounts when the caller has a native-reported progress value.
       end.set(withSpring(Math.max(0, Math.min(1, progress)), spring('smooth', reduced)));
     }
-  }, [done, known, progress, reduced, end]);
+  }, [done, progress, reduced, end]);
 
   const trace = useDerivedValue(() => end.get());
 

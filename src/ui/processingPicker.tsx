@@ -40,8 +40,8 @@ export function ProcessingPicker({
   const select = (id: ProfileId) => {
     if (current !== id) {
       track('profile_selected', { profile_id: id, previous_profile: current });
-      onChange(id);
     }
+    onChange(id);
   };
   return (
     <View style={{ gap: 12 }}>
@@ -61,7 +61,6 @@ export function ProcessingPicker({
               <Button
                 title={selected ? t.done : t.selectModel}
                 secondary={!selected}
-                disabled={selected}
                 icon={selected ? 'check' : undefined}
                 testID={`select-model-${id}`}
                 onPress={() => select(id)}

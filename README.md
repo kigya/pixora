@@ -35,11 +35,11 @@ Eight presets cover photos, illustrations and pixel art. Seven use bundled ncnn/
 
 Recreate uses the input image to guide local image-to-image generation. An optional description can guide the result. It can invent or change details; it does not recover a verifiable original.
 
-The optional SD 1.5 Q4 + LCM package is **1.88 GB**. Download it explicitly, pause or resume the download, and remove it from Settings when you no longer need it. Cache cleanup keeps the model. The mode has separate resource checks and is experimental; phone speed, memory use and quality have not been validated for this revision.
+The optional SD 1.5 Q4 + LCM package is **1.88 GB**. Download it explicitly, pause or resume the download, and remove it from Settings when you no longer need it. Cache cleanup keeps the model. The compact profile uses a 512×512 internal diffusion canvas, returns a crop with a long side of at most 256 pixels, then uses the existing AI upscaler. Model loading can be slow and memory use depends on the phone. Current device measurements are tracked in the verification report.
 
-<p><img src="assets/recreate/before.png" width="46%" alt="Degraded cat image used as the reconstruction input"> <img src="assets/recreate/cat-unsplash-source.jpg" width="46%" alt="The same cat in the original high-quality reference photograph"></p>
+<p><img src="assets/recreate/before.png" width="46%" alt="Degraded cat image used as the reconstruction input"> <img src="assets/recreate/after.png" width="46%" alt="Actual local img2img output from the degraded cat image"></p>
 
-<sub>The interface uses a degraded copy and its matching original as an illustrative reference pair. The clean photograph is not a generated result. An archived host img2img experiment is identified separately in the manifest. Source image: Mikhail Vasilyev, CC0; parameters and hashes are in <a href="assets/recreate/manifest.json">the asset manifest</a>.</sub>
+<sub>The comparison shows a degraded input and an actual SD 1.5 Q4 + LCM img2img output. Generation can change markings and other details. This host example does not establish phone quality or speed. Source image: Mikhail Vasilyev, CC0; parameters and hashes are in <a href="assets/recreate/manifest.json">the asset manifest</a>.</sub>
 
 ## Compare before you save
 
@@ -90,7 +90,7 @@ Android targets ARM64 phones and tablets running Android 10 or later. iOS target
 
 The interface supports light, dark and system themes, **34 active languages**, right-to-left layouts and scalable text. Translations have not been professionally reviewed.
 
-Version 0.9.0 remains an experimental source revision. The current UX revision has real Xiaomi release-flow checks and automated tests; see the [current verification report](docs/engineering/ux-090.md) for exact scope and remaining gates. The strict whole-app coverage threshold is still 100% and has not passed for this revision. Recreate is not accepted on the tested 4 GB phone; its 6 GiB safety guard remains. No emulator or simulator was used. This repository does not offer a signed 0.9 store download.
+Version 0.9.0 remains an experimental source revision. The current UX revision has real Xiaomi release-flow checks and automated tests; see the [current verification report](docs/engineering/ux-090.md) for exact scope and remaining gates. The strict whole-app coverage threshold is still 100% and has not passed for this revision. The compact Recreate profile replaces the fixed 6 GiB guard with dynamic resource checks; real-image generation and current verification limits are recorded in the report. No emulator or simulator was used. This repository does not offer a signed 0.9 store download.
 
 ## Build from source
 

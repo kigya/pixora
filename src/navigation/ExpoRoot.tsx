@@ -4,7 +4,7 @@ import {AppState, StatusBar, StyleSheet, Text, View} from 'react-native';
 import {Stack, ThemeProvider, DarkTheme, DefaultTheme} from 'expo-router';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import Animated, {useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, cancelAnimation} from 'react-native-reanimated';
+import Animated, {useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, withDelay, cancelAnimation} from 'react-native-reanimated';
 import Svg, {Path, Rect} from 'react-native-svg';
 import {AppProvider, useApp} from '../application/AppProvider';
 import Native from '../specs/NativeUpscale';
@@ -31,13 +31,21 @@ function StartupSplash({active, onShown}: {active: boolean; onShown: () => void}
         if (!active || shown.current) return;
         shown.current = true;
         onShown();
+        // Start from the exact native solid frame, then introduce the shader.
+        reveal.set(reduced ? 1 : withDelay(80,withTiming(1,{duration:360})));
       });
     });
-  }, [active, onShown]);
+  }, [active, onShown, reduced, reveal]);
   useEffect(() => {
     if (active) {
-      reveal.set(reduced ? 1 : withTiming(1, {duration:260}));
-      releaseAtVisibleFrame();
+      if (shown.current) {
+        // Backgrounding cancels the in-flight reveal. Resume from its current
+        // opacity, or finish immediately if Reduce Motion is enabled.
+        reveal.set(reduced ? 1 : withTiming(1,{duration:360}));
+      } else {
+        reveal.set(0);
+        releaseAtVisibleFrame();
+      }
     }
     else cancelAnimation(reveal);
     return () => {
@@ -60,7 +68,7 @@ function StartupSplash({active, onShown}: {active: boolean; onShown: () => void}
     if (secondFrame.current !== null) cancelAnimationFrame(secondFrame.current);
   }, []);
   return <View style={[StyleSheet.absoluteFill,{backgroundColor:colors.bg}]}>
-    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill,gradient]}>
+    <Animated.View testID="startup-aurora-layer" pointerEvents="none" style={[StyleSheet.absoluteFill,gradient]}>
       <AuroraVeil active={active} intensity={1} speed={3} baseColor={colors.bg} colors={[colors.accent,colors.cyan,colors.accent]} style={StyleSheet.absoluteFill}/>
     </Animated.View>
     <View testID="startup-brand" style={styles.brand} onLayout={() => {laidOut.current=true;releaseAtVisibleFrame();}}>
@@ -78,18 +86,22 @@ function Navigator() {
   const [minimumElapsed,setMinimumElapsed] = useState(false);
   const [foreground,setForeground] = useState(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
   const [retrying,setRetrying] = useState(false);
-  const splashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [splashVisible,setSplashVisible] = useState(false);
+  const splashRemaining = useRef(1500);
   const onSplashShown = useCallback(() => {
-    if (splashTimer.current !== null) return;
-    // The first Aurora layout releases Android's plain launch window. Its own
-    // minimum starts here, not while React is still preparing the first frame.
     Native.finishStartup();
-    splashTimer.current = setTimeout(() => setMinimumElapsed(true),1500);
+    setSplashVisible(true);
   }, []);
   useEffect(() => {
     const listener = AppState.addEventListener('change',state => setForeground(state === 'active'));
-    return () => {if(splashTimer.current !== null)clearTimeout(splashTimer.current);listener.remove();};
+    return () => listener.remove();
   },[]);
+  useEffect(() => {
+    if (!splashVisible || !foreground || minimumElapsed) return;
+    const started = Date.now();
+    const timer = setTimeout(() => setMinimumElapsed(true),splashRemaining.current);
+    return () => {clearTimeout(timer);splashRemaining.current = Math.max(0,splashRemaining.current-(Date.now()-started));};
+  },[splashVisible,foreground,minimumElapsed]);
   const startup = loading || !minimumElapsed || startupError;
   return <View style={[styles.root,{backgroundColor:colors.bg}]}>
     <StatusBar barStyle={dark ? 'light-content' : 'dark-content'}/>
@@ -98,12 +110,13 @@ function Navigator() {
         <Stack.Screen name="index"/>
         <Stack.Screen name="Home"/>
         <Stack.Screen name="Settings"/>
+        <Stack.Screen name="Models"/>
         <Stack.Screen name="Onboarding"/>
         <Stack.Screen name="Feedback"/>
         <Stack.Screen name="Language"/>
       </Stack></View>}
     </ThemeProvider>
-    {startup && <StartupSplash active={foreground} onShown={onSplashShown}/>}
+    {startup && <StartupSplash active={foreground && !loading} onShown={onSplashShown}/>}
     {startupError && <View style={styles.retry}><Text accessibilityRole="alert" style={{color:colors.text}}>{t.error}</Text><PressJelly loading={retrying} onPress={() => {setRetrying(true);refresh().catch(() => {}).finally(() => setRetrying(false));}}>{t.retry}</PressJelly></View>}
   </View>;
 }

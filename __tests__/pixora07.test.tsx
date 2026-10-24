@@ -278,7 +278,7 @@ test('cache slider commits once on release, not during movement, cancels cleanly
   expect(changed).toHaveBeenLastCalledWith(0);
 });
 
-test('processing card reports real phases, uncertainty, fallback and stops its clock in background', async () => {
+test('processing card keeps elapsed time separate from native progress and pauses in background', async () => {
   jest.useFakeTimers();
   jest.setSystemTime(1000000);
   let listener: (state: any) => void = () => {};
@@ -297,14 +297,9 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
     backend: 'GPU',
   };
   const { rerender } = await render(<ProcessingCard session={job} />);
-  const progressbars = screen.getAllByRole('progressbar');
-  expect(progressbars).toHaveLength(2);
-  expect(progressbars[0]).toHaveAccessibilityValue({
-    min: 0,
-    max: 100,
-    now: 54,
-  });
-  expect(progressbars[1]).toHaveAccessibilityValue({ min: 0, max: 100, now: 54 });
+  expect(screen.getByText(strings.en.elapsedLabel)).toBeOnTheScreen();
+  expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.processing)).not.toBeOnTheScreen();
   expect(screen.queryByText(strings.en.estimatingTime)).not.toBeOnTheScreen();
   expect(screen.queryByText('GPU')).not.toBeOnTheScreen();
   expect(screen.queryByText(strings.en.remainingLabel)).not.toBeOnTheScreen();
@@ -326,31 +321,20 @@ test('processing card reports real phases, uncertainty, fallback and stops its c
     />,
   );
   expect(screen.getByText(strings.en.fallback)).toBeOnTheScreen();
-  await rerender(
-    <ProcessingCard
-      session={{
-        ...job,
-        state: 'FINALIZING',
-        phase: 'writing_result',
-        progress: -1,
-        backend: '',
-      }}
-    />,
-  );
-  expect(screen.getByRole('progressbar', { name: strings.en.finalizing })).toBeOnTheScreen();
-  expect(screen.getByRole('progressbar', { name: strings.en.finalizing }).props.accessibilityValue).toBeUndefined();
+  await rerender(<ProcessingCard session={{ ...job, state: 'FINALIZING', phase: 'writing_result', progress: -1, backend: '' }} />);
+  expect(screen.queryByText(strings.en.finalizing)).not.toBeOnTheScreen();
   await rerender(
     <ProcessingCard
       session={{ ...job, phase: 'unknown', backend: 'CPU', elapsedMs: 301000 }}
     />,
   );
-  expect(screen.getByText(strings.en.long)).toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.long)).not.toBeOnTheScreen();
   await rerender(
     <ProcessingCard
       session={{ ...job, phase: 'preparing_image', backend: 'CPU' }}
     />,
   );
-  expect(screen.getByText(strings.en.cpu)).toBeOnTheScreen();
+  expect(screen.queryByText(strings.en.cpu)).not.toBeOnTheScreen();
 });
 
 test('screen engagement excludes background and loss of native navigation focus', async () => {
@@ -432,11 +416,7 @@ test('job analytics categorises sizes without image URI or filenames', () => {
   expect(JSON.stringify(context)).not.toMatch(/uri|filename|email/i);
 });
 
-test('processing layout adapts to large type and RTL while keeping values LTR', async () => {
-  const rn = require('react-native');
-  const dimensions = jest
-    .spyOn(rn, 'useWindowDimensions')
-    .mockReturnValue({ width: 320, height: 640, fontScale: 2, scale: 1 });
+test('processing elapsed label localizes in RTL and keeps its time value LTR', async () => {
   const job = {
     ...emptySession,
     startedAt: Date.now(),
@@ -449,17 +429,9 @@ test('processing layout adapts to large type and RTL while keeping values LTR', 
       <ProcessingCard session={job} />
     </LocaleContext.Provider>,
   );
-  expect(screen.getAllByRole('progressbar')[0]).toHaveAccessibilityValue({
-    min: 0,
-    max: 100,
-    now: 30,
-  });
-  dimensions.mockReturnValue({
-    width: 840,
-    height: 640,
-    fontScale: 1,
-    scale: 1,
-  });
+  expect(screen.getByText(strings.ar.elapsedLabel)).toBeOnTheScreen();
+  expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+  expect(screen.getByTestId('processing-time').props.style).toBeDefined();
   await rerender(
     <LocaleContext.Provider value="ar">
       <ProcessingCard session={job} />

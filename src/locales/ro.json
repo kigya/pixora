@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU nu este disponibil. Continuăm cu CPU.",
     "INFERENCE_FAILED": "Procesarea a eșuat. Încearcă din nou sau alege alt fișier.",
     "SERVICE_START_FAILED": "Procesarea nu a putut porni. Revino în aplicație și încearcă din nou.",
-    "TIME_LIMIT": "S-a atins limita de procesare de 30 de minute. Poți încerca din nou.",
+    "TIME_LIMIT": "S-a atins limita de procesare de {minutes} de minute. Poți încerca din nou.",
     "INTERRUPTED": "Procesarea a fost întreruptă. Pornește-o din nou.",
     "EXPORT_FAILED": "Fișierul nu a putut fi salvat sau deschis. Rezultatul rămâne în aplicație.",
     "SHARE_FAILED": "Fișierul nu a putut fi distribuit. Rezultatul rămâne în aplicație.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Spațiu insuficient.",
     "notEnoughMemory": "Memorie insuficientă. Închide alte aplicații și încearcă din nou.",
     "licenses": "Licențe",
-    "languageSearch": "Limbă"
+    "languageSearch": "Limbă",
+    "notificationBody": "Urmărește și anulează descărcarea când Pixora rulează în fundal."
   },
   "notice": {
     "aiDetailsMayChange": "AI poate modifica detalii mici"

@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU tidak tersedia. Dilanjutkan dengan CPU.",
     "INFERENCE_FAILED": "Pemrosesan gagal. Coba lagi atau pilih file lain.",
     "SERVICE_START_FAILED": "Pemrosesan tidak dapat dimulai. Kembali ke aplikasi dan coba lagi.",
-    "TIME_LIMIT": "Batas pemrosesan 30 menit tercapai. Anda dapat mencoba lagi.",
+    "TIME_LIMIT": "Batas pemrosesan {minutes} menit tercapai. Anda dapat mencoba lagi.",
     "INTERRUPTED": "Pemrosesan terhenti. Mulai lagi.",
     "EXPORT_FAILED": "File tidak dapat disimpan atau dibuka. Hasil tetap ada di aplikasi.",
     "SHARE_FAILED": "File tidak dapat dibagikan. Hasil tetap ada di aplikasi.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Ruang penyimpanan tidak cukup.",
     "notEnoughMemory": "Memori tidak cukup. Tutup aplikasi lain dan coba lagi.",
     "licenses": "Lisensi",
-    "languageSearch": "Bahasa"
+    "languageSearch": "Bahasa",
+    "notificationBody": "Pantau dan batalkan unduhan saat Pixora berjalan di latar belakang."
   },
   "notice": {
     "aiDetailsMayChange": "AI dapat mengubah detail kecil"

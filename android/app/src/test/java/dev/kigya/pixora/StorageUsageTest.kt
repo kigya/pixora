@@ -9,6 +9,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
@@ -52,5 +54,44 @@ class StorageUsageTest {
         val saturated = StorageUsageSnapshot(Long.MAX_VALUE, 1L, 0L, 0L, 0L, -1L)
         assertEquals(Long.MAX_VALUE, saturated.totalBytes)
         assertEquals(0L, saturated.freeBytes)
+    }
+
+    @Test fun canonicalAliasesKeepSessionFilesOutOfOtherBucket() {
+        val physicalData = folder.newFolder("physical-data")
+        val aliasData = File(folder.root, "data-alias")
+        Files.createSymbolicLink(aliasData.toPath(), physicalData.toPath())
+        val cache = File(physicalData, "cache").apply { mkdirs() }
+        val canonicalSessions = File(physicalData, "files/sessions").apply { mkdirs() }
+        val aliasSessions = File(aliasData, "files/sessions")
+        val canonicalJournal = File(physicalData, "files/session.json").apply { parentFile!!.mkdirs(); writeBytes(ByteArray(5)) }
+        val aliasJournal = File(aliasData, "files/session.json")
+        val models = File(aliasData, "files/recreate-model")
+        File(canonicalSessions, "result.bin").writeBytes(ByteArray(13))
+        File(cache, "preview.bin").writeBytes(ByteArray(7))
+
+        val usage = StorageUsage.scan(physicalData, cache, aliasSessions, aliasJournal, models, 41L)
+
+        assertEquals(18L, usage.sessionBytes)
+        assertEquals(7L, usage.cacheBytes)
+        assertEquals(0L, usage.otherBytes)
+        assertEquals(25L, usage.totalBytes)
+    }
+
+    @Test fun canonicalPathFailureFallsBackToNormalizedAbsolutePath() {
+        val data = folder.newFolder("fallback-data").canonicalFile
+        val cache = File(data, "cache").apply { mkdirs() }
+        val sessions = File(data, "sessions").apply { mkdirs() }
+        val models = File(data, "models").apply { mkdirs() }
+        File(cache, "preview.bin").writeBytes(ByteArray(9))
+        File(sessions, "session.json").writeBytes(ByteArray(4))
+        val failingCanonicalCache = object : File(cache.path) {
+            override fun getCanonicalFile(): File = throw IOException("controlled canonical path failure")
+        }
+
+        val usage = StorageUsage.scan(data, failingCanonicalCache, sessions, File(data, "journal.json"), models, 1L)
+
+        assertEquals(9L, usage.cacheBytes)
+        assertEquals(4L, usage.sessionBytes)
+        assertEquals(0L, usage.otherBytes)
     }
 }

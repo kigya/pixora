@@ -68,6 +68,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }),
     [caps, setCaps] = useState<Capabilities | null>(null),
     [loading, setLoading] = useState(true),
+    [themeReady, setThemeReady] = useState(false),
     [startupError, setStartupError] = useState(false),
     [message, setMessage] = useState<MessageKey>(''),
     [notifications, setNotifications] = useState<boolean | null>(null);
@@ -107,6 +108,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]);
     accept(current);
     setSettings(preferences);
+    setThemeReady(true);
     setCaps(capabilities);
     setNotifications(notice);
     setAvailability(flags);
@@ -169,7 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <SessionContext.Provider value={session}>
       <AppContext.Provider value={value}>
-        <PixoraThemeProvider dark={dark}>
+        <PixoraThemeProvider dark={dark} resolved={themeReady}>
           <LocaleContext.Provider value={lang}>
             <DialogProvider>
               <InformationProvider>{children}</InformationProvider>

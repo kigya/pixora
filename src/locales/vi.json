@@ -108,7 +108,7 @@
     "GPU_FAILED": "Không dùng được GPU. Tiếp tục bằng CPU.",
     "INFERENCE_FAILED": "Xử lý không thành công. Hãy thử lại hoặc chọn tệp khác.",
     "SERVICE_START_FAILED": "Không thể bắt đầu xử lý. Quay lại ứng dụng rồi thử lại.",
-    "TIME_LIMIT": "Đã đạt giới hạn xử lý 30 phút. Bạn có thể thử lại.",
+    "TIME_LIMIT": "Đã đạt giới hạn xử lý {minutes} phút. Bạn có thể thử lại.",
     "INTERRUPTED": "Quá trình xử lý bị gián đoạn. Hãy bắt đầu lại.",
     "EXPORT_FAILED": "Không thể lưu hoặc mở tệp. Kết quả vẫn ở trong ứng dụng.",
     "SHARE_FAILED": "Không thể chia sẻ tệp. Kết quả vẫn ở trong ứng dụng.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Không đủ dung lượng lưu trữ.",
     "notEnoughMemory": "Không đủ bộ nhớ. Đóng các ứng dụng khác rồi thử lại.",
     "licenses": "Giấy phép",
-    "languageSearch": "Ngôn ngữ"
+    "languageSearch": "Ngôn ngữ",
+    "notificationBody": "Theo dõi và hủy tải xuống khi Pixora chạy trong nền."
   },
   "notice": {
     "aiDetailsMayChange": "AI có thể thay đổi các chi tiết nhỏ"

@@ -1,5 +1,6 @@
 export type Routes = {
-  Home: undefined;
+  Home: { selectedProfile?: import('../specs/NativeUpscale').ProfileId; selectionToken?: string } | undefined;
+  Models: { processingKind: 'enhance' | 'recreate'; selectedProfile: import('../specs/NativeUpscale').ProfileId };
   Onboarding: { replay: boolean };
   Settings: undefined;
   Language: undefined;

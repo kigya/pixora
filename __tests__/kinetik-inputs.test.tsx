@@ -51,6 +51,8 @@ test('CompareSlider adjusts through accessibility, clips through measured pan/ta
   );
   const control = screen.getByRole('adjustable', { name: 'Result comparison' });
   expect(control.props.accessibilityValue).toMatchObject({ min: 0, max: 100, now: 50 });
+  await fireGesture('compare-slider-tap', 'onEnd', { x: 40 });
+  expect(onPositionChange).not.toHaveBeenCalled();
   await fireGesture('compare-slider', 'onUpdate', { x: 120 });
   expect(onPositionChange).not.toHaveBeenCalled();
   await setLayout(control, 200);
@@ -92,6 +94,11 @@ test('ElasticSlider snaps a measured drag, completes on release, clamps endpoint
   );
   const control = screen.getByRole('adjustable', { name: 'Cache limit' });
   expect(control.props.accessibilityValue).toEqual({ min: 10, max: 50, now: 20, text: '20 MiB' });
+  expect(screen.getByTestId('elastic-slider-thumb')).toBeOnTheScreen();
+  expect(screen.getAllByTestId('elastic-slider-detent')).toHaveLength(3);
+  await fireGesture('elastic-slider', 'onBegin', { x: 20 });
+  await fireGesture('elastic-slider', 'onUpdate', { x: 160 });
+  expect(onValueChange).not.toHaveBeenCalled(); // Layout has not supplied a usable track width yet.
   await setLayout(control, 200);
 
   await fireGesture('elastic-slider', 'onBegin', { x: 0 });
@@ -152,6 +159,9 @@ test('StepSlider snaps by measured width and offers bounded accessible steps in 
   );
   const control = screen.getByRole('adjustable', { name: 'Generation speed' });
   expect(control.props.accessibilityValue).toEqual({ min: 0, max: 3, now: 1, text: 'Balanced' });
+  await fireGesture('step-slider', 'onBegin', { x: 20 });
+  await fireGesture('step-slider', 'onUpdate', { x: 190 });
+  expect(onValueChange).not.toHaveBeenCalled();
   await setLayout(control, 200);
   await fireEvent(control, 'accessibilityAction', event('increment'));
   expect(onValueChange).toHaveBeenLastCalledWith(2);
@@ -165,7 +175,7 @@ test('StepSlider snaps by measured width and offers bounded accessible steps in 
   const action = jest.fn();
   await view.rerender(
     <KinetikProvider scheme="light" reduceMotion="always" haptics={false}>
-      <StepSlider value={1} steps={4} labels={['Fast', 'Balanced', 'Careful', 'Maximum quality']}
+      <StepSlider value={2} steps={4} labels={['Fast', 'Balanced', 'Careful', 'Maximum quality']}
         label="Generation speed" onValueChange={onValueChange}
         action={{ label: 'Reset speed', icon: <Text>↺</Text>, onPress: action }} haptics={false} />
     </KinetikProvider>,
@@ -199,6 +209,31 @@ test('StepSlider keeps its action available with motion enabled and exposes the 
   expect(onValueChange).not.toHaveBeenCalled();
 });
 
+test('StepSlider keeps the in-progress stop when a parent value update arrives during a drag', async () => {
+  const onValueChange = jest.fn();
+  const view = await renderKinetik(
+    <StepSlider value={1} steps={4} labels={['Fast', 'Balanced', 'Careful', 'Maximum quality']}
+      label="Generation speed" onValueChange={onValueChange} haptics={false} />,
+    'always',
+  );
+  const control = screen.getByRole('adjustable', { name: 'Generation speed' });
+  await setLayout(control, 200);
+  await fireGesture('step-slider', 'onBegin', { x: 190 });
+  await fireGesture('step-slider', 'onUpdate', { x: 190 });
+  expect(onValueChange).toHaveBeenLastCalledWith(3);
+
+  await view.rerender(
+    <KinetikProvider scheme="light" reduceMotion="always" haptics={false}>
+      <StepSlider value={2} steps={4} labels={['Fast', 'Balanced', 'Careful', 'Maximum quality']}
+        label="Generation speed" onValueChange={onValueChange} haptics={false} />
+    </KinetikProvider>,
+  );
+  await fireGesture('step-slider', 'onUpdate', { x: 190 });
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+  await fireGesture('step-slider', 'onFinalize', { x: 190 });
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+});
+
 test('MorphSelect searches case-insensitively, ignores disabled choices, selects, dismisses, and handles empty results', async () => {
   const onValueChange = jest.fn();
   const user = userEvent.setup();
@@ -211,8 +246,10 @@ test('MorphSelect searches case-insensitively, ignores disabled choices, selects
     { value: 'it', label: 'Italian' },
     { value: 'pt', label: 'Portuguese' },
     { value: 'sv', label: 'Swedish', disabled: true },
+    { value: 'hu', label: 'Magyar' },
+    { value: 'ar', label: 'العربية' },
   ] as const;
-  await renderKinetik(
+  const view = await renderKinetik(
     <MorphSelect options={options} value="en" onValueChange={onValueChange} label="Language"
       placeholder="Choose language" searchPlaceholder="Search languages" closeLabel="Dismiss language list"
       maxVisible={5} haptics={false} />,
@@ -220,7 +257,12 @@ test('MorphSelect searches case-insensitively, ignores disabled choices, selects
   );
 
   await user.press(screen.getByRole('button', { name: 'Language, English' }));
+  const optionsScroll = view.container.queryAll(node => node.props.scrollEnabled !== undefined)[0];
+  expect(optionsScroll?.props.keyboardShouldPersistTaps).toBe('handled');
   const search = screen.getByLabelText('Search languages');
+  await user.type(search, '   ');
+  expect(screen.getAllByRole('menuitem')).toHaveLength(options.length);
+  await user.clear(search);
   await user.type(search, 'sWe');
   expect(screen.getByRole('menuitem', { name: 'Swedish' })).toBeOnTheScreen();
   expect(screen.queryByRole('menuitem', { name: 'Spanish' })).toBeNull();
@@ -230,6 +272,15 @@ test('MorphSelect searches case-insensitively, ignores disabled choices, selects
   expect(onValueChange).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Search languages')).toHaveDisplayValue('sWe');
 
+  await user.clear(screen.getByLabelText('Search languages'));
+  await user.type(screen.getByLabelText('Search languages'), 'ar');
+  expect(screen.getByRole('menuitem', { name: 'Magyar' })).toBeOnTheScreen();
+  expect(screen.getByRole('menuitem', { name: 'العربية' })).toBeOnTheScreen();
+  await user.press(screen.getByRole('menuitem', { name: 'العربية' }));
+  expect(onValueChange).toHaveBeenNthCalledWith(1, 'ar');
+  expect(screen.queryByLabelText('Search languages')).toBeNull();
+
+  await user.press(screen.getByRole('button', { name: 'Language, English' }));
   await user.clear(screen.getByLabelText('Search languages'));
   await user.type(screen.getByLabelText('Search languages'), 'zzzz');
   expect(screen.queryAllByRole('menuitem')).toHaveLength(0);
@@ -259,4 +310,42 @@ test('MorphSelect supports reduced-motion selection and native modal dismissal',
   await user.press(screen.getByRole('menuitem', { name: 'Light' }));
   expect(onValueChange).toHaveBeenCalledWith('light');
   expect(screen.queryByRole('menuitem', { name: 'Light' })).toBeNull();
+});
+
+test('MorphSelect renders a placeholder, descriptions and leading content for an unselected value', async () => {
+  const onValueChange = jest.fn();
+  const view = await renderKinetik(
+    <MorphSelect
+      options={[
+        { value: 'dark', label: 'Dark', description: 'Best in low light', leading: <Text>●</Text> },
+        { value: 'light', label: 'Light', description: 'Bright surfaces' },
+      ]}
+      value={null} onValueChange={onValueChange} label="Theme" placeholder="Pick a theme" haptics={false}
+    />,
+    'never',
+  );
+  const trigger = screen.getByRole('button', { name: 'Theme, Pick a theme' });
+  await userEvent.press(trigger);
+  expect(screen.getByRole('menuitem', { name: 'Dark, Best in low light' })).toBeOnTheScreen();
+  expect(screen.getByText('●')).toBeOnTheScreen();
+  const escapeBoundary = view.container.queryAll(node => typeof node.props?.onAccessibilityEscape === 'function')[0];
+  expect(escapeBoundary).toBeTruthy();
+  await fireEvent(escapeBoundary!, 'accessibilityEscape');
+  expect(screen.queryByRole('menuitem', { name: 'Dark, Best in low light' })).toBeNull();
+
+  await userEvent.press(screen.getByRole('button', { name: 'Theme, Pick a theme' }));
+  const duplicateTriggers = screen.getAllByRole('button', { name: 'Theme, Pick a theme' });
+  expect(duplicateTriggers).toHaveLength(2);
+  await fireEvent.press(duplicateTriggers[1]);
+  expect(screen.queryByRole('menuitem', { name: 'Dark, Best in low light' })).toBeNull();
+
+  await userEvent.press(screen.getByRole('button', { name: 'Theme, Pick a theme' }));
+  const modal = view.container.queryAll(node => typeof node.props?.onRequestClose === 'function')[0];
+  expect(modal).toBeTruthy();
+  await fireEvent(modal!, 'requestClose');
+  expect(screen.queryByRole('menuitem', { name: 'Dark, Best in low light' })).toBeNull();
+
+  await userEvent.press(screen.getByRole('button', { name: 'Theme, Pick a theme' }));
+  await userEvent.press(screen.getByRole('menuitem', { name: 'Dark, Best in low light' }));
+  expect(onValueChange).toHaveBeenCalledWith('dark');
 });

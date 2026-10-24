@@ -1,6 +1,7 @@
 package dev.kigya.pixora
 
 import java.io.File
+import java.io.IOException
 import java.nio.file.Path
 
 data class StorageUsageSnapshot(
@@ -35,7 +36,6 @@ internal object StorageUsage {
         var temporary = 0L
         var model = 0L
         var other = 0L
-        val dataPath = normalized(dataDir)
         val cachePath = normalized(cacheDir)
         val sessionPath = normalized(sessionDir)
         val journalPath = normalized(sessionJournal)
@@ -61,7 +61,12 @@ internal object StorageUsage {
         return name.endsWith(".partial") || name.endsWith(".part") || name.startsWith("incoming-")
     }
 
-    private fun normalized(file: File): Path = file.toPath().toAbsolutePath().normalize()
+    /** Resolve Android's /data/data and /data/user/0 aliases to the same physical path. */
+    private fun normalized(file: File): Path = try {
+        file.canonicalFile.toPath().normalize()
+    } catch (_: IOException) {
+        file.toPath().toAbsolutePath().normalize()
+    }
 
 }
 

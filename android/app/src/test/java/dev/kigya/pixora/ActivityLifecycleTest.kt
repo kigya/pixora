@@ -1,6 +1,7 @@
 package dev.kigya.pixora
 
 import android.app.Application
+import android.content.ComponentName
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
@@ -19,6 +20,15 @@ import org.robolectric.fakes.RoboSplashScreen
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class ActivityLifecycleTest {
+    @Test fun mainActivityHandlesLocaleAndLayoutDirectionWithoutBeingRecreated() {
+        val context=org.robolectric.RuntimeEnvironment.getApplication()
+        val info=context.packageManager.getActivityInfo(ComponentName(context,MainActivity::class.java),0)
+
+        assertTrue("locale changes must be delivered to the running React activity",info.configChanges and android.content.pm.ActivityInfo.CONFIG_LOCALE != 0)
+        assertTrue("layout direction changes must be delivered to the running React activity",info.configChanges and android.content.pm.ActivityInfo.CONFIG_LAYOUT_DIRECTION != 0)
+        assertTrue("existing orientation handling must remain declared",info.configChanges and android.content.pm.ActivityInfo.CONFIG_ORIENTATION != 0)
+    }
+
     @Test fun startupWaitsForJavascriptReadinessBeforeDrawing() {
         mockConstruction(DefaultReactActivityDelegate::class.java).use {
             val controller = Robolectric.buildActivity(MainActivity::class.java)
@@ -45,6 +55,25 @@ class ActivityLifecycleTest {
             assertFalse(content.viewTreeObserver.dispatchOnPreDraw()) // Startup completed before the content listener existed.
 
             controller.pause().stop().destroy()
+        }
+    }
+
+    @Test @Config(sdk=[29]) fun preAndroid12StartupUsesSavedLightAndDarkBackgroundWithoutPlatformSplashApi() {
+        mockConstruction(DefaultReactActivityDelegate::class.java).use {
+            for (theme in listOf("light","dark")) {
+                val controller=Robolectric.buildActivity(MainActivity::class.java)
+                val activity=controller.get()
+                activity.getSharedPreferences("settings",0).edit().putString("theme",theme).commit()
+                activity.setTheme(dev.kigya.pixora.R.style.AppTheme)
+                controller.create().start().resume()
+                val content=activity.findViewById<View>(android.R.id.content)
+                assertTrue(content.viewTreeObserver.dispatchOnPreDraw())
+                activity.finishStartup()
+                assertFalse(content.viewTreeObserver.dispatchOnPreDraw())
+                val expected=activity.getColor(if(theme=="dark")R.color.window_background_dark else R.color.window_background_light)
+                assertEquals(expected,(activity.window.decorView.background as android.graphics.drawable.ColorDrawable).color)
+                controller.pause().stop().destroy()
+            }
         }
     }
 

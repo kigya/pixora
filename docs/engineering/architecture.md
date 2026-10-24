@@ -1,6 +1,6 @@
 # Pixora 0.9 architecture
 
-**Status snapshot: 2026-10-22.** This document describes the 0.9 source configuration, not runtime or release evidence. The 0.9 test sources were updated but tests have not been run for this change. The normal Android release build is pending in the root integration run. No device, Xiaomi, emulator, or simulator result is claimed here.
+**Source snapshot: 2026-10-24, code19.** The follow-up uses a compact Recreate profile and a foreground model downloader. Current test/build/device evidence is recorded separately; source configuration alone is not runtime or release acceptance.
 
 ## JavaScript and navigation
 
@@ -55,3 +55,18 @@ The first-install product introduction has three horizontally paged, passive pro
 ## Historical architecture (not the 0.9 stack)
 
 Through 0.8.x Pixora was Bare React Native 0.87.1 with React 19 and a React Navigation container. Original-resolution tiled processing and its explicit UI belonged to the approved 0.8 quality revision. The 0.9 owner-approved plan replaces the stack with Expo SDK 58 / React Native 0.88 and removes Original resolution from new-job UI. Previous build, device, and coverage receipts refer only to their recorded source revisions and must not be reused as 0.9 evidence.
+
+
+## Code19 resource and UX follow-up
+
+The Models route owns selectable Enhance cards and the single Recreate package. Home keeps a compact selection row and optional prompt. Finishing onboarding uses Router replace/back; replay accepts serialized route parameters. The launch minimum counts only visible foreground time after first layout. Native release waits for initial settings hydration; the first resolved palette applies synchronously, and later theme changes retain their tween. Aurora fades from the shared native surface. Processing uses the actual source image plus Scan Progress, elapsed time and cancellation, with no Aurora or Aperture.
+
+Recreate retains an output cap of 256 px (floor-preserved aspect) before enhancement. The selected experimental profile resamples the source into a 512×512 internal diffusion canvas with reflected padding, disables VAE tiling, crops the generated content and resamples it to the public output dimensions. A single-image host A/B rejected the 256 diffusion canvas and 128/256 VAE tiles because of visible color/banding artifacts. Disk-backed CPU parameters, mmap and disabled prefetch/conditioning cache remain. Managed SDK budgets are 512/768/1024 MiB for calibration, separate from OS memory/PSS. In the pinned SDK, CPU capacity checks return success and CPU graph segmentation is disabled (`src/model_manager.cpp`, `src/core/ggml_runner.cpp`); `max_vram` therefore does not enforce a CPU RAM cap or guarantee different streaming behavior for these values. Dynamic available-memory and disk checks remain. Input colors are composited over white for diffusion conditioning, while the original alpha is restored before enhancement. SD resources are released before ncnn starts. The retained model blobs and hashes are unchanged.
+
+Android explicit model transfer uses a dedicated dataSync foreground service. Reserve-before-dispatch prevents double requests; cancellation retains partial files, and installation requires pinned SHA-256 verification. Notification permission is explained at point of use and is optional. Download bytes and installed bytes have different UI meanings. Storage classifies regular private files into disjoint categories using canonical paths; decimal presentation does not migrate binary cache-limit settings.
+
+Star selection has a visual change callback and a separate successful-gesture commit callback. Commits navigate once, with a persisted five-minute/per-job gate. Screen analytics carries a compact navigation context; result/processing schemas stay privacy-allowlisted and below the 25-parameter limit. Model-transfer events report bounded statuses, and raw platform errors are normalized before storage or telemetry.
+
+The corrected reconstruction profile checks for 2 GiB of OS-available memory before launch, separately from the SDK managed-memory budget. This guard follows the measured approximately 2.5 GiB process PSS of the first corrected Xiaomi run; it does not cap total process memory.
+
+Android service timing is mode-specific: Recreate 45 minutes, Enhance 30 minutes; the wake-lock lease is the selected deadline plus 30 seconds. This follows a real eight-step TIME_LIMIT failure at 1,816,925 ms. Recreate reports `RECREATE_TIME_LIMIT` so the shared localized error formatter shows 45; ordinary `TIME_LIMIT` continues to show 30, including the unchanged iOS lifecycle. The instrumentation wait follows the production Recreate deadline plus bounded cleanup grace.

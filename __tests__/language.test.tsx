@@ -31,20 +31,42 @@ test('language picker searches local names and saves the selected locale', async
   expect(navigation.goBack).toHaveBeenCalledTimes(1);
 });
 
-test('settings keeps the searchable language selector inline and persists the choice', async () => {
+test('failed locale persistence keeps the selector open and shows an error', async () => {
+  (Native.updateSettings as jest.Mock).mockRejectedValueOnce(new Error('storage unavailable'));
   await render(
+    <AppProvider>
+      <LanguageScreen navigation={navigation as any} route={{} as any} />
+    </AppProvider>,
+  );
+
+  await userEvent.press(screen.getByRole('button', { name: `${copy.language}, English` }));
+  await userEvent.type(screen.getByPlaceholderText(copy.recreate.languageSearch), '\u0420\u0443\u0441\u0441\u043a\u0438\u0439');
+  await userEvent.press(screen.getByRole('menuitem', { name: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439' }));
+
+  expect(await screen.findByText(copy.errors.INFERENCE_FAILED)).toBeOnTheScreen();
+  expect(navigation.goBack).not.toHaveBeenCalled();
+  await userEvent.press(screen.getByRole('button', { name: copy.back }));
+  expect(navigation.goBack).toHaveBeenCalledTimes(1);
+});
+
+test('settings keeps the searchable language selector inline and persists the choice', async () => {
+  const view = await render(
     <AppProvider>
       <SettingsScreen navigation={navigation as any} route={{} as any} />
     </AppProvider>,
   );
 
+  // Settings is a scrollable screen around MorphSelect's own modal/list. Its
+  // ancestor must not consume the first option tap to dismiss the IME.
+  expect(view.container.queryAll(node => node.props.keyboardShouldPersistTaps === 'always')).toHaveLength(1);
   await userEvent.press(await screen.findByRole('button', { name: `${copy.language}, English` }));
-  await userEvent.type(screen.getByPlaceholderText(copy.recreate.languageSearch), '\u0420\u0443\u0441\u0441\u043a\u0438\u0439');
-  await userEvent.press(screen.getByRole('menuitem', { name: '\u0420\u0443\u0441\u0441\u043a\u0438\u0439' }));
+  await userEvent.type(screen.getByPlaceholderText(copy.recreate.languageSearch), 'ar');
+  await userEvent.press(screen.getByRole('menuitem', { name: '\u0627\u0644\u0639\u0631\u0628\u064a\u0629' }));
 
-  expect(Native.updateSettings).toHaveBeenCalledWith('ru', 'png', 'light');
+  expect(Native.updateSettings).toHaveBeenCalledTimes(1);
+  expect(Native.updateSettings).toHaveBeenCalledWith('ar', 'png', 'light');
   expect(navigation.navigate).not.toHaveBeenCalledWith('Language');
-  expect(await screen.findByRole('button', { name: '\u042f\u0437\u044b\u043a, \u0420\u0443\u0441\u0441\u043a\u0438\u0439' })).toBeOnTheScreen();
+  expect(await screen.findByRole('button', { name: '\u0627\u0644\u0644\u063a\u0629, \u0627\u0644\u0639\u0631\u0628\u064a\u0629' })).toBeOnTheScreen();
 });
 
 test('theme control exposes direct system, light, and dark choices', async () => {
@@ -114,6 +136,7 @@ test('storage refreshes after returning to the foreground', async () => {
       listeners.forEach(listener => listener('background'));
       listeners.forEach(listener => listener('active'));
     });
+    // Foregrounding settings performs one fresh byte-count query.
     expect(Native.getStorageUsage).toHaveBeenCalledTimes(calls + 1);
   } finally {
     appStateSpy.mockRestore();

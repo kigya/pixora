@@ -25,7 +25,8 @@ struct Request {
     uint64_t seed = 0;
     float strength = 0.6f;
     float cfg = 1.0f;
-    uint32_t max_side = 512;
+    uint32_t max_side = 256;
+    uint32_t memory_budget_mib = 512; // SDK-managed CPU weight/runner budget; not a hard OS RSS cap.
 };
 
 struct Result {

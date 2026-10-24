@@ -11,7 +11,7 @@ The current 0.9 source architecture is maintained in [docs/engineering/architect
 
 ## State and verification
 
-Architecture documentation describes source intent and ownership; it is not build or runtime evidence. The 0.9 test sources have not been run for this change. The Android release build is pending in the current integration run; no 0.9 build or device result is asserted here. Earlier 0.8.x checks are historical and bound to their recorded revisions.
+Architecture documentation describes source intent and ownership; it is not build or runtime evidence. The owner later authorized code19 host tests and physical Xiaomi checks. Current measurements, real saved Recreate results, failed trials and remaining coverage/platform/Firebase limits are maintained in [the verification report](engineering/ux-090.md). Earlier0.8.x and code18 results remain historical; they do not establish current-source acceptance.
 
 ## Historical notes
 

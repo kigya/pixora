@@ -1,5 +1,5 @@
 {
-  "type": "illustrative-reference-pair",
+  "type": "model-generated-example",
   "source": {
     "title": "Cat unsplash",
     "page": "https://commons.wikimedia.org/wiki/File:Cat_unsplash.jpg",
@@ -18,9 +18,13 @@
     "cat-unsplash-source.jpg": {
       "sha256": "1d7c76179422119d01919938c534897175b987fd9664298433560221445a610d",
       "bytes": 3638696
+    },
+    "after.png": {
+      "sha256": "2e70a0744d7aafb35aa0bac0ec981637b388fc8ea01a4634eb6994efed478b14",
+      "bytes": 242967
     }
   },
-  "note": "The visible pair uses the same licensed photograph and its degraded derivative. It illustrates reconstruction and is not represented as an inference result. after.png is an archived authentic host result and is not shown in the product.",
+  "note": "Before is a degraded derivative of the licensed source. The displayed after.png is the authentic archived SD1.5 Q4 plus LCM img2img output documented below; it may invent details. The original high-quality source is retained for provenance and is not displayed as a model result.",
   "archived_host_inference": {
     "model": {
       "repo": "gpustack/stable-diffusion-v1-5-GGUF",

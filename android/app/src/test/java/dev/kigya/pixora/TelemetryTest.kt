@@ -61,6 +61,41 @@ class TelemetryTest {
         assertTrue(Telemetry.settings().getBoolean("noticeSeen"));assertEquals(Telemetry.consentVersion,Telemetry.settings().getInt("consentVersion"))
         Telemetry.event("ui_action");assertTrue(received.isEmpty())
     }
+
+    @Test fun recreateDownloadTelemetryIsBoundedAndRespectsAnalyticsOptOut() {
+        val attempt="download-attempt-1"
+        Telemetry.event("recreate_model_download_started", JSONObject()
+            .put("attempt_token",attempt).put("model_version",RecreateModelStore.REVISION)
+            .put("processing_kind","recreate").put("downloaded_bytes",1_024)
+            .put("total_bytes",RecreateModelStore.TOTAL).put("installed_bytes",0)
+            .put("prompt", "private cat").put("path", "/private/model"))
+        val started = received.single()
+        assertEquals("recreate_model_download_started", started.first)
+        assertEquals(setOf("attempt_token","model_version","processing_kind","downloaded_bytes","total_bytes","installed_bytes"),started.second.keySet())
+        assertEquals(attempt,started.second.getString("attempt_token"))
+        assertEquals(RecreateModelStore.REVISION,started.second.getString("model_version"))
+        assertEquals("recreate",started.second.getString("processing_kind"))
+        assertEquals(1_024.0,started.second.getDouble("downloaded_bytes"),0.0)
+
+        Telemetry.event("recreate_model_download_finished", JSONObject().put("attempt_token",attempt)
+            .put("model_version",RecreateModelStore.REVISION).put("processing_kind","recreate")
+            .put("downloaded_bytes",RecreateModelStore.TOTAL).put("total_bytes",RecreateModelStore.TOTAL)
+            .put("installed_bytes",RecreateModelStore.TOTAL).put("duration_ms",2_500).put("status", "success")
+            .put("error_code", "MODEL_DOWNLOAD_FAILED").put("url", "https://private.example/model")
+            .put("prompt", "private cat").put("path", "/private/model"))
+        val finished = received.last()
+        assertEquals("recreate_model_download_finished", finished.first)
+        assertEquals(setOf("attempt_token","model_version","processing_kind","downloaded_bytes","total_bytes","installed_bytes","duration_ms","status","error_code"), finished.second.keySet())
+        assertEquals(attempt,finished.second.getString("attempt_token"))
+        assertEquals(RecreateModelStore.TOTAL.toDouble(),finished.second.getDouble("installed_bytes"),0.0)
+        assertEquals(2_500.0,finished.second.getDouble("duration_ms"),0.0)
+        assertTrue(finished.second.size() <= 25)
+        assertFalse(finished.second.toString().contains("private"))
+
+        Telemetry.update(false, true, true)
+        Telemetry.event("recreate_model_download_finished", JSONObject().put("status", "success"))
+        assertEquals(2, received.size)
+    }
     @Test fun legacyFlagsAndSeenNoticeAreNotConsentAndUnresolvedChoicesDefaultOn() {
         context.getSharedPreferences("telemetry",0).edit()
             .putBoolean("analytics",false).putBoolean("crashes",false)
@@ -161,6 +196,27 @@ class TelemetryTest {
         assertEquals(setOf("action","rating"),result.keySet());assertEquals("help_opened",result.getString("action"));assertEquals(4.0,result.getDouble("rating"),0.0)
         Telemetry.event("screen_view",JSONObject().put("screen_name","home_ready"));assertEquals(2,received.size)
     }
+
+    @Test fun oversizedAllowlistedEventIsRejectedWholeAndValidStringValuesRemainStrings() {
+        Telemetry.update(true, true, true)
+        val stringEvent = JSONObject().put("screen_name", "settings_storage").put("action", "cache_clear")
+        Telemetry.event("ui_action", stringEvent)
+        assertEquals(1, received.size)
+        assertEquals("settings_storage", received.single().second.getString("screen_name"))
+        assertEquals("cache_clear", received.single().second.getString("action"))
+
+        val fields = listOf(
+            "screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile",
+            "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase",
+            "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms",
+            "engagement_ms", "enabled_count", "image_width", "image_height",
+        )
+        val tooLarge = JSONObject()
+        fields.forEachIndexed { index, key -> tooLarge.put(key, "allowed_$index") }
+        Telemetry.event("ui_action", tooLarge)
+
+        assertEquals("events exceeding Firebase's parameter cap must be discarded as a whole", 1, received.size)
+    }
     @Test fun failedSettingsWriteKeepsCollectionStateAndNonFiniteValuesAreDropped() {
         val preferences=context.getSharedPreferences("telemetry",0)
         val wrapped=object:android.content.ContextWrapper(context) {
@@ -236,20 +292,20 @@ class TelemetryTest {
         Telemetry.observeJob(before,JSONObject(next.toString()).put("backend","GPU"))
         assertEquals("same-backend GPU progress does not report a fallback",1,received.size)
         assertEquals("attempt-1",received.single().second.getString("attempt_token"))
-        for((state,error,status) in listOf(Triple("SUCCEEDED","","success"),Triple("CANCELLED","","cancelled"),Triple("INTERRUPTED","","interrupted"),Triple("FAILED","TIME_LIMIT","time_limit"),Triple("FAILED","LOW_MEMORY","error"))) {
+        for((state,error,status) in listOf(Triple("SUCCEEDED","","success"),Triple("CANCELLED","","cancelled"),Triple("INTERRUPTED","","interrupted"),Triple("FAILED","TIME_LIMIT","time_limit"),Triple("FAILED","RECREATE_TIME_LIMIT","time_limit"),Triple("FAILED","LOW_MEMORY","error"))) {
             val job=JSONObject(next.toString()).put("jobId",state+error).put("state",state).put("error",error).put("elapsedMs",123)
             Telemetry.observeJob(JSONObject(),job);Telemetry.observeJob(job,job)
             assertEquals(status,received.last().second.getString("status"))
         }
-        assertEquals(6,received.size)
+        assertEquals(7,received.size)
         Telemetry.observeJob(JSONObject(),JSONObject().put("state","FAILED"))
-        assertEquals(6,received.size)
+        assertEquals(7,received.size)
         Telemetry.observeJob(JSONObject().put("backend","CPU"),JSONObject().put("backend","CPU").put("state","RUNNING"))
-        assertEquals(6,received.size)
+        assertEquals(7,received.size)
         Telemetry.update(false,false,true)
         val offline=JSONObject(next.toString()).put("jobId","opted-out").put("state","SUCCEEDED")
         Telemetry.observeJob(next,offline);Telemetry.update(true,false,true);Telemetry.observeJob(offline,offline)
-        assertEquals(6,received.size)
+        assertEquals(7,received.size)
     }
     @Test fun ratingTelemetryContainsBoundedRecreateContextButNeverPromptOrSourceData() {
         val job = JSONObject().put("jobId", "attempt-7").put("processingKind", "recreate")
@@ -262,7 +318,8 @@ class TelemetryTest {
                 .put("workHeight", 192).put("mime", "image/jpeg").put("hasAlpha", true)
                 .put("sourcePath", "/private/image.jpg"))
         val context = Telemetry.ratingContext(job, 5)
-        assertEquals(24, context.length())
+        assertEquals(25, context.length())
+        assertEquals("compact256_sd512", context.getString("compact_profile"))
         assertEquals("recreate", context.getString("processing_kind"))
         assertEquals("jpeg", context.getString("source_format"))
         assertEquals(1, context.getInt("has_alpha"))
@@ -281,7 +338,8 @@ class TelemetryTest {
                 .put("speed", "quality").put("backend", "CPU").put("resultWidth", 16)
                 .put("resultHeight", 8).put("elapsedMs", 10).put("image", image)
             val context = Telemetry.ratingContext(job, 3)
-            assertEquals(19, context.length())
+            assertEquals(20, context.length())
+            assertEquals("none", context.getString("compact_profile"))
             assertEquals(expected, context.getString("source_format"))
             assertEquals(8, context.getInt("input_width"))
             assertEquals(0, context.getInt("has_alpha"))
@@ -307,5 +365,68 @@ class TelemetryTest {
         assertTrue(context.length()<=25)
         assertEquals(1200,context.getInt("image_width"));assertEquals(900,context.getInt("image_height"));assertEquals("balanced",context.getString("recommended_profile"));assertEquals(1,context.getInt("recommendation_applied"))
         assertFalse(context.toString().contains("private"));assertFalse(context.toString().contains("cat.png"))
+    }
+
+    @Test fun compactDimensionsAreIncludedInJobLifecycleAndOverLimitEventsAreRejectedWhole() {
+        val job=JSONObject().put("jobId","compact-job").put("processingKind","recreate")
+            .put("profileId","standard").put("mode","recreate").put("modelId","sd15-q4")
+            .put("aiInputWidth",256).put("aiInputHeight",192).put("scale",2).put("speed","fast")
+            .put("backend","CPU").put("state","RUNNING").put("phase","recreating")
+            .put("recommendedProfile","").put("recommendationApplied",false)
+            .put("image",JSONObject().put("width",900).put("height",600).put("workWidth",700)
+                .put("workHeight",466).put("sourcePath","/private/cat.png"))
+        val context=Telemetry.jobContext(job)
+        assertEquals(15,context.length())
+        assertEquals("compact256_sd512",context.getString("compact_profile"))
+        assertEquals(256,context.getInt("input_width"));assertEquals(192,context.getInt("input_height"))
+        assertFalse(context.toString().contains("private"))
+        Telemetry.observeJob(JSONObject(),JSONObject(job.toString()).put("state","SUCCEEDED").put("elapsedMs",400))
+        assertEquals(1,received.size)
+        val finished=received.single().second
+        assertEquals("compact256_sd512",finished.getString("compact_profile"))
+        assertEquals(256.0,finished.getDouble("input_width"),0.0)
+        assertTrue(finished.size()<=25)
+
+        val tooMany=JSONObject()
+        listOf("screen_name","screen_class","action","source","status","profile_id","previous_profile","speed","scale","backend","previous_backend","size_bucket","model_version","phase","error_code","attempt_token","format","rating","route","setting","value","duration_ms","engagement_ms","enabled_count","image_width","image_height").forEach { tooMany.put(it,"safe") }
+        val before=received.size
+        Telemetry.event("ui_action",tooMany)
+        assertEquals(before,received.size)
+    }
+
+    @Test fun lifecycleDimensionsMatchFastAndRecreateInferenceCapsBeforeProgressArrives() {
+        val fast=JSONObject().put("processingKind","enhance").put("mode","details").put("speed","fast")
+            .put("image",JSONObject().put("workWidth",1000).put("workHeight",750))
+        val fastContext=Telemetry.jobContext(fast)
+        assertEquals(512,fastContext.getInt("input_width"));assertEquals(384,fastContext.getInt("input_height"))
+        assertEquals("none",fastContext.getString("compact_profile"))
+        val recreate=JSONObject().put("processingKind","recreate").put("mode","recreate").put("speed","quality")
+            .put("image",JSONObject().put("workWidth",700).put("workHeight",465))
+        val recreateContext=Telemetry.jobContext(recreate)
+        assertEquals(256,recreateContext.getInt("input_width"));assertEquals(170,recreateContext.getInt("input_height"))
+        assertEquals("compact256_sd512",recreateContext.getString("compact_profile"))
+    }
+
+    @Test fun dimensionFallbackHandlesPartialSavedSizesInvalidImageAxesAndPixelFastMode() {
+        val partialSaved = Telemetry.jobContext(JSONObject().put("processingKind", "enhance")
+            .put("aiInputWidth", 250).put("aiInputHeight", 0)
+            .put("image", JSONObject().put("workWidth", 60).put("workHeight", 40)))
+        assertEquals(60, partialSaved.getInt("input_width"))
+        assertEquals(40, partialSaved.getInt("input_height"))
+
+        val invalidAxis = Telemetry.ratingContext(JSONObject().put("processingKind", "enhance")
+            .put("image", JSONObject().put("workWidth", 60).put("workHeight", 0)), 2)
+        assertEquals(0, invalidAxis.getInt("input_width"))
+        assertEquals(0, invalidAxis.getInt("input_height"))
+
+        val pixelFast = Telemetry.jobContext(JSONObject().put("processingKind", "enhance")
+            .put("speed", "fast").put("mode", "pixel")
+            .put("image", JSONObject().put("workWidth", 400).put("workHeight", 300)))
+        assertEquals(400, pixelFast.getInt("input_width"))
+        assertEquals(300, pixelFast.getInt("input_height"))
+
+        val blankPrompt = Telemetry.ratingContext(JSONObject().put("processingKind", "recreate")
+            .put("recreatePrompt", "  "), 1)
+        assertEquals(0, blankPrompt.getInt("prompt_present"))
     }
 }

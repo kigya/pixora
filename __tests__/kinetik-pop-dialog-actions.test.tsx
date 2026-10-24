@@ -35,6 +35,8 @@ test('two actions use the primary and danger tones and keep callbacks independen
   const danger = screen.getByRole('button', { name: 'Remove' });
   expect(StyleSheet.flatten(primary.props.style)).toMatchObject({ backgroundColor: '#FFFFFF' });
   expect(StyleSheet.flatten(danger.props.style)).toMatchObject({ backgroundColor: '#FF6B7A' });
+  expect(StyleSheet.flatten(primary.props.style)).toMatchObject({ alignSelf: 'stretch', width: '100%', height: 'auto' });
+  expect(StyleSheet.flatten(danger.props.style)).toMatchObject({ alignSelf: 'stretch', width: '100%', height: 'auto' });
   expect(StyleSheet.flatten(primary.props.style)?.backgroundColor).not.toBe(StyleSheet.flatten(danger.props.style)?.backgroundColor);
   await userEvent.press(danger);
   expect(remove).toHaveBeenCalledTimes(1);
@@ -42,6 +44,15 @@ test('two actions use the primary and danger tones and keep callbacks independen
   await userEvent.press(primary);
   expect(cancel).toHaveBeenCalledTimes(1);
   expect(remove).toHaveBeenCalledTimes(1);
+});
+
+test('long localized action labels wrap inside full-width stacked dialog actions', async () => {
+  const label = '\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u044c \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0443 \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u044f \u0432 \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u0435\u043c\u043e\u043c \u0440\u0435\u0436\u0438\u043c\u0435';
+  const view = await render(app(<PopDialog visible title={'\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u0435'} actions={[{ label, onPress: jest.fn() }, { label: '\u041e\u0442\u043c\u0435\u043d\u0430', onPress: jest.fn() }]} onClose={jest.fn()} />));
+  const action = screen.getByRole('button', { name: label });
+  expect(StyleSheet.flatten(action.props.style)).toMatchObject({ alignSelf: 'stretch', width: '100%', height: 'auto' });
+  expect(view.getByText(label).props.numberOfLines).toBeUndefined();
+  expect(view.getByText(label).props.style).toMatchObject({ textAlign: 'center', flexWrap: 'wrap' });
 });
 
 test('three actions use the stacked layout and each action remains independently reachable', async () => {

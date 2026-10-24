@@ -35,6 +35,27 @@ test('the default launch confirms preparation and creates a prepared-resolution 
   );
   expect(Native.startJobWithResolution).not.toHaveBeenCalled();
 });
+test('the legacy original-resolution contract remains usable for existing callers', async () => {
+  const confirm = jest.fn(async () => true);
+  const beforeStart = jest.fn(async () => true);
+
+  const result = await beginUpscale(
+    image,
+    4,
+    'standard',
+    confirm,
+    undefined,
+    beforeStart,
+    'original',
+  );
+
+  expect(result).toMatchObject({ state: 'RUNNING', jobId: 'job', resolution: 'original' });
+  expect(confirm).not.toHaveBeenCalled();
+  expect(beforeStart).toHaveBeenCalledTimes(1);
+  expect(Native.startJobWithResolution).toHaveBeenCalledWith(
+    'source', 4, 'standard', 'quality', 'original', true,
+  );
+});
 test('new jobs expose only the prepared input and omit original-resolution choice', async () => {
   seed({ state: 'READY', image: { ...image, needsPreparation: false } });
   await render(

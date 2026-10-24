@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from 'expo-router/native-stack';
 import type { Routes } from '../navigation/routes';
-import Native, { type RecreateModelState, type StorageUsage } from '../specs/NativeUpscale';
+import Native, { type StorageUsage } from '../specs/NativeUpscale';
 import { Button, Segments, Icon, createStyles } from '../ui/components';
 import { useTheme } from '../ui/theme';
 import { useConfirm } from '../ui/dialog';
@@ -21,13 +21,13 @@ import { TelemetryControls } from '../ui/telemetryControls';
 import { cacheLimits } from '../domain/presentation';
 import { ElasticSlider } from '../components/kinetik/elastic-slider';
 import { UsageMeter } from '../components/kinetik/usage-meter';
-import { ProgressBar } from '../components/kinetik/progress-bar';
-import { PopDialog } from '../components/kinetik/pop-dialog';
 import { useOperation } from '../application/useOperation';
 import { PRIVACY_POLICY_URL } from '../application/privacy';
 import { LanguageSelector } from '../ui/languageSelector';
 import { ThemeSwitch, type ThemeMode } from '../components/kinetik/theme-switch';
 import { PressJelly } from '../components/kinetik/press-jelly';
+import { RecreateModelControl } from '../ui/recreateModelControl';
+import { formatStorage, storageAmount } from '../domain/storage';
 import { Profile } from '../components/kinetik/screens/profile';
 
 import { track, useTrackedScreen } from '../application/telemetry';
@@ -55,10 +55,6 @@ export function SettingsScreen({
   const [info, setInfo] = useState(''),
     [legal, setLegal] = useState('');
   const [privacyLinkError, setPrivacyLinkError] = useState(false);
-  const [modelTermsVisible, setModelTermsVisible] = useState(false);
-  const [modelState, setModelState] = useState<RecreateModelState>({
-    state: 'absent', downloadedBytes: 0, totalBytes: 0, installedBytes: 0, error: '',
-  });
   const [storage, setStorage] = useState<StorageUsage>({
     cacheBytes: 0, sessionBytes: 0, temporaryBytes: 0, recreateModelBytes: 0,
     otherBytes: 0, totalBytes: 0, freeBytes: 0,
@@ -66,26 +62,27 @@ export function SettingsScreen({
   const { operation, error, setError, run } = useOperation();
   const busy = !!operation;
   const appStorageBytes = Math.max(0, storage.totalBytes);
-  const formatMiB = (value: number) => number(value);
-  const modelBytes = modelState.totalBytes || 1.88 * 1024 * 1024 * 1024;
-  const modelMiB = modelBytes / 1048576;
+  const storageUnit = storageAmount(appStorageBytes).unit;
+  const unitBytes = storageUnit === 'GB' ? 1_000_000_000 : 1_000_000;
+  const formatAmount = (value: number) => value > 0 && value < 0.01 ? '<0.01' : number(value);
   useEffect(() => {
     refresh().catch(() => {});
   }, [refresh]);
   useEffect(() => {
     let mounted = true;
     const update = () => {
-      Promise.all([Native.getRecreateModelState(), Native.getStorageUsage()])
-        .then(([model, usage]) => {
+      Native.getStorageUsage()
+        .then(usage => {
           if (!mounted) return;
-          setModelState(model);
           setStorage(usage);
         })
         .catch(() => {});
     };
+    let lastRead = 0; let previousState = '';
     const subscription = Native.onRecreateModelChanged(model => {
-      setModelState(model);
-      Native.getStorageUsage().then(setStorage).catch(() => {});
+      const now = Date.now();
+      if (model.state === previousState && now - lastRead < 1000) return;
+      previousState = model.state; lastRead = now; update();
     });
     update();
     const appStateSubscription = AppState.addEventListener('change', state => {
@@ -122,27 +119,6 @@ export function SettingsScreen({
           </Text>
           <View style={{ width: 48 }} />
         </View>
-      }
-      overlay={
-        <PopDialog
-          closeLabel={t.back}
-          visible={modelTermsVisible}
-          onClose={() => setModelTermsVisible(false)}
-          title={t.recreate.title}
-          message={t.recreate.terms}
-          actions={[
-            { label: t.recreate.licenses, onPress: () => run(async () => {
-              setModelTermsVisible(false);
-              setLegal(await Native.getLegalText());
-              setInfo('legal');
-            }) },
-            { label: t.cancel, onPress: () => setModelTermsVisible(false) },
-            { label: t.recreate.acceptDownload, tone: 'primary', onPress: () => {
-              setModelTermsVisible(false);
-              run(async () => setModelState(await Native.downloadRecreateModel()));
-            } },
-          ]}
-        />
       }
     >
         {info ? (
@@ -282,21 +258,21 @@ export function SettingsScreen({
               <UsageMeter
                 breakdown
                 title={t.storageUsage.total}
-                unit="MiB"
-                total={Math.max(appStorageBytes / 1048576, 0.1)}
+                unit={storageUnit}
+                colors={[colors.accent,colors.cyan,'#A78BFA','#0E7490','#C4B5FD']}
+                total={appStorageBytes / unitBytes}
                 segments={[
-                  { label: t.storageUsage.sessions, value: storage.sessionBytes / 1048576 },
-                  { label: t.storageUsage.temporary, value: storage.temporaryBytes / 1048576 },
-                  { label: t.storageUsage.model, value: storage.recreateModelBytes / 1048576 },
-                  { label: t.storageUsage.cache, value: storage.cacheBytes / 1048576 },
-                  { label: t.storageUsage.other, value: storage.otherBytes / 1048576 },
+                  { label: t.storageUsage.sessions, value: storage.sessionBytes / unitBytes, displayValue: formatStorage(storage.sessionBytes,lang) },
+                  { label: t.storageUsage.temporary, value: storage.temporaryBytes / unitBytes, displayValue: formatStorage(storage.temporaryBytes,lang) },
+                  { label: t.storageUsage.model, value: storage.recreateModelBytes / unitBytes, displayValue: formatStorage(storage.recreateModelBytes,lang) },
+                  { label: t.storageUsage.cache, value: storage.cacheBytes / unitBytes, displayValue: formatStorage(storage.cacheBytes,lang) },
+                  { label: t.storageUsage.other, value: storage.otherBytes / unitBytes, displayValue: formatStorage(storage.otherBytes,lang) },
                 ]}
-                formatValue={formatMiB}
+                formatValue={formatAmount}
               />
               <Text style={s.caption}>
-                {t.storageUsage.free}: {formatMiB(storage.freeBytes / 1048576)} MiB
+                {t.storageUsage.free}: {formatStorage(storage.freeBytes,lang)}
               </Text>
-              <Text style={s.label}>{t.cacheLimit}</Text>
               <ElasticSlider
                 label={t.cacheLimit}
                 value={Math.max(0, cacheLimits.findIndex(value => value === settings.cacheLimitMiB))}
@@ -305,7 +281,7 @@ export function SettingsScreen({
                 step={1}
                 formatValue={index => {
                   const value = cacheLimits[Math.round(index)] ?? settings.cacheLimitMiB;
-                  return value === 0 ? t.cacheNo : value === -1 ? t.cacheUnlimited : `${number(value)} MiB`;
+                  return value === 0 ? t.cacheNo : value === -1 ? t.cacheUnlimited : formatStorage(value * 1048576,lang);
                 }}
                 onSlidingComplete={index =>
                   run(async () => {
@@ -358,46 +334,7 @@ export function SettingsScreen({
             </View>
             <View style={s.card}>
               <Text style={s.label}>{t.recreate.title}</Text>
-              <Text style={s.caption}>{t.recreate.model}: {number(modelState.installedBytes / 1048576)} MiB</Text>
-              {modelState.state === 'downloading' || modelState.state === 'verifying' ? (
-                <>
-                  <ProgressBar
-                    label={modelState.state === 'verifying' ? t.recreate.verifying : t.recreate.downloading}
-                    value={modelState.state === 'verifying' || modelState.totalBytes <= 0
-                      ? null
-                      : Math.min(1, modelState.downloadedBytes / modelState.totalBytes)}
-                  />
-                  <Button
-                    title={t.recreate.cancelDownload}
-                    secondary
-                    disabled={busy}
-                    onPress={() => run(async () => setModelState(await Native.cancelRecreateDownload()))}
-                  />
-                </>
-              ) : modelState.state === 'ready' ? (
-                <Button
-                  title={t.recreate.delete}
-                  secondary
-                  disabled={busy}
-                  onPress={() => run(async () => {
-                    if (await confirm(t.recreate.delete, t.recreate.deleteConfirm, t.delete, t.cancel)) {
-                      setModelState(await Native.deleteRecreateModel());
-                      setStorage(await Native.getStorageUsage());
-                    }
-                  })}
-                />
-              ) : (
-                <>
-                  <Text style={s.caption}>{t.recreate.downloadSize.replace('{size}', `${number(modelMiB)} MiB`)}</Text>
-                  {modelState.state === 'failed' && <Text style={s.errorText}>{t.recreate.downloadFailed}</Text>}
-                  <Button
-                    title={modelState.state === 'paused' || modelState.state === 'failed' ? t.recreate.retry : t.recreate.download}
-                    disabled={busy}
-                    onPress={() => setModelTermsVisible(true)}
-                  />
-                </>
-              )}
-              {modelState.state === 'ready' && <Text style={s.caption}>{t.recreate.ready}</Text>}
+              <RecreateModelControl allowDelete />
             </View>
             <View style={s.card}>
               <Button
@@ -428,17 +365,9 @@ export function SettingsScreen({
                   setInfo('privacy');
                 }}
               />
-              <Button
-                title={t.licenses}
-                secondary
-                onPress={() =>
-                  run(async () => {
-                    setLegal(await Native.getLegalText());
-                    track('ui_action', { action: 'licenses_opened' });
-                    setInfo('legal');
-                  })
-                }
-              />
+              <PressJelly variant="surface" accessibilityLabel={t.licenses} style={{backgroundColor:'transparent',borderWidth:0,boxShadow:'none',paddingHorizontal:0,minWidth:0,borderRadius:0,alignSelf:'flex-start'}} onPress={() => run(async () => {setLegal(await Native.getLegalText());track('ui_action',{action:'licenses_opened'});setInfo('legal');})}>
+                <Text accessibilityRole="link" style={{color:colors.accent}}>{t.licenses} ↗</Text>
+              </PressJelly>
             </View>
           </>
         )}

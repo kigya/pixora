@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU är inte tillgänglig. Vi fortsätter med CPU.",
     "INFERENCE_FAILED": "Bearbetningen misslyckades. Försök igen eller välj en annan fil.",
     "SERVICE_START_FAILED": "Bearbetningen kunde inte starta. Återgå till appen och försök igen.",
-    "TIME_LIMIT": "Bearbetningen nådde gränsen på 30 minuter. Du kan försöka igen.",
+    "TIME_LIMIT": "Bearbetningen nådde gränsen på {minutes} minuter. Du kan försöka igen.",
     "INTERRUPTED": "Bearbetningen avbröts. Starta den igen.",
     "EXPORT_FAILED": "Filen kunde inte sparas eller öppnas. Resultatet finns kvar i appen.",
     "SHARE_FAILED": "Filen kunde inte delas. Resultatet finns kvar i appen.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Otillräckligt lagringsutrymme.",
     "notEnoughMemory": "För lite minne. Stäng andra appar och försök igen.",
     "licenses": "Licenser",
-    "languageSearch": "Språk"
+    "languageSearch": "Språk",
+    "notificationBody": "Följ och avbryt nedladdningen när Pixora körs i bakgrunden."
   },
   "notice": {
     "aiDetailsMayChange": "AI kan ändra små detaljer"

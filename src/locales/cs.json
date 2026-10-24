@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU není dostupné. Pokračujeme na CPU.",
     "INFERENCE_FAILED": "Zpracování selhalo. Zkuste to znovu nebo vyberte jiný soubor.",
     "SERVICE_START_FAILED": "Zpracování se nepodařilo spustit. Vraťte se do aplikace a zkuste to znovu.",
-    "TIME_LIMIT": "Byl dosažen limit 30 minut zpracování. Můžete to zkusit znovu.",
+    "TIME_LIMIT": "Byl dosažen limit {minutes} minut zpracování. Můžete to zkusit znovu.",
     "INTERRUPTED": "Zpracování bylo přerušeno. Spusťte ho znovu.",
     "EXPORT_FAILED": "Soubor nelze uložit nebo otevřít. Výsledek zůstává v aplikaci.",
     "SHARE_FAILED": "Soubor nelze sdílet. Výsledek zůstává v aplikaci.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Nedostatek místa.",
     "notEnoughMemory": "Nedostatek paměti. Zavřete ostatní aplikace a zkuste to znovu.",
     "licenses": "Licence",
-    "languageSearch": "Jazyk"
+    "languageSearch": "Jazyk",
+    "notificationBody": "Sledujte a zrušte stahování, když Pixora běží na pozadí."
   },
   "notice": {
     "aiDetailsMayChange": "AI může změnit drobné detaily"

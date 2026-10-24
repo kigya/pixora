@@ -28,6 +28,8 @@ export type StarRatingProps = {
   value: number;
   /** Leave unset for a read-only rating. */
   onValueChange?: (value: number) => void;
+  /** Called once when a tap, drag, or accessibility action is committed. */
+  onValueCommit?: (value: number) => void;
   /** Number of stars. Defaults to 5. */
   max?: number;
   /** Allow half stars. Defaults to false. */
@@ -86,6 +88,7 @@ function starPath(size: number): SkPath {
 export function StarRating({
   value,
   onValueChange,
+  onValueCommit,
   max = 5,
   allowHalf = false,
   clearable = true,
@@ -101,7 +104,7 @@ export function StarRating({
   const reduced = useReduceMotion();
   const haptic = useHaptic(haptics);
   const fill = color ?? colors.azure;
-  const readOnly = !onValueChange;
+  const readOnly = !onValueChange && !onValueCommit;
   const gap = Math.round(size * 0.22);
   const width = max * size + (max - 1) * gap;
   const unit = allowHalf ? 0.5 : 1;
@@ -135,6 +138,7 @@ export function StarRating({
     haptic('tick');
     onValueChange?.(next);
   };
+  const commit = (next: number) => onValueCommit?.(next);
 
   const pan = Gesture.Pan()
     .withTestId('star-rating')
@@ -147,25 +151,34 @@ export function StarRating({
         committed.set(next);
         scheduleOnRN(emit, next);
       }
+    })
+    .onEnd((_event, success) => {
+      if (success) scheduleOnRN(commit, committed.get());
     });
   const tap = Gesture.Tap()
     .withTestId('star-rating-tap')
     .enabled(!readOnly && !disabled)
-    .onEnd((e) => {
+    .onEnd((e, success) => {
+      if (!success) return;
       const hit = valueAt(e.x);
       const next = clearable && hit === committed.get() ? 0 : hit;
       committed.set(next);
       scheduleOnRN(emit, next);
+      scheduleOnRN(commit, next);
     });
 
   const format = (v: number) => `${v} of ${max} stars`;
   const onAccessibilityAction = (e: AccessibilityActionEvent) => {
     if (readOnly || disabled) return;
-    const next = Math.max(
-      0,
-      Math.min(max, value + (e.nativeEvent.actionName === 'increment' ? unit : -unit)),
-    );
-    if (next !== value) emit(next);
+    if (e.nativeEvent.actionName === 'activate') {
+      commit(committed.get());
+      return;
+    }
+    const next = Math.max(0, Math.min(max, committed.get() + (e.nativeEvent.actionName === 'increment' ? unit : -unit)));
+    if (next !== committed.get()) {
+      committed.set(next);
+      emit(next);
+    }
   };
 
   const canvas = (
@@ -198,7 +211,7 @@ export function StarRating({
         accessibilityLabel,
         accessibilityValue: { min: 0, max, now: value, text: format(value) },
         accessibilityState: { disabled },
-        accessibilityActions: [{ name: 'increment' }, { name: 'decrement' }],
+        accessibilityActions: [{ name: 'increment' }, { name: 'decrement' }, { name: 'activate' }],
         onAccessibilityAction,
       } as const);
 

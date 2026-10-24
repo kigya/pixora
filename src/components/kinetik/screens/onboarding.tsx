@@ -37,6 +37,7 @@ export type OnboardingProps = {
   nextLabel: string;
   finishLabel: string;
   skipLabel?: string;
+  busy?: boolean;
   stepLabel: (current: number, total: number) => string;
 };
 
@@ -48,6 +49,7 @@ export function Onboarding({
   nextLabel,
   finishLabel,
   skipLabel,
+  busy = false,
   stepLabel,
 }: OnboardingProps) {
   const { colors, space, font } = useKinetikTheme();
@@ -60,6 +62,8 @@ export function Onboarding({
   const [width, setWidth] = useState(window.width);
   const [height, setHeight] = useState(0);
   const [index, setIndex] = useState(0);
+  const [finishing, setFinishing] = useState(false);
+  const finishingRef = useRef(false);
   const [foreground, setForeground] = useState(
     AppState.currentState !== 'background' && AppState.currentState !== 'inactive',
   );
@@ -82,8 +86,19 @@ export function Onboarding({
     if (pageWidth > 0)
       setIndex(Math.max(0, Math.min(count - 1, Math.round(event.nativeEvent.contentOffset.x / pageWidth))));
   };
+  const finish = async (callback: () => void | Promise<void>) => {
+    if (finishingRef.current || busy) return;
+    finishingRef.current = true;
+    setFinishing(true);
+    try {
+      await callback();
+    } finally {
+      finishingRef.current = false;
+      setFinishing(false);
+    }
+  };
   const next = () => {
-    if (last) return onFinish();
+    if (last) return void finish(onFinish);
     const to = index + 1;
     scroller.current?.scrollTo({ x: to * widthRef.current, animated: !reduced });
     setIndex(to);
@@ -163,11 +178,11 @@ export function Onboarding({
       </View>
 
       <View style={[styles.footer, { paddingHorizontal: pad, gap: space[2] }]}>
-        <PressJelly block size="lg" onPress={next}>
+        <PressJelly block size="lg" onPress={next} disabled={finishing || busy} loading={finishing || busy}>
           {last ? finishLabel : nextLabel}
         </PressJelly>
         {onSkip && skipLabel ? (
-          <PressJelly variant="surface" block size="md" onPress={onSkip}>
+          <PressJelly variant="surface" block size="md" onPress={() => void finish(onSkip)} disabled={finishing || busy} loading={finishing || busy}>
             {skipLabel}
           </PressJelly>
         ) : null}

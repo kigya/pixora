@@ -32,3 +32,8 @@ Private model storage is separate from cache and sessions, excluded from iOS bac
 ## 0.9 result ratings — 24 October 2026
 
 The explicit owner request authorizes numeric image/processing properties with submitted result stars, under the saved Analytics switch. Photos/EXIF/paths and user-authored content remain local. Support now sends the selected 1–4 rating with the explicitly submitted message; the same transport field already existed. The local privacy source is updated, but this source PR does not publish the hosted policy or change store disclosures.
+
+
+## Code19 verification boundary
+
+Foreground downloading adds an Android progress/cancel notification, without sending media. Notification refusal does not block the explicit transfer. Download lifecycle events and the compact-processing profile respect the existing Analytics switch; no prompt, filename, URI or support content is added. Event payloads are bounded to 25 safe fields. The Console currently requires Google reauthentication, so ingestion/registration remain unconfirmed. No hosted privacy policy, store disclosure or account setting is published or changed by this task.

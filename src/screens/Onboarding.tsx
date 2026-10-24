@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { useRouter } from 'expo-router';
 import type { NativeStackScreenProps } from 'expo-router/native-stack';
 import Animated, {
   cancelAnimation,
@@ -11,7 +12,6 @@ import Svg, {
   Circle,
   ClipPath,
   Defs,
-  Ellipse,
   G,
   LinearGradient,
   Path,
@@ -31,13 +31,15 @@ type SceneColors = { bg: string; surface: string; ink: string; accent: string; c
 type SceneProps = SvgProps & { colors: SceneColors; detailed: boolean };
 
 export function Onboarding({
-  navigation,
   route,
 }: NativeStackScreenProps<Routes, 'Onboarding'>) {
+  const router = useRouter();
   const { t, settings, setSettings } = useApp();
   const { colors } = useTheme();
-  const replay = route.params?.replay === true;
+  const replay = String(route.params?.replay) === 'true';
   const [finishError, setFinishError] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const finishingRef = useRef(false);
   const sceneColors: SceneColors = {
     bg: colors.bg,
     surface: colors.surface,
@@ -49,13 +51,20 @@ export function Onboarding({
   };
 
   const finish = async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    setFinishing(true);
     try {
       if (!replay && settings.onboardingVersion === 0)
         setSettings(await Native.completeOnboarding());
-      if (replay) navigation.goBack();
-      else navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+      if (replay && router.canGoBack()) router.back();
+      else if (replay) router.replace('/Settings');
+      else router.replace('/Home');
     } catch {
       setFinishError(true);
+    } finally {
+      finishingRef.current = false;
+      setFinishing(false);
     }
   };
 
@@ -68,7 +77,7 @@ export function Onboarding({
     {
       key: 'recreate',
       title: t.onboarding.recreateTitle,
-      visual: active => <RevealScene active={active} colors={sceneColors} type="cat" />,
+      visual: active => <RevealScene active={active} colors={sceneColors} type="mountains" />,
     },
     {
       key: 'privacy',
@@ -84,6 +93,7 @@ export function Onboarding({
         slides={slides}
         onFinish={finish}
         onSkip={finish}
+        busy={finishing}
         nextLabel={t.onboarding.next}
         finishLabel={t.onboarding.start}
         skipLabel={t.onboarding.skip}
@@ -103,7 +113,7 @@ function RevealScene({
 }: {
   active: boolean;
   colors: SceneColors;
-  type: 'bridge' | 'cat';
+  type: 'bridge' | 'mountains';
 }) {
   const reduced = useReduceMotion();
   const progress = useSharedValue(0);
@@ -118,7 +128,7 @@ function RevealScene({
 
   const reveal = useAnimatedStyle(() => ({ width: `${progress.get() * 100}%` }));
   const onLayout = (event: LayoutChangeEvent) => setSize(event.nativeEvent.layout);
-  const Scene = type === 'bridge' ? BridgeArt : CatArt;
+  const Scene = type === 'bridge' ? BridgeArt : MountainArt;
 
   return (
     <View
@@ -191,48 +201,49 @@ function BridgeArt({ colors, detailed, ...props }: SceneProps) {
   );
 }
 
-function CatArt({ colors, detailed, ...props }: SceneProps) {
-  const silhouette = 'M98 226L80 136L145 177Q180 160 215 177L280 136L262 226Q292 260 284 340Q271 438 180 457Q89 438 76 340Q68 260 98 226Z';
+function MountainArt({ colors, detailed, ...props }: SceneProps) {
+  const farRidge = 'M0 342L42 296L75 323L126 242L160 287L207 205L251 276L288 228L360 330V430H0Z';
+  const nearRidge = 'M0 386L56 339L93 366L154 278L194 326L246 261L297 337L330 308L360 352V455H0Z';
   return (
-    <Svg testID="onboarding-art-cat" viewBox="0 0 360 560" preserveAspectRatio="xMidYMid meet" {...props}>
+    <Svg testID="onboarding-art-mountains" viewBox="0 0 360 560" preserveAspectRatio="xMidYMid meet" {...props}>
       <Defs>
-        <LinearGradient id="catBackdrop" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={colors.accent} stopOpacity="0.2" />
-          <Stop offset="1" stopColor={colors.cyan} stopOpacity="0.16" />
+        <LinearGradient id="mountainSky" x1="0" y1="0" x2="0.2" y2="1">
+          <Stop offset="0" stopColor={colors.cyan} stopOpacity="0.36" />
+          <Stop offset="1" stopColor={colors.bg} stopOpacity="0.08" />
         </LinearGradient>
-        <ClipPath id="catMask"><Path d={silhouette} /></ClipPath>
+        <LinearGradient id="mountainLake" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={colors.cyan} stopOpacity="0.4" />
+          <Stop offset="1" stopColor={colors.accent} stopOpacity="0.1" />
+        </LinearGradient>
+        <ClipPath id="mountainWater"><Rect x="0" y="390" width="360" height="170" /></ClipPath>
       </Defs>
       <Rect width="360" height="560" fill={colors.bg} />
-      <Rect width="360" height="560" fill="url(#catBackdrop)" />
-      <Circle cx="57" cy="115" r="28" fill={colors.cyan} opacity="0.18" />
-      <Circle cx="300" cy="391" r="39" fill={colors.accent} opacity="0.13" />
-      <Path d="M30 482Q180 447 330 482V560H30Z" fill={colors.surface} opacity="0.56" />
-      <Path d={silhouette} fill={colors.surface} stroke={colors.accent} strokeWidth="5" />
-      <G clipPath="url(#catMask)">
-        {!detailed ? (
-          <G fill={colors.muted} opacity={0.42}>
-            <Rect x="112" y="270" width="52" height="37" rx="10" />
-            <Rect x="194" y="263" width="58" height="42" rx="10" />
-            <Rect x="136" y="330" width="91" height="42" rx="14" />
-            <Rect x="104" y="389" width="59" height="24" rx="7" />
-            <Rect x="201" y="386" width="54" height="27" rx="7" />
-            <Rect x="137" y="211" width="80" height="17" rx="8" />
-          </G>
-        ) : (
-          <G fill="none" stroke={colors.ink} strokeLinecap="round" strokeLinejoin="round">
-            <Ellipse cx="132" cy="295" rx="15" ry="21" fill={colors.cyan} stroke={colors.ink} strokeWidth="2.5" />
-            <Ellipse cx="228" cy="295" rx="15" ry="21" fill={colors.cyan} stroke={colors.ink} strokeWidth="2.5" />
-            <Circle cx="132" cy="296" r="6" fill={colors.ink} />
-            <Circle cx="228" cy="296" r="6" fill={colors.ink} />
-            <Path d="M165 337Q180 324 195 337Q181 352 165 337Z" fill={colors.accent} strokeWidth="2.5" />
-            <Path d="M180 350Q174 367 158 369 M180 350Q186 367 202 369 M132 348L88 337 M132 359L88 359 M228 348L272 337 M228 359L272 359" strokeWidth="2.5" />
-            <Path d="M102 216L138 253 M258 216L222 253 M93 285L117 290 M267 285L243 290 M105 396L133 409 M255 396L227 409 M149 428L165 435 M211 428L195 435" strokeWidth="2" opacity="0.72" />
-            <Path d="M111 244Q122 233 136 236 M224 236Q239 233 249 244 M117 384L142 391 M243 384L218 391" strokeWidth="2" opacity="0.44" />
-          </G>
-        )}
+      <Rect width="360" height="390" fill="url(#mountainSky)" />
+      <Circle cx="277" cy="119" r="49" fill={colors.cyan} opacity="0.16" />
+      <Circle cx="277" cy="119" r="33" fill={colors.cyan} opacity="0.4" />
+      <Path d={farRidge} fill={colors.muted} opacity="0.54" />
+      <Path d={nearRidge} fill={colors.surface} stroke={colors.accent} strokeWidth="3" />
+      <Path d="M0 386Q58 376 113 388T225 386T360 390V410H0Z" fill={colors.accent} opacity="0.62" />
+      <Rect y="404" width="360" height="156" fill="url(#mountainLake)" />
+      <G clipPath="url(#mountainWater)">
+        <Path d="M0 425Q50 415 100 425T200 425T300 425T400 425 M0 456Q43 449 86 456T172 456T258 456T344 456T400 456 M20 495H102 M242 492H340 M73 529H164 M219 529H297" stroke={colors.cyan} strokeWidth="3" strokeLinecap="round" opacity={detailed ? 0.72 : 0.2} />
       </G>
-      <Circle cx="47" cy="337" r="4" fill={colors.accent} opacity="0.55" />
-      <Circle cx="314" cy="245" r="5" fill={colors.cyan} opacity="0.62" />
+      {detailed ? (
+        <G fill="none" stroke={colors.ink} strokeLinecap="round" strokeLinejoin="round">
+          <Path d="M42 296L75 323L126 242L160 287L207 205L251 276L288 228" strokeWidth="2.5" opacity="0.85" />
+          <Path d="M112 264L126 242L143 270L130 263L123 269Z M190 235L207 205L231 247L213 231L204 237Z M273 247L288 228L308 260L290 247L283 253Z" fill={colors.ink} strokeWidth="1.4" />
+          <Path d="M57 339L93 366L154 278L194 326L246 261L297 337L330 308" strokeWidth="2.4" opacity="0.9" />
+          <Path d="M8 377H26 M44 374H65 M304 378H324 M332 381H351" strokeWidth="3" opacity="0.56" />
+          <Path d="M24 140Q42 134 60 140 M92 175Q110 168 128 175 M174 119Q190 113 206 119" stroke={colors.muted} strokeWidth="2" opacity="0.45" />
+        </G>
+      ) : (
+        <G fill={colors.muted} opacity={0.35}>
+          <Rect x="41" y="142" width="55" height="10" rx="5" />
+          <Rect x="121" y="178" width="72" height="12" rx="6" />
+          <Rect x="250" y="468" width="67" height="14" rx="7" />
+          <Rect x="32" y="510" width="83" height="12" rx="6" />
+        </G>
+      )}
     </Svg>
   );
 }

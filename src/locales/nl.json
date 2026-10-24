@@ -108,7 +108,7 @@
     "GPU_FAILED": "GPU niet beschikbaar. Verder met de CPU.",
     "INFERENCE_FAILED": "De verwerking is mislukt. Probeer opnieuw of kies een ander bestand.",
     "SERVICE_START_FAILED": "De verwerking kon niet starten. Ga terug naar de app en probeer opnieuw.",
-    "TIME_LIMIT": "De verwerkingslimiet van 30 minuten is bereikt. Je kunt opnieuw proberen.",
+    "TIME_LIMIT": "De verwerkingslimiet van {minutes} minuten is bereikt. Je kunt opnieuw proberen.",
     "INTERRUPTED": "De verwerking is onderbroken. Start opnieuw.",
     "EXPORT_FAILED": "Het bestand kon niet worden opgeslagen of geopend. Je resultaat blijft in de app.",
     "SHARE_FAILED": "Het bestand kon niet worden gedeeld. Je resultaat blijft in de app.",
@@ -322,7 +322,8 @@
     "notEnoughSpace": "Onvoldoende opslagruimte.",
     "notEnoughMemory": "Niet genoeg werkgeheugen. Sluit andere apps en probeer opnieuw.",
     "licenses": "Licenties",
-    "languageSearch": "Taal"
+    "languageSearch": "Taal",
+    "notificationBody": "Volg en annuleer de download terwijl Pixora op de achtergrond draait."
   },
   "notice": {
     "aiDetailsMayChange": "AI kan kleine details veranderen"
