@@ -20,6 +20,7 @@ object SessionStore {
     private fun empty(sequence: Long) = JSONObject().apply {
         put("mode", "quality");put("modelId", "realesrgan-x4plus");put("timings", JSONObject());put("schemaVersion", 3); put("sequence", sequence); put("sessionId", ""); put("jobId", "")
         put("processingKind", "enhance").put("recreateSeed", 0L).put("recreateModelRevision", "").put("recreatePrompt", "").put("recreateSteps", 0)
+        put("recommendedProfile", "").put("recommendationApplied", false).put("recommendationContextSet", false).put("resultRating", 0)
         put("phase", ""); put("completedTiles", 0); put("totalTiles", 0); put("state", "EMPTY"); put("scale", 2); put("backend", ""); put("progress", -1)
         put("startedAt", 0); put("elapsedMs", 0); put("image", JSONObject.NULL)
         put("resultUri", ""); put("resultWidth", 0); put("resultHeight", 0); put("error", "")
@@ -39,6 +40,10 @@ object SessionStore {
         if(!value.has("recreateModelRevision"))value.put("recreateModelRevision","")
         if(!value.has("recreatePrompt"))value.put("recreatePrompt","")
         if(!value.has("recreateSteps"))value.put("recreateSteps",0)
+        if(!value.has("recommendedProfile"))value.put("recommendedProfile","")
+        if(!value.has("recommendationApplied"))value.put("recommendationApplied",false)
+        if(!value.has("recommendationContextSet"))value.put("recommendationContextSet",false)
+        if(!value.has("resultRating"))value.put("resultRating",0)
         if (activeStates.contains(value.optString("state"))) {
             value.put("state", "INTERRUPTED").put("error", "INTERRUPTED").put("progress", -1)
             persist()

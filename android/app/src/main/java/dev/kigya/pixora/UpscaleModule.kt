@@ -16,7 +16,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.facebook.react.bridge.*
-import com.google.android.play.core.review.ReviewManagerFactory
 import com.facebook.react.modules.core.PermissionAwareActivity
 import com.facebook.react.modules.core.PermissionListener
 import org.json.JSONObject
@@ -25,11 +24,13 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.Executors
 
-class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint()), private val recommendation:(String)->String={RecommendationEngine.analyze(it)}):NativeUpscaleSpec(ctx) {
-    companion object{const val NAME="NativeUpscale"; const val PICK=4301;const val NOTIFY=4302}
+class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:JsonBridge=JsonBridge(), private val models:ModelVerifier=BundledModels(ctx), private val control:JobControl=NativeJobControl, private val feedback:FeedbackClient=FeedbackClient(NativeEngine.feedbackEndpoint()), private val recommendation:(String)->String={RecommendationEngine.analyze(it)}, private val recreateDownloadIo:java.util.concurrent.Executor=Executors.newSingleThreadExecutor()):NativeUpscaleSpec(ctx) {
+    companion object{
+        const val NAME="NativeUpscale"; const val PICK=4301;const val NOTIFY=4302
+        internal fun marketReviewIntent(packageId:String)=Intent(Intent.ACTION_VIEW,Uri.parse("market://details?id=$packageId")).setPackage("com.android.vending").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
     private val io=Executors.newSingleThreadExecutor()
     private val feedbackIo=Executors.newSingleThreadExecutor()
-    private val recreateDownloadIo=Executors.newSingleThreadExecutor()
     private val main=Handler(Looper.getMainLooper())
     private var pickerPromise:Promise?=null
     private var permissionPromise:Promise?=null
@@ -141,30 +142,36 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
         map(SessionStore.settings(ctx))
     }
     override fun getStorageUsage(p:Promise)=async(p){
-        fun bytes(root:File,include:(File)->Boolean={true}):Long=if(!root.exists())0L else root.walkTopDown().filter{it.isFile&&include(it)}.sumOf{it.length()}
-        fun temporary(file:File)=file.name.endsWith(".partial")||file.name.endsWith(".part")||file.name.startsWith("incoming-")
-        val sessions=File(ctx.filesDir,"sessions")
-        val model=recreateModels.modelBytes()+recreateModels.partialBytes()
-        val sessionBytes=bytes(sessions){!temporary(it)}
-        val temporaryBytes=bytes(sessions){temporary(it)}+bytes(ctx.cacheDir){temporary(it)}
-        val cacheBytes=bytes(ctx.cacheDir){!temporary(it)}
-        val stat=android.os.StatFs(ctx.filesDir.path)
-        map(JSONObject().put("cacheBytes",cacheBytes).put("sessionBytes",sessionBytes).put("temporaryBytes",temporaryBytes)
-            .put("recreateModelBytes",model).put("freeBytes",stat.availableBytes))
+        val stat=android.os.StatFs(ctx.dataDir.path)
+        map(StorageUsage.scan(ctx.dataDir,ctx.cacheDir,File(ctx.filesDir,"sessions"),File(ctx.filesDir,"session.json"),
+            File(ctx.filesDir,"recreate-model"),stat.availableBytes).toJson())
     }
     override fun clearCache(p:Promise)=async(p){
-        SessionStore.requireIdle()
-        val root=ctx.cacheDir
-        var removed=0L
-        if(root.exists()) {
-            val files=root.walkTopDown().filter{it.isFile}.toList()
-            for(file in files) {
-                val size=file.length()
-                if(file.delete()) removed+=size else throw AppFailure("CACHE_CLEAR_FAILED")
+        synchronized(SessionStore.lock) {
+            SessionStore.requireIdle()
+            val root=ctx.cacheDir
+            var removed=0L
+            if(root.exists()) {
+                val files=root.walkTopDown().filter{it.isFile}.toList()
+                for(file in files) {
+                    val size=file.length()
+                    if(file.delete()) removed=if(size>0L && removed>Long.MAX_VALUE-size)Long.MAX_VALUE else removed+size else throw AppFailure("CACHE_CLEAR_FAILED")
+                }
+                root.walkBottomUp().filter{it.isDirectory && it!=root}.forEach{it.delete()}
             }
-            root.walkBottomUp().filter{it.isDirectory && it!=root}.forEach{it.delete()}
+            removed.toDouble()
         }
-        removed.toDouble()
+    }
+    override fun setRecommendationContext(jobId:String,recommendedProfile:String,recommendationApplied:Boolean,p:Promise)=async(p){
+        synchronized(SessionStore.lock) {
+            if(jobId.isBlank() || recommendedProfile.isNotEmpty() && recommendedProfile !in ProcessingProfiles.presets || recommendationApplied && recommendedProfile.isEmpty())throw AppFailure("INFERENCE_FAILED")
+            val current=SessionStore.snapshot()
+            if(current.optString("jobId")!=jobId)throw AppFailure("SOURCE_UNAVAILABLE")
+            val alreadySet=current.optBoolean("recommendationContextSet")
+            if(alreadySet && (current.optString("recommendedProfile")!=recommendedProfile || current.optBoolean("recommendationApplied")!=recommendationApplied))throw AppFailure("RECOMMENDATION_CONTEXT_ALREADY_SET")
+            if(!alreadySet)SessionStore.update{it.put("recommendedProfile",recommendedProfile).put("recommendationApplied",recommendationApplied).put("recommendationContextSet",true)}
+            map(SessionStore.publicSnapshot())
+        }
     }
     override fun startRecreateJob(id:String,scale:Double,speed:String,prompt:String,preparationConfirmed:Boolean,p:Promise)=async(p){
         if(scale !in setOf(2.0,4.0) || speed !in setOf("fast","quality"))throw AppFailure("INFERENCE_FAILED")
@@ -187,6 +194,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             val seed=java.security.SecureRandom().nextInt().toLong().and(0xffffffffL)
             val safePrompt=prompt.replace('\n',' ').replace('\r',' ').trim().take(300)
             SessionStore.update{it.put("processingKind","recreate").put("recreateSeed",seed).put("recreateModelRevision",RecreateModelStore.REVISION).put("recreatePrompt",safePrompt).put("recreateSteps",if(speed=="fast")4 else 8)
+                .put("recommendedProfile","").put("recommendationApplied",false).put("recommendationContextSet",false).put("resultRating",0)
                 .put("resolution","prepared").put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId","standard").put("speed",speed).put("mode","recreate").put("modelId","stable-diffusion-v1-5-q4-lcm")
                 .put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
             try{ContextCompat.startForegroundService(ctx,Intent(ctx,ProcessingService::class.java).setAction("PROCESS"))}
@@ -209,7 +217,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             val activity=ctx.currentActivity ?: throw AppFailure("SERVICE_START_FAILED")
             if(activity.isFinishing || activity.isDestroyed)throw AppFailure("SERVICE_START_FAILED")
             control.reset()
-            SessionStore.update{it.put("processingKind","enhance").put("recreateSeed",0L).put("recreateModelRevision","").put("recreatePrompt","").put("recreateSteps",0);for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("resolution",resolution).put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
+            SessionStore.update{it.put("processingKind","enhance").put("recreateSeed",0L).put("recreateModelRevision","").put("recreatePrompt","").put("recreateSteps",0).put("recommendedProfile","").put("recommendationApplied",false).put("recommendationContextSet",false).put("resultRating",0);for(key in listOf("estimatedTotalLowMs","estimatedTotalHighMs","remainingLowMs","remainingHighMs","aiInputWidth","aiInputHeight"))it.remove(key);it.put("resolution",resolution).put("restrictAnimation",MotionPolicy.restricted(ctx)).put("profileId",profile).put("speed",speed).put("mode",mode).put("modelId",ProcessingProfiles.model(mode)).put("timings",JSONObject()).put("jobId",UUID.randomUUID().toString()).put("scale",scale.toInt()).put("state","PREPARING").put("phase","preparing_image").put("completedTiles",0).put("totalTiles",0).put("startedAt",System.currentTimeMillis()).put("elapsedMs",0).put("progress",-1).put("error","").put("resultUri","").put("resultWidth",0).put("resultHeight",0).put("exports",JSONArray()).put("exportState","EXPORT_IDLE")}
             try{ContextCompat.startForegroundService(ctx,Intent(ctx,ProcessingService::class.java).setAction("PROCESS"))}
             catch(_:Exception){SessionStore.update{it.put("state","FAILED").put("error","SERVICE_START_FAILED")};throw AppFailure("SERVICE_START_FAILED")}
             Telemetry.event("job_started",Telemetry.jobContext(SessionStore.snapshot()))
@@ -277,6 +285,7 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
             if (previous.optString(key) != value) Telemetry.event("settings_changed", JSONObject().put("setting",key).put("value",value))
         }
         main.post {
+            (ctx.currentActivity as? MainActivity)?.updateSystemBars()
             androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(ThemePolicy.nightMode(theme))
             androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
                 androidx.core.os.LocaleListCompat.forLanguageTags(if (selectedLanguage == "system") "" else selectedLanguage),
@@ -320,29 +329,52 @@ class UpscaleModule(private val ctx:ReactApplicationContext, private val bridge:
     override fun claimReviewPrompt(jobId:String,p:Promise)=async(p){
         synchronized(SessionStore.lock) {
             val prefs=ctx.getSharedPreferences("settings",0)
-            val eligible=SessionStore.snapshot().optString("jobId")==jobId && SessionStore.snapshot().optString("state")=="SUCCEEDED" && prefs.getInt("savedJobs",0)>=3 && prefs.getInt("reviewPrompts",0)<2 && System.currentTimeMillis()-prefs.getLong("reviewShownAt",0)>=30L*86400000
-            if (!eligible) return@synchronized false
-            prefs.edit()
-                .putInt("reviewPrompts",prefs.getInt("reviewPrompts",0)+1)
-                .putLong("reviewShownAt",System.currentTimeMillis())
-                .commit()
+            ReviewPromptPolicy.canOffer(SessionStore.snapshot(),jobId,prefs.getStringSet("reviewPromptShownJobs",emptySet())?:emptySet(),prefs.getLong("reviewPromptLastShownAt",0L),System.currentTimeMillis())
+        }
+    }
+    override fun markReviewPromptShown(jobId:String,p:Promise)=async(p){
+        synchronized(SessionStore.lock) {
+            val prefs=ctx.getSharedPreferences("settings",0)
+            val shown=prefs.getStringSet("reviewPromptShownJobs",emptySet())?.toSet()?:emptySet()
+            val now=System.currentTimeMillis()
+            if(jobId in shown && SessionStore.snapshot().optString("jobId")==jobId && SessionStore.snapshot().optString("state")=="SUCCEEDED")return@synchronized true
+            if(!ReviewPromptPolicy.canOffer(SessionStore.snapshot(),jobId,shown,prefs.getLong("reviewPromptLastShownAt",0L),now))return@synchronized false
+            val (next,lastShown)=ReviewPromptPolicy.markShown(shown,jobId,now)
+            if(!prefs.edit().putStringSet("reviewPromptShownJobs",next).putLong("reviewPromptLastShownAt",lastShown).commit())throw AppFailure("SETTINGS_WRITE_FAILED")
+            Telemetry.event("review_prompt_shown",Telemetry.jobContext(SessionStore.snapshot()).put("status","shown"))
+            true
+        }
+    }
+    override fun submitResultRating(jobId:String,rating:Double,p:Promise)=async(p){
+        if(rating!=rating.toInt().toDouble() || rating.toInt() !in 1..5)throw AppFailure("FEEDBACK_INVALID")
+        var recorded=false
+        val updated=synchronized(SessionStore.lock) {
+            val current=SessionStore.snapshot()
+            if(current.optString("jobId")!=jobId || current.optString("state")!="SUCCEEDED")throw AppFailure("SOURCE_UNAVAILABLE")
+            val previous=current.optInt("resultRating",0)
+            if(previous!=0 && previous!=rating.toInt())throw AppFailure("RATING_ALREADY_SUBMITTED")
+            if(previous==0){recorded=true;SessionStore.update{it.put("resultRating",rating.toInt())}}
+            else SessionStore.publicSnapshot()
+        }
+        if(recorded)Telemetry.event("result_rating_submitted",Telemetry.ratingContext(SessionStore.snapshot(),rating.toInt()))
+        map(updated)
+    }
+    override fun openStoreReview(p:Promise) {
+        main.post {
+            val packageId=ctx.packageName
+            val market=marketReviewIntent(packageId)
+            val web=Intent(Intent.ACTION_VIEW,Uri.parse("https://play.google.com/store/apps/details?id=$packageId")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                if(market.resolveActivity(ctx.packageManager)!=null)ctx.startActivity(market) else ctx.startActivity(web)
+                p.resolve(true)
+            } catch(_:Exception) {
+                try {ctx.startActivity(web);p.resolve(true)}
+                catch(_:Exception){p.resolve(false)}
+            }
         }
     }
     override fun requestReview(p:Promise) {
-        main.post {
-            val activity = ctx.currentActivity
-            if (activity == null) { p.resolve(false); return@post }
-            try {
-                val manager = ReviewManagerFactory.create(ctx)
-                manager.requestReviewFlow().addOnCompleteListener(activity) { request ->
-                    if (!request.isSuccessful) { p.resolve(false); return@addOnCompleteListener }
-                    manager.launchReviewFlow(activity, request.result).addOnCompleteListener(activity) { result ->
-                        // Play does not reveal whether its neutral system dialog was shown or submitted.
-                        p.resolve(result.isSuccessful)
-                    }
-                }
-            } catch (_: Exception) { p.resolve(false) }
-        }
+        openStoreReview(p)
     }
     override fun getFeedbackStatus(p:Promise)=async(p){feedback.configured()}
     override fun sendFeedback(email:String,message:String,rating:Double,requestId:String,p:Promise)=async(p,"FEEDBACK_FAILED",feedbackIo){

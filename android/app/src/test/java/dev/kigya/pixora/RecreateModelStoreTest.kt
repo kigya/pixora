@@ -41,7 +41,7 @@ class RecreateModelStoreTest {
 
     @Test fun verifiedDownloadInstallsAtomicallyAndRecordsOnlyPinnedHash() {
         val connection = FakeConnection(200, bytes)
-        val store = store { connection }
+        val store = store({ _ -> connection })
         store.download()
         assertEquals("ready", store.snapshot().getString("state"))
         assertEquals(bytes.size.toLong(), store.modelBytes())
@@ -51,10 +51,10 @@ class RecreateModelStoreTest {
     }
 
     @Test fun installedModelRemainsReadyAcrossSnapshotsAndStoreRecreation() {
-        val store = store { FakeConnection(200, bytes) }
+        val store = store({ _ -> FakeConnection(200, bytes) })
         store.download()
         repeat(3) { assertEquals("ready", store.snapshot().getString("state")) }
-        val restored = store { throw AssertionError("ready models do not need a request") }
+        val restored = store({ throw AssertionError("ready models do not need a request") })
         assertEquals("ready", restored.snapshot().getString("state"))
         assertTrue(restored.verifyInstalled())
     }

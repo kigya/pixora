@@ -18,19 +18,20 @@ test('comparison exposes bounded divider changes to accessibility and independen
  for (let i=0;i<20;i++) await fireEvent(divider,'accessibilityAction',{nativeEvent:{actionName:'decrement'}});
  expect(divider).toHaveAccessibilityValue({min:0,max:100,now:0});
  await userEvent.press(screen.getByRole('radio',{name:t.before}));
- expect(screen.getByRole('radio',{name:t.before})).toBeSelected();
+ expect(screen.getByRole('radio',{name:t.before})).toHaveProp('accessibilityState',{checked:true,disabled:false});
  await userEvent.press(screen.getByRole('radio',{name:t.after}));
- expect(screen.getByRole('radio',{name:t.after})).toBeSelected();
+ expect(screen.getByRole('radio',{name:t.after})).toHaveProp('accessibilityState',{checked:true,disabled:false});
  expect(Native.logTelemetryEvent).toHaveBeenCalledWith('comparison_used',JSON.stringify({action:'divider'}));
 });
 test('Kinetik confirmation preserves the promise result and focuses its heading',async()=>{
  let done:Promise<boolean>|undefined;const resolved=jest.fn();
  function Ask(){const confirm=useConfirm();return <RN.Button title="Ask" onPress={()=>{done=confirm('Title','Body','Yes','No');done.then(resolved)}}/>}
- await render(<DialogProvider><Ask/></DialogProvider>);await userEvent.press(screen.getByRole('button',{name:'Ask'}));
- expect(screen.getByTestId('confirmation-dialog')).toBeOnTheScreen();
- expect(screen.getByRole('heading',{name:'Title'})).toBeOnTheScreen();
  const find=jest.spyOn(require('react-native'),'findNodeHandle').mockReturnValue(1);
  const focus=jest.spyOn(RN.AccessibilityInfo,'setAccessibilityFocus');
+ await render(<DialogProvider><Ask/></DialogProvider>);await userEvent.press(screen.getByRole('button',{name:'Ask'}));
+ expect(screen.getByTestId('confirmation-dialog')).toBeOnTheScreen();
+ expect(screen.getByRole('header',{name:'Title'})).toBeOnTheScreen();
+ await fireEvent(screen.getByTestId('confirmation-dialog-modal'), 'show');
  await waitFor(()=>expect(focus).toHaveBeenCalledWith(1));
  await userEvent.press(screen.getByRole('button',{name:'Yes'}));
  expect(await done).toBe(true);expect(resolved).toHaveBeenCalledWith(true);find.mockRestore();
@@ -82,8 +83,8 @@ test('phone help panel and Kinetik confirmation dismiss through their backdrops'
  let done:Promise<boolean>|undefined;
  function Ask(){const confirm=useConfirm();return <RN.Button title="Ask" onPress={()=>{done=confirm('Title','Body','Yes','No')}}/>}
  await render(<DialogProvider><InformationProvider><HelpLink/><Ask/></InformationProvider></DialogProvider>);
- await userEvent.press(screen.getByRole('button',{name:t.how}));await fireEvent.press(screen.getByTestId('information-backdrop'));expect(screen.queryByText(t.howTitle)).not.toBeOnTheScreen();
- await userEvent.press(screen.getByRole('button',{name:'Ask'}));await userEvent.press(screen.getByRole('button',{name:'Close dialog'}));expect(await done).toBe(false);
+ await userEvent.press(screen.getByRole('button',{name:t.how}));await fireEvent.press(screen.getByTestId('information-backdrop', { includeHiddenElements: true }));expect(screen.queryByText(t.howTitle)).not.toBeOnTheScreen();
+ await userEvent.press(screen.getByRole('button',{name:'Ask'}));await userEvent.press(screen.getByRole('button',{name:'No'}));expect(await done).toBe(false);
 });
 test('comparison layout is measured before pixel divider movement',async()=>{
  jest.spyOn(RN.PanResponder,'create').mockReturnValue({panHandlers:{}} as any);

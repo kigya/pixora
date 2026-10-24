@@ -37,9 +37,9 @@ Recreate uses the input image to guide local image-to-image generation. An optio
 
 The optional SD 1.5 Q4 + LCM package is **1.88 GB**. Download it explicitly, pause or resume the download, and remove it from Settings when you no longer need it. Cache cleanup keeps the model. The mode has separate resource checks and is experimental; phone speed, memory use and quality have not been validated for this revision.
 
-<p><img src="assets/recreate/before.png" width="46%" alt="Degraded cat image used as the reconstruction input"> <img src="assets/recreate/after.png" width="46%" alt="Actual local img2img reconstruction of the degraded cat"></p>
+<p><img src="assets/recreate/before.png" width="46%" alt="Degraded cat image used as the reconstruction input"> <img src="assets/recreate/cat-unsplash-source.jpg" width="46%" alt="The same cat in the original high-quality reference photograph"></p>
 
-<sub>This pair was produced on a computer by the pinned CPU pipeline. It is bundled demonstration content, not a device test. Source image: Mikhail Vasilyev, CC0; parameters and hashes are in <a href="assets/recreate/manifest.json">the asset manifest</a>.</sub>
+<sub>The interface uses a degraded copy and its matching original as an illustrative reference pair. The clean photograph is not a generated result. An archived host img2img experiment is identified separately in the manifest. Source image: Mikhail Vasilyev, CC0; parameters and hashes are in <a href="assets/recreate/manifest.json">the asset manifest</a>.</sub>
 
 ## Compare before you save
 
@@ -53,7 +53,7 @@ AI can alter fine details; it cannot guarantee recovery of information missing f
 
 ![Illustrated preparation screen showing the original and working image dimensions](docs/images/readme/04-upscale.webp)
 
-Large images show their original, working and expected output dimensions before processing. Enlargement applies to the prepared image, so you can see the size you will get. While it runs, follow progress and elapsed time, or cancel the job.
+The preparation screen shows the original size and one expected result size. Enlargement applies to the prepared image; working and AI intermediate dimensions stay out of the interface. While it runs, follow progress and elapsed time, or cancel the job.
 
 ## Privacy
 
@@ -61,7 +61,7 @@ Photos are processed on your device and are never uploaded for inference. Images
 
 The optional model download requests fixed, hash-pinned files from Hugging Face and its delivery hosts. Those hosts receive ordinary connection information such as IP address. The app never includes your image, description, session, filename or URI in these requests.
 
-Firebase usage analytics and error reporting have independent switches in Settings. Both currently default to enabled with an informational notice; saved opt-outs are preserved. Remote Config separately controls mode availability. Feedback sends your submitted fields, the app version and a random request ID.
+Firebase usage analytics and error reporting have independent switches in Settings. Both currently default to enabled with an informational notice; saved opt-outs are preserved. Remote Config separately controls mode availability. After a newly saved internal result, an optional star dialog can appear at most once every five minutes. Ratings 1–4 open built-in support; 5 opens Google Play. A numeric rating and allowlisted technical generation parameters can enter Analytics when enabled. A written support message is sent only when you submit it, together with its rating, app version and a random request ID.
 
 [Privacy policy](privacy/index.html) · [Data flow and telemetry](docs/observability/privacy.md)
 
@@ -90,7 +90,7 @@ Android targets ARM64 phones and tablets running Android 10 or later. iOS target
 
 The interface supports light, dark and system themes, **34 active languages**, right-to-left layouts and scalable text. Translations have not been professionally reviewed.
 
-Version 0.9.0 is an experimental source revision. The Expo migration and new UI have no new device, emulator, simulator or test-suite acceptance: those runs were explicitly deferred. Earlier coverage and iOS build results belong to earlier source revisions. This repository does not offer a signed 0.9 store download.
+Version 0.9.0 remains an experimental source revision. The current UX revision has real Xiaomi release-flow checks and automated tests; see the [current verification report](docs/engineering/ux-090.md) for exact scope and remaining gates. The strict whole-app coverage threshold is still 100% and has not passed for this revision. Recreate is not accepted on the tested 4 GB phone; its 6 GiB safety guard remains. No emulator or simulator was used. This repository does not offer a signed 0.9 store download.
 
 ## Build from source
 

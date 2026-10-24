@@ -228,7 +228,7 @@
   },
   "speedTitle": "Tốc độ xử lý",
   "speedQuality": "Chất lượng",
-  "speedFast": "Nhanh",
+  "speedFast": "Tốc độ",
   "speedNote": "Ít thời gian hơn. Chi tiết nhỏ có thể đơn giản hơn.",
   "sameInput": "Ảnh nhỏ này dùng cùng đầu vào AI ở cả hai tốc độ.",
   "aiInput": "Đầu vào AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI có thể thay đổi các chi tiết nhỏ"
   },
-  "selectModel": "Chọn"
+  "selectModel": "Chọn",
+  "storageUsage": {
+    "sessions": "Phiên xử lý",
+    "temporary": "Tệp tạm",
+    "model": "Mô hình",
+    "other": "Dữ liệu khác",
+    "free": "Dung lượng trống",
+    "cache": "Bộ nhớ đệm",
+    "total": "Dữ liệu ứng dụng"
+  },
+  "rating": {
+    "title": "Đánh giá kết quả",
+    "store": "Mở Google Play"
+  }
 }

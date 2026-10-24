@@ -8,11 +8,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <mutex>
 #include <new>
 #include <string>
 #include <vector>
+
+#if defined(PIXORA_RECREATE_TESTING)
+extern "C" uint8_t* pixora_recreate_test_allocate(size_t size);
+extern "C" void pixora_recreate_test_after_canvas();
+#endif
 
 namespace pixora::recreate {
 namespace {
@@ -55,7 +59,8 @@ struct ActiveContextGuard {
     ~ActiveContextGuard() {
         {
             std::lock_guard<std::mutex> lock(g_state_mutex);
-            if (g_active_ctx == context) g_active_ctx = nullptr;
+        // The run mutex guarantees exactly one active context; this guard owns it.
+        g_active_ctx = nullptr;
         }
         free_sd_ctx(context);
     }
@@ -98,7 +103,6 @@ void progress_trampoline(int step, int total, float, void*) {
 
 void set_error(Result* result, Status status, const char* message) {
     result->status = status;
-    if (message == nullptr) message = "Unknown reconstruction error";
     std::snprintf(result->error, sizeof(result->error), "%s", message);
 }
 
@@ -148,7 +152,9 @@ Status run(const Request& request, ProgressCallback progress, void* user_data, R
         return result->status;
     }
     const uint64_t pixel_count = static_cast<uint64_t>(request.width) * request.height;
-    if (pixel_count > 100000000ull || pixel_count > std::numeric_limits<size_t>::max() / 4u) {
+    // Two uint32 dimensions multiply safely in uint64_t. The pixel cap also keeps
+    // all subsequent RGBA and RGB byte counts safely within size_t.
+    if (pixel_count > 100000000ull) {
         set_error(result, Status::InvalidArgument, "Input image dimensions exceed the supported limit");
         return result->status;
     }
@@ -173,10 +179,6 @@ Status run(const Request& request, ProgressCallback progress, void* user_data, R
         const uint32_t content_h = std::max(1u, static_cast<uint32_t>(std::lround(request.height * scale)));
         const uint32_t model_w = round_up_64(content_w);
         const uint32_t model_h = round_up_64(content_h);
-        if (model_w > 576 || model_h > 576) {
-            set_error(result, Status::InvalidArgument, "Padded generation canvas exceeds 576 pixels");
-            return result->status;
-        }
         std::vector<uint8_t> resized;
         resize_bilinear(request.rgba, request.width, request.height, resized, content_w, content_h);
         std::vector<uint8_t> padded(static_cast<size_t>(model_w) * model_h * 3u);
@@ -191,6 +193,9 @@ Status run(const Request& request, ProgressCallback progress, void* user_data, R
                             &resized[(static_cast<size_t>(sy) * content_w + sx) * 3u], 3u);
             }
         }
+#if defined(PIXORA_RECREATE_TESTING)
+        pixora_recreate_test_after_canvas();
+#endif
         if (g_cancel_requested.load(std::memory_order_acquire)) {
             set_error(result, Status::Cancelled, "Reconstruction cancelled");
             return result->status;
@@ -243,8 +248,7 @@ Status run(const Request& request, ProgressCallback progress, void* user_data, R
             return result->status;
         }
         if (!generated || image_guard.images == nullptr || image_guard.count < 1 || image_guard.images[0].data == nullptr) {
-            set_error(result, g_cancel_requested.load() ? Status::Cancelled : Status::GenerationFailed,
-                      g_cancel_requested.load() ? "Reconstruction cancelled" : "Image generation failed");
+            set_error(result, Status::GenerationFailed, "Image generation failed");
             return result->status;
         }
         const sd_image_t image = image_guard.images[0];
@@ -253,7 +257,11 @@ Status run(const Request& request, ProgressCallback progress, void* user_data, R
             return result->status;
         }
         const size_t out_bytes = static_cast<size_t>(content_w) * content_h * 3u;
+#if defined(PIXORA_RECREATE_TESTING)
+        result->rgb = pixora_recreate_test_allocate(out_bytes);
+#else
         result->rgb = static_cast<uint8_t*>(std::malloc(out_bytes));
+#endif
         if (result->rgb == nullptr) {
             set_error(result, Status::OutOfMemory, "Could not allocate the generated image");
             return result->status;

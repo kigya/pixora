@@ -5,6 +5,7 @@ import {
   Text,
   View,
   type AccessibilityActionEvent,
+  type AccessibilityState,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -41,6 +42,7 @@ export type PressJellyProps = {
   /** Required when `children` is not a string. */
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  accessibilityState?: AccessibilityState;
   testID?: string;
   /** Stretch to the parent's width. */
   block?: boolean;
@@ -65,6 +67,7 @@ export function PressJelly({
   haptics = true,
   accessibilityLabel,
   accessibilityHint,
+  accessibilityState,
   testID,
   block = false,
   style,
@@ -159,7 +162,7 @@ export function PressJelly({
           accessibilityLabel ?? (typeof children === 'string' ? children : undefined)
         }
         accessibilityHint={accessibilityHint}
-        accessibilityState={{ disabled, busy: loading }}
+        accessibilityState={{ ...accessibilityState, disabled: inactive, busy: loading }}
         accessibilityActions={[{ name: 'activate' }]}
         onAccessibilityAction={onAccessibilityAction}
         style={[

@@ -228,7 +228,7 @@
   },
   "speedTitle": "处理速度",
   "speedQuality": "高质量",
-  "speedFast": "快速",
+  "speedFast": "速度",
   "speedNote": "时间更短，细节可能更简单。",
   "sameInput": "这张小图在两种速度下使用相同的 AI 输入。",
   "aiInput": "AI 输入",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI 可能改变细小细节"
   },
-  "selectModel": "选择"
+  "selectModel": "选择",
+  "storageUsage": {
+    "sessions": "处理记录",
+    "temporary": "临时文件",
+    "model": "模型",
+    "other": "其他数据",
+    "free": "可用空间",
+    "cache": "缓存",
+    "total": "应用数据"
+  },
+  "rating": {
+    "title": "评价此结果",
+    "store": "打开 Google Play"
+  }
 }

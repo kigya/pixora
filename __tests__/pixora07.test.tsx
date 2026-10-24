@@ -19,7 +19,7 @@ import { StorageSlider } from '../src/ui/storageSlider';
 import { LocaleContext } from '../src/ui/locale';
 import { jobContext, useTrackedScreen } from '../src/application/telemetry';
 import { emptySession } from '../src/domain/session';
-import Native, { seed } from '../tests/nativeMock';
+import Native, { seed, capabilities } from '../tests/nativeMock';
 import { strings } from '../src/ui/i18n';
 
 const events = () =>
@@ -60,7 +60,7 @@ test('telemetry controls persist independently and retain state after a failed w
   const analytics = await screen.findByRole('switch', {
     name: strings.en.analyticsTitle,
   });
-  await act(() => fireEvent(analytics, 'valueChange', true));
+  await fireEvent(analytics, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
     true,
     false,
@@ -68,33 +68,15 @@ test('telemetry controls persist independently and retain state after a failed w
   );
   expect(
     screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-  ).toHaveProp('value', true);
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.crashesTitle }),
-      'valueChange',
-      true,
-    ),
-  );
+  ).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(Native.updateTelemetrySettings).toHaveBeenLastCalledWith(
     true,
     true,
     true,
   );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-      'valueChange',
-      false,
-    ),
-  );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.crashesTitle }),
-      'valueChange',
-      false,
-    ),
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(events()).toEqual(
     expect.arrayContaining([
       ['settings_changed', { setting: 'analytics', value: 'on' }],
@@ -104,19 +86,13 @@ test('telemetry controls persist independently and retain state after a failed w
   Native.updateTelemetrySettings.mockRejectedValueOnce(
     new Error('write failed'),
   );
-  await act(() =>
-    fireEvent(
-      screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-      'valueChange',
-      true,
-    ),
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(
     await screen.findByText(strings.en.errors.INFERENCE_FAILED),
   ).toBeOnTheScreen();
   expect(
     screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-  ).toHaveProp('value', false);
+  ).toHaveProp('accessibilityState', { checked: false, disabled: false });
 });
 
 test('stale telemetry write failure cannot roll back a newer queued choice', async () => {
@@ -136,18 +112,10 @@ test('stale telemetry write failure cannot roll back a newer queued choice', asy
       <TelemetryControls />
     </AppProvider>,
   );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-    'valueChange',
-    true,
-  );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.crashesTitle }),
-    'valueChange',
-    true,
-  );
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
   await act(async () => rejectFirst(new Error('stale write failed')));
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(2));
@@ -162,8 +130,8 @@ test('stale telemetry write failure cannot roll back a newer queued choice', asy
     noticeSeen: true,
     consentVersion: 2,
   }));
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', true);
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
 });
 
 test('latest telemetry write failure rolls back only to the last confirmed settings', async () => {
@@ -183,16 +151,8 @@ test('latest telemetry write failure rolls back only to the last confirmed setti
       <TelemetryControls />
     </AppProvider>,
   );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.analyticsTitle }),
-    'valueChange',
-    true,
-  );
-  await fireEvent(
-    screen.getByRole('switch', { name: strings.en.crashesTitle }),
-    'valueChange',
-    true,
-  );
+  await fireEvent(screen.getByRole('switch', { name: strings.en.analyticsTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
+  await fireEvent(screen.getByRole('switch', { name: strings.en.crashesTitle }), 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   await waitFor(() => expect(Native.updateTelemetrySettings).toHaveBeenCalledTimes(1));
   await act(async () => resolveFirst({
     analytics: true,
@@ -207,8 +167,8 @@ test('latest telemetry write failure rolls back only to the last confirmed setti
     [true, false, true],
     [true, true, true],
   ]);
-  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('value', true);
-  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('value', false);
+  expect(screen.getByRole('switch', { name: strings.en.analyticsTitle })).toHaveProp('accessibilityState', { checked: true, disabled: false });
+  expect(screen.getByRole('switch', { name: strings.en.crashesTitle })).toHaveProp('accessibilityState', { checked: false, disabled: false });
 });
 
 test('informational first-launch notice keeps default-on choices and reports save failure', async () => {
@@ -572,6 +532,7 @@ test('remote configuration replaces a disabled selection, preserves import and b
     updatedAt: 1,
   };
   Native.getProfileAvailability.mockResolvedValue(flags);
+  capabilities.modes = ['quality', 'fast', 'illustration', 'pixel'];
   let updated: (value: any) => void = () => {};
   Native.onProfileAvailabilityChanged.mockImplementation(callback => {
     updated = callback!;
@@ -589,7 +550,7 @@ test('remote configuration replaces a disabled selection, preserves import and b
     previewUri: 'file:///image',
     needsPreparation: false,
   };
-  seed({ state: 'READY', image, sessionId: 'session', profileId: 'standard' });
+  seed({ state: 'READY', image, sessionId: 'session', profileId: 'standard', processingKind: 'enhance' });
   const props = {
     navigation: { navigate: jest.fn(), goBack: jest.fn() },
     route: {},
@@ -600,11 +561,6 @@ test('remote configuration replaces a disabled selection, preserves import and b
     </AppProvider>,
   );
   expect(await screen.findByText(strings.en.profileChanged)).toBeOnTheScreen();
-  expect(
-    screen.getByRole('button', {
-      name: `${strings.en.profileTitle}: ${strings.en.presets.lite.title}`,
-    }),
-  ).toBeOnTheScreen();
   await act(() =>
     updated({
       ...flags,

@@ -1,173 +1,368 @@
 {
   "schema_version": 1,
-  "source_fingerprint": "adaf5700a8cd9f7e713dc98a50c5e1c61c2277c1bbbb7d912d5c1263a71b0946",
-  "recorded_at": "2026-10-22T19:32:40.690913+00:00",
+  "source_fingerprint": "82500787d2fabc86e54bcc97ad8410f515076fa229eb7e45593c23a0c82cddc8",
+  "recorded_at": "2026-10-24T09:12:58.746856+00:00",
   "criteria": [
     {
       "id": "REQ-TRACE-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "passed",
+      "reason": "Approved UX/rating features map to TEST-909\u2013913 and the current bounded report.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/product/features.md",
+          "sha256": "612c7bb071247b4c607a319658ecbe8f42de9405518ebd3fce2b34b56d37fcf7"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "ARCH-BOUNDARY-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Native contracts/offline boundaries have tests and review; iOS compilation/runtime acceptance remains blocked by the missing SDK.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "ICON-001",
       "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "reason": "The existing canonical icon is retained. This task did not repeat the whole platform/icon acceptance matrix.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "SPLASH-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "passed",
+      "reason": "Visible-frame timer and native light/dark/system policy tests pass; Xiaomi video confirms logo-only Aurora and matching light launch background.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "src/navigation/ExpoRoot.tsx",
+          "sha256": "3b669cbc6ee6d7db7238e9594a90a7a751900198e8d97fabc18fb0618f80e8e0"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "ONBOARD-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Three passive horizontal pages, spacing and replay pass on Xiaomi and in component tests; full font/RTL/rotation/accessibility acceptance remains open.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "NAV-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "passed",
+      "reason": "Router, startup failure/retry, Back, fresh/upgrade and replay/rating routes have passing assertions and bounded Xiaomi flows.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "src/navigation/ExpoRoot.tsx",
+          "sha256": "3b669cbc6ee6d7db7238e9594a90a7a751900198e8d97fabc18fb0618f80e8e0"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "MOTION-A11Y-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Reduced-motion/lifecycle handlers have component assertions; full physical accessibility/font matrix and smoothness acceptance remain open.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "LOCALE-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "All 34 active locale schemas/placeholders/flag hashes pass. The full physical RTL/font/native-language matrix is not accepted.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "PERMISSION-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Physical notification refusal still allowed processing; the full platform permission matrix is not repeated.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "PRIVACY-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Local filters/opt-outs have tests and no images/content enter telemetry. Firebase access and publication of the revised hosted policy remain blocked or excluded.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "LICENSE-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Bundled hashes/provenance and optional model terms are retained; current complete legal/store review is not claimed.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "LOCAL-DATA-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "passed",
+      "reason": "Storage categories and cache/session/model exclusions have host tests; Xiaomi cache clearing decreased bytes and retained the current result.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "android/app/src/main/java/dev/kigya/pixora/StorageUsage.kt",
+          "sha256": "73250a6eaa58bc69cf83539807507a7f40699d66f6ab6257056d84f7e3226961"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "PLATFORM-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "ARM64 Android release runs on Xiaomi; generic iOS build is blocked by missing iOS 26.5 platform. No emulator/simulator ran.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "QUALITY-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "failed",
+      "reason": "Strict whole-app 100% coverage is unmet, six high dependency findings remain, mode-switch traces are mixed, and 4GB Recreate acceptance is unavailable.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     },
     {
       "id": "HANDOFF-001",
-      "status": "not_run",
-      "reason": "Owner requested test-source updates and Android build only; no runtime/test acceptance for changed0.9 code.",
+      "status": "blocked",
+      "reason": "Requested signed APK/install/source PR delivery is complete; whole-app handoff gates remain open and no main/store/public release is authorized.",
       "test_ids": [
-        "TEST-905",
-        "TEST-906",
-        "TEST-907"
+        "TEST-909",
+        "TEST-910",
+        "TEST-911",
+        "TEST-912",
+        "TEST-913"
       ],
-      "references": []
+      "references": [
+        {
+          "kind": "source",
+          "path": "docs/quality/test-matrix.md",
+          "sha256": "6a6bc6d1315556650ad820201eb96c0dd126429e41cb197794a2a9278fb6506d"
+        },
+        {
+          "kind": "evidence",
+          "path": "docs/engineering/ux-090.md",
+          "sha256": "5f9e27344ad41f1fd54769b920232a609ada3534a451927e9a65b46c88d05056"
+        }
+      ]
     }
   ],
-  "change": "Startup navigation-context and logo-only splash correction; no verification launch or tests."
+  "change": "Owner-authorized 24 October UX/rating correction: bounded tests/Xiaomi/APK delivery, explicit unresolved whole-app gates."
 }

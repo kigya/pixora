@@ -1,5 +1,5 @@
 {
-  "type": "authentic-model-output",
+  "type": "illustrative-reference-pair",
   "source": {
     "title": "Cat unsplash",
     "page": "https://commons.wikimedia.org/wiki/File:Cat_unsplash.jpg",
@@ -10,48 +10,54 @@
     "degradation": "downscale to max 128px, JPEG quality 12, nearest-neighbor display upscale",
     "source_sha256": "1d7c76179422119d01919938c534897175b987fd9664298433560221445a610d"
   },
-  "model": {
-    "repo": "gpustack/stable-diffusion-v1-5-GGUF",
-    "revision": "dcac270609fffc0ce7c7d41a3c0e752721859f7c",
-    "file": "stable-diffusion-v1-5-Q4_0.gguf",
-    "bytes": 1747190784,
-    "sha256": "c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b",
-    "lora_repo": "latent-consistency/lcm-lora-sdv1-5",
-    "lora_revision": "cf2fced511dbe7e26c8d1d397e728fbab875db4b",
-    "lora_file": "pytorch_lora_weights.safetensors",
-    "lora_bytes": 134621556,
-    "lora_sha256": "8f90d840e075ff588a58e22c6586e2ae9a6f7922996ee6649a7f01072333afe4",
-    "license": "CreativeML OpenRAIL-M",
-    "license_url": "https://huggingface.co/gpustack/stable-diffusion-v1-5-GGUF",
-    "lora_license": "OpenRAIL++",
-    "lora_license_url": "https://huggingface.co/latent-consistency/lcm-lora-sdv1-5"
-  },
-  "parameters": {
-    "pipeline": "stable-diffusion.cpp img2img",
-    "steps": 4,
-    "sampler": "LCM",
-    "scheduler": "LCM",
-    "cfg": 1.0,
-    "strength": 0.6,
-    "seed": 230922,
-    "prompt": "a photorealistic close-up portrait of the same domestic cat, natural fur texture, preserve pose, face markings and composition, soft daylight",
-    "backend": "CPU",
-    "input_max_side": 512
-  },
   "outputs": {
     "before.png": {
       "sha256": "8ac10e03532c20d1ae24f6cb67c3b9f2999e2f51477ac5067bec4c8874e07e60",
       "bytes": 14387
     },
-    "after.png": {
+    "cat-unsplash-source.jpg": {
+      "sha256": "1d7c76179422119d01919938c534897175b987fd9664298433560221445a610d",
+      "bytes": 3638696
+    }
+  },
+  "note": "The visible pair uses the same licensed photograph and its degraded derivative. It illustrates reconstruction and is not represented as an inference result. after.png is an archived authentic host result and is not shown in the product.",
+  "archived_host_inference": {
+    "model": {
+      "repo": "gpustack/stable-diffusion-v1-5-GGUF",
+      "revision": "dcac270609fffc0ce7c7d41a3c0e752721859f7c",
+      "file": "stable-diffusion-v1-5-Q4_0.gguf",
+      "bytes": 1747190784,
+      "sha256": "c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b",
+      "lora_repo": "latent-consistency/lcm-lora-sdv1-5",
+      "lora_revision": "cf2fced511dbe7e26c8d1d397e728fbab875db4b",
+      "lora_file": "pytorch_lora_weights.safetensors",
+      "lora_bytes": 134621556,
+      "lora_sha256": "8f90d840e075ff588a58e22c6586e2ae9a6f7922996ee6649a7f01072333afe4",
+      "license": "CreativeML OpenRAIL-M",
+      "license_url": "https://huggingface.co/gpustack/stable-diffusion-v1-5-GGUF",
+      "lora_license": "OpenRAIL++",
+      "lora_license_url": "https://huggingface.co/latent-consistency/lcm-lora-sdv1-5"
+    },
+    "parameters": {
+      "pipeline": "stable-diffusion.cpp img2img",
+      "steps": 4,
+      "sampler": "LCM",
+      "scheduler": "LCM",
+      "cfg": 1.0,
+      "strength": 0.6,
+      "seed": 230922,
+      "prompt": "a photorealistic close-up portrait of the same domestic cat, natural fur texture, preserve pose, face markings and composition, soft daylight",
+      "backend": "CPU",
+      "input_max_side": 512
+    },
+    "engine": {
+      "repo": "leejet/stable-diffusion.cpp",
+      "revision": "39bc9d0b4bad86750fcb1fd2d711bc57a4c6018f",
+      "license": "MIT"
+    },
+    "output": {
       "sha256": "2e70a0744d7aafb35aa0bac0ec981637b388fc8ea01a4634eb6994efed478b14",
       "bytes": 242967
     }
-  },
-  "note": "after.png is raw host inference output; the licensed high-quality source is not presented as generated output.",
-  "engine": {
-    "repo": "leejet/stable-diffusion.cpp",
-    "revision": "39bc9d0b4bad86750fcb1fd2d711bc57a4c6018f",
-    "license": "MIT"
   }
 }

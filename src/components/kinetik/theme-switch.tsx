@@ -14,14 +14,18 @@ import { useReduceMotion } from '../../lib/kinetik/hooks/use-reduce-motion';
 import { spring } from '../../lib/kinetik/motion/motion';
 import { useKinetikTheme } from '../../lib/kinetik/tokens/theme';
 
-export type ThemeMode = 'light' | 'dark';
+export type ThemeMode = 'system' | 'light' | 'dark';
 
 export type ThemeSwitchProps = {
   value: ThemeMode;
+  /** Current operating-system appearance, used to keep the sun/moon truthful in System mode. */
+  systemDark?: boolean;
   onValueChange: (value: ThemeMode) => void;
-  /** Words beside the icon, e.g. "Dark mode". Leave out for an icon-only button. */
+  /** Visible heading above the three direct theme choices. */
   label?: string;
-  /** Read by screen readers when there is no visible label. Defaults to "Dark mode". */
+  /** Direct-choice labels; each remains visible and may wrap in narrow layouts. */
+  optionLabels?: Readonly<Record<ThemeMode, string>>;
+  /** Read by screen readers when there is no visible label. */
   accessibilityLabel?: string;
   /** A tap as it switches. Defaults to true. */
   haptics?: boolean;
@@ -34,15 +38,16 @@ const ICON = 28;
 const C = ICON / 2;
 
 /**
- * A light and dark switch drawn as a sun that becomes a moon. The rays turn a
- * quarter and draw in, the core swells, and a shadow slides across it to
- * leave a crescent; the colour cools from amber to a pale blue on the way.
+ * A three-choice theme control with an animated sun/moon indicator. The icon
+ * follows the effective appearance while each mode can be selected directly.
  */
 export function ThemeSwitch({
   value,
+  systemDark = false,
   onValueChange,
   label,
-  accessibilityLabel = 'Dark mode',
+  optionLabels = { system: 'System', light: 'Light', dark: 'Dark' },
+  accessibilityLabel = 'Theme',
   haptics = true,
   testID,
   style,
@@ -50,7 +55,7 @@ export function ThemeSwitch({
   const { colors, font, radius } = useKinetikTheme();
   const reduced = useReduceMotion();
   const haptic = useHaptic(haptics);
-  const dark = value === 'dark';
+  const dark = value === 'dark' || (value === 'system' && systemDark);
   const p = useSharedValue(dark ? 1 : 0);
   const press = useSharedValue(0);
 
@@ -81,60 +86,69 @@ export function ThemeSwitch({
   const shell = useAnimatedStyle(() => ({ transform: [{ scale: 1 - press.get() * 0.08 }] }));
 
   return (
-    <Pressable
-      testID={testID}
-      onPress={() => {
-        haptic('tap');
-        onValueChange(dark ? 'light' : 'dark');
-      }}
-      onPressIn={() => press.set(withSpring(1, spring('snappy', reduced)))}
-      onPressOut={() => press.set(withSpring(0, spring('bouncy', reduced)))}
-      accessibilityRole="switch"
-      accessibilityLabel={label ?? accessibilityLabel}
-      accessibilityState={{ checked: dark }}
-      style={[styles.row, style]}
-    >
-      <Animated.View
-        style={[
-          styles.box,
-          {
-            backgroundColor: colors.surfaceRaised,
-            borderColor: colors.border,
-            borderRadius: radius.pill,
-          },
-          shell,
-        ]}
-      >
-        <Canvas style={styles.icon}>
-          <Group layer>
-            <Circle cx={C} cy={C} r={core} color={ink} />
-            <Circle cx={biteX} cy={biteY} r={7.5} color={ink} blendMode="dstOut" />
-          </Group>
-          <Path path={rays} style="stroke" strokeWidth={2} strokeCap="round" color={ink} />
-        </Canvas>
-      </Animated.View>
-      {label ? (
-        <View style={styles.text}>
-          <Text
-            style={{ color: colors.text, fontSize: font.size.md, fontWeight: font.weight.medium }}
-          >
-            {label}
-          </Text>
-        </View>
-      ) : null}
-    </Pressable>
+    <View testID={testID} style={[styles.container, style]}>
+      <View style={styles.headingRow}>
+        <Animated.View
+          style={[
+            styles.box,
+            {
+              backgroundColor: colors.surfaceRaised,
+              borderColor: colors.border,
+              borderRadius: radius.pill,
+            },
+            shell,
+          ]}
+        >
+          <Canvas style={styles.icon}>
+            <Group layer>
+              <Circle cx={C} cy={C} r={core} color={ink} />
+              <Circle cx={biteX} cy={biteY} r={7.5} color={ink} blendMode="dstOut" />
+            </Group>
+            <Path path={rays} style="stroke" strokeWidth={2} strokeCap="round" color={ink} />
+          </Canvas>
+        </Animated.View>
+        {label ? <Text style={{ color: colors.text, fontSize: font.size.md, fontWeight: font.weight.medium, flexShrink: 1 }}>{label}</Text> : null}
+      </View>
+      <View accessible accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel} style={styles.options}>
+        {(['system', 'light', 'dark'] as const).map(mode => {
+          const selected = mode === value;
+          return (
+            <Pressable
+              key={mode}
+              testID={testID ? `${testID}-option-${mode}` : undefined}
+              onPress={() => {
+                if (selected) return;
+                haptic('tick');
+                onValueChange(mode);
+              }}
+              accessibilityRole="radio"
+              accessibilityLabel={optionLabels[mode]}
+              accessibilityState={{ checked: selected, disabled: false }}
+              style={[
+                styles.option,
+                {
+                  backgroundColor: selected ? colors.surfaceRaised : colors.background,
+                  borderColor: selected ? colors.azure : colors.border,
+                  borderRadius: radius.md,
+                },
+              ]}
+            >
+              <Text style={{ color: colors.text, fontSize: font.size.sm, fontWeight: selected ? font.weight.semibold : font.weight.medium, textAlign: 'center' }}>
+                {optionLabels[mode]}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    minHeight: BOX,
-    alignSelf: 'flex-start',
-  },
+  container: { width: '100%', gap: 12 },
+  headingRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  options: { flexDirection: 'row', gap: 8 },
+  option: { flex: 1, minWidth: 0, minHeight: BOX, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },
   box: { width: BOX, height: BOX, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   icon: { width: ICON, height: ICON },
-  text: { gap: 1 },
 });

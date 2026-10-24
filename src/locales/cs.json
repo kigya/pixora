@@ -228,7 +228,7 @@
   },
   "speedTitle": "Rychlost zpracování",
   "speedQuality": "Kvalitně",
-  "speedFast": "Rychle",
+  "speedFast": "Rychlost",
   "speedNote": "Méně času. Drobné detaily mohou být jednodušší.",
   "sameInput": "U tohoto malého obrázku je vstup AI při obou rychlostech stejný.",
   "aiInput": "Vstup AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI může změnit drobné detaily"
   },
-  "selectModel": "Vybrat"
+  "selectModel": "Vybrat",
+  "storageUsage": {
+    "sessions": "Relace",
+    "temporary": "Dočasné soubory",
+    "model": "Model",
+    "other": "Ostatní data",
+    "free": "Volné místo",
+    "cache": "Mezipaměť",
+    "total": "Data aplikace"
+  },
+  "rating": {
+    "title": "Ohodnoťte výsledek",
+    "store": "Otevřít Google Play"
+  }
 }

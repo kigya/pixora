@@ -228,7 +228,7 @@
   },
   "speedTitle": "प्रसंस्करण गति",
   "speedQuality": "गुणवत्ता",
-  "speedFast": "तेज़",
+  "speedFast": "गति",
   "speedNote": "कम समय। छोटी बारीकियाँ सरल हो सकती हैं।",
   "sameInput": "इस छोटे चित्र के लिए दोनों गतियों पर AI इनपुट समान है।",
   "aiInput": "AI इनपुट",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI छोटे विवरण बदल सकता है"
   },
-  "selectModel": "चुनें"
+  "selectModel": "चुनें",
+  "storageUsage": {
+    "sessions": "सत्र",
+    "temporary": "अस्थायी फ़ाइलें",
+    "model": "मॉडल",
+    "other": "अन्य डेटा",
+    "free": "खाली जगह",
+    "cache": "कैश",
+    "total": "ऐप डेटा"
+  },
+  "rating": {
+    "title": "इस परिणाम को रेट करें",
+    "store": "Google Play खोलें"
+  }
 }

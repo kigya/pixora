@@ -228,7 +228,7 @@
   },
   "speedTitle": "Processing speed",
   "speedQuality": "Quality",
-  "speedFast": "Fast",
+  "speedFast": "Speed",
   "speedNote": "Less time. Small details may be simpler.",
   "sameInput": "This small image uses the same AI input at both speeds.",
   "aiInput": "AI input",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI may change small details"
   },
-  "selectModel": "Select"
+  "selectModel": "Select",
+  "storageUsage": {
+    "sessions": "Sessions",
+    "temporary": "Temporary files",
+    "model": "Model",
+    "other": "Other data",
+    "free": "Free space",
+    "cache": "Cache",
+    "total": "App data"
+  },
+  "rating": {
+    "title": "Rate this result",
+    "store": "Open Google Play"
+  }
 }

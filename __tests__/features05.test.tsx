@@ -129,10 +129,12 @@ test('collapsed model cards select independently and keep one expanded compariso
   await userEvent.press(screen.getByTestId('select-model-art'));
   expect(change).toHaveBeenCalledWith('art');
   await userEvent.press(screen.getByRole('button', { name: t.presets.standard.title }));
-  expect(screen.getByRole('button', { name: t.presets.standard.title })).toBeExpanded();
+  expect(screen.getByText(t.presets.standard.note)).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: `${t.presets.standard.title}: ${t.before} / ${t.after}` })).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.presets.pixel.title }));
-  expect(screen.getByRole('button', { name: t.presets.pixel.title })).toBeExpanded();
-  expect(screen.getByRole('button', { name: t.presets.standard.title })).toBeCollapsed();
+  expect(screen.queryByText(t.presets.standard.note)).not.toBeOnTheScreen();
+  expect(screen.getByText(t.presets.pixel.note)).toBeOnTheScreen();
+  expect(screen.getByRole('adjustable', { name: `${t.presets.pixel.title}: ${t.before} / ${t.after}` })).toBeOnTheScreen();
   await userEvent.press(screen.getByTestId('select-model-pixel'));
   expect(change).toHaveBeenCalledWith('pixel');
 });
@@ -284,12 +286,10 @@ test('unknown profile falls back and picker backdrop closes safely', async () =>
       <ProcessingPicker value="unknown" onChange={change} />
     </AppProvider>,
   );
-  await userEvent.press(
-    await screen.findByRole('button', {
-      name: `${t.profileTitle}: ${t.presets.standard.title}`,
-    }),
-  );
-  await fireEvent.press(screen.getByTestId('information-backdrop'));
+  await userEvent.press(await screen.findByRole('button', { name: t.presets.standard.title }));
+  expect(screen.getByText(t.presets.standard.note)).toBeOnTheScreen();
+  await userEvent.press(screen.getByRole('button', { name: t.presets.standard.title }));
+  expect(screen.queryByText(t.presets.standard.note)).not.toBeOnTheScreen();
   expect(change).not.toHaveBeenCalled();
 });
 test('storage slider follows gesture without persisting until release', async () => {
@@ -317,8 +317,9 @@ test('settings help explains storage and changes retention setting', async () =>
   );
   expect(screen.getByText(t.cacheHelpBody)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.understood }));
-  await userEvent.press(screen.getByRole('button', { name: t.cacheNo }));
-  expect(Native.setCacheLimit).toHaveBeenCalledWith(0);
+  const retention = screen.getByRole('adjustable', { name: t.cacheLimit });
+  for (let i = 0; i < 4; i++) await fireEvent(retention, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+  expect(Native.setCacheLimit).toHaveBeenLastCalledWith(0);
 });
 test('successful export requests a neutral native review without a rating screen', async () => {
   seed({
@@ -338,7 +339,8 @@ test('successful export requests a neutral native review without a rating screen
   expect(screen.getByText(t.webpNote)).toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: t.save }));
   expect(await screen.findByText(t.exportSuccess)).toBeOnTheScreen();
-  expect(Native.requestReview).toHaveBeenCalledTimes(1);
+  expect(Native.claimReviewPrompt).not.toHaveBeenCalled();
+  expect(Native.requestReview).not.toHaveBeenCalled();
   expect(screen.queryByText(t.rateTitle)).toBeNull();
   expect(navigation.navigate).not.toHaveBeenCalledWith('Feedback', expect.anything());
   expect(Native.exportResult).toHaveBeenCalledWith('j', 'webp');
@@ -346,11 +348,13 @@ test('successful export requests a neutral native review without a rating screen
 
 test('pixel profile does not show an AI modification warning', async () => {
   seed({ state: 'READY', image, mode: 'pixel' });
+  capabilities.modes = ['quality', 'fast', 'illustration', 'pixel'];
   await render(
     <AppProvider>
       <Home {...props} />
     </AppProvider>,
   );
+  await userEvent.press(await screen.findByRole('button', { name: t.presets.pixel.title }));
   expect(await screen.findByText(t.presets.pixel.note)).toBeOnTheScreen();
   expect(screen.queryByText(t.aiNote)).toBeNull();
 });

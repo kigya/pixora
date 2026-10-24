@@ -228,7 +228,7 @@
   },
   "speedTitle": "מהירות עיבוד",
   "speedQuality": "איכות",
-  "speedFast": "מהיר",
+  "speedFast": "מהירות",
   "speedNote": "פחות זמן. פרטים קטנים עשויים להיות פשוטים יותר.",
   "sameInput": "התמונה הקטנה הזאת משתמשת באותו קלט AI בשתי המהירויות.",
   "aiInput": "קלט AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI עשויה לשנות פרטים קטנים"
   },
-  "selectModel": "בחירה"
+  "selectModel": "בחירה",
+  "storageUsage": {
+    "sessions": "הפעלות",
+    "temporary": "קבצים זמניים",
+    "model": "מודל",
+    "other": "נתונים אחרים",
+    "free": "מקום פנוי",
+    "cache": "מטמון",
+    "total": "נתוני האפליקציה"
+  },
+  "rating": {
+    "title": "דירוג התוצאה",
+    "store": "פתיחת Google Play"
+  }
 }

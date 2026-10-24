@@ -3,7 +3,7 @@ import { Image, Text, View } from 'react-native';
 import { useApp } from '../application/AppProvider';
 import { useLocale } from './locale';
 import { useTheme } from './theme';
-import { Button, Icon, createStyles } from './components';
+import { Button, createStyles } from './components';
 import { profileIds, publicProfile } from '../domain/profiles';
 import { track } from '../application/telemetry';
 import { CompareSlider } from '../components/kinetik/compare-slider';
@@ -51,14 +51,12 @@ export function ProcessingPicker({
         return (
           <ExpandCard
             key={id}
-            image={before}
             title={t.presets[id].title}
             expanded={expanded === id}
             onExpandedChange={open => {
               setExpanded(open ? id : null);
               if (open) track('profile_picker_opened', { profile_id: current });
             }}
-            imageAspect={0.72}
             selectionSlot={
               <Button
                 title={selected ? t.done : t.selectModel}

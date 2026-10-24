@@ -124,7 +124,7 @@ export function SegmentBar<T extends string>({
           pointerEvents="none"
           style={[
             styles.pill,
-            { backgroundColor: withAlpha(colors.text, 0.14), borderRadius: radius.sm },
+            { backgroundColor: colors.ember, borderRadius: radius.sm },
             pill,
           ]}
         />
@@ -148,7 +148,7 @@ export function SegmentBar<T extends string>({
               <Text
                 numberOfLines={1}
                 style={{
-                  color: on ? colors.text : colors.textMuted,
+                  color: on ? colors.onEmber : colors.textMuted,
                   fontSize: font.size.sm,
                   fontWeight: on ? font.weight.semibold : font.weight.medium,
                 }}

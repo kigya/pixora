@@ -228,7 +228,7 @@
   },
   "speedTitle": "処理速度",
   "speedQuality": "高品質",
-  "speedFast": "高速",
+  "speedFast": "速度",
   "speedNote": "時間を短縮。細部が簡略化される場合があります。",
   "sameInput": "この小さな画像では両方の速度で同じAI入力を使います。",
   "aiInput": "AI入力",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AIが細部を変更する場合があります"
   },
-  "selectModel": "選択"
+  "selectModel": "選択",
+  "storageUsage": {
+    "sessions": "処理履歴",
+    "temporary": "一時ファイル",
+    "model": "モデル",
+    "other": "その他のデータ",
+    "free": "空き容量",
+    "cache": "キャッシュ",
+    "total": "アプリデータ"
+  },
+  "rating": {
+    "title": "結果を評価",
+    "store": "Google Play を開く"
+  }
 }

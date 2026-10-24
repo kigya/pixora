@@ -228,7 +228,7 @@
   },
   "speedTitle": "Viteză de procesare",
   "speedQuality": "Calitate",
-  "speedFast": "Rapid",
+  "speedFast": "Viteză",
   "speedNote": "Mai puțin timp. Detaliile mici pot fi mai simple.",
   "sameInput": "Această imagine mică folosește aceeași intrare AI la ambele viteze.",
   "aiInput": "Intrare AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI poate modifica detalii mici"
   },
-  "selectModel": "Alege"
+  "selectModel": "Alege",
+  "storageUsage": {
+    "sessions": "Sesiuni",
+    "temporary": "Fișiere temporare",
+    "model": "Model",
+    "other": "Alte date",
+    "free": "Spațiu liber",
+    "cache": "Cache",
+    "total": "Datele aplicației"
+  },
+  "rating": {
+    "title": "Evaluează rezultatul",
+    "store": "Deschide Google Play"
+  }
 }

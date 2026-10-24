@@ -228,7 +228,7 @@
   },
   "speedTitle": "ความเร็วประมวลผล",
   "speedQuality": "คุณภาพ",
-  "speedFast": "เร็ว",
+  "speedFast": "ความเร็ว",
   "speedNote": "ใช้เวลาน้อยลง รายละเอียดเล็กน้อยอาจเรียบง่ายขึ้น",
   "sameInput": "ภาพเล็กนี้ใช้ภาพป้อนเข้า AI เหมือนกันทั้งสองความเร็ว",
   "aiInput": "ภาพป้อนเข้า AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI อาจเปลี่ยนรายละเอียดเล็กน้อย"
   },
-  "selectModel": "เลือก"
+  "selectModel": "เลือก",
+  "storageUsage": {
+    "sessions": "เซสชัน",
+    "temporary": "ไฟล์ชั่วคราว",
+    "model": "โมเดล",
+    "other": "ข้อมูลอื่น",
+    "free": "พื้นที่ว่าง",
+    "cache": "แคช",
+    "total": "ข้อมูลแอป"
+  },
+  "rating": {
+    "title": "ให้คะแนนผลลัพธ์นี้",
+    "store": "เปิด Google Play"
+  }
 }

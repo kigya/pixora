@@ -228,7 +228,7 @@
   },
   "speedTitle": "Velocidade",
   "speedQuality": "Qualidade",
-  "speedFast": "Rápido",
+  "speedFast": "Velocidade",
   "speedNote": "Menos tempo. Detalhes pequenos podem ficar mais simples.",
   "sameInput": "Esta imagem pequena usa a mesma entrada de IA nas duas velocidades.",
   "aiInput": "Entrada da IA",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "A IA pode alterar pequenos detalhes"
   },
-  "selectModel": "Selecionar"
+  "selectModel": "Selecionar",
+  "storageUsage": {
+    "sessions": "Sessões",
+    "temporary": "Ficheiros temporários",
+    "model": "Modelo",
+    "other": "Outros dados",
+    "free": "Espaço livre",
+    "cache": "Cache",
+    "total": "Dados da aplicação"
+  },
+  "rating": {
+    "title": "Avalie este resultado",
+    "store": "Abrir Google Play"
+  }
 }

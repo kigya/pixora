@@ -228,7 +228,7 @@
   },
   "speedTitle": "Kecepatan pemrosesan",
   "speedQuality": "Kualitas",
-  "speedFast": "Cepat",
+  "speedFast": "Kecepatan",
   "speedNote": "Waktu lebih singkat. Detail kecil mungkin lebih sederhana.",
   "sameInput": "Gambar kecil ini menggunakan input AI yang sama pada kedua kecepatan.",
   "aiInput": "Input AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI dapat mengubah detail kecil"
   },
-  "selectModel": "Pilih"
+  "selectModel": "Pilih",
+  "storageUsage": {
+    "sessions": "Sesi",
+    "temporary": "File sementara",
+    "model": "Model",
+    "other": "Data lain",
+    "free": "Ruang kosong",
+    "cache": "Cache",
+    "total": "Data aplikasi"
+  },
+  "rating": {
+    "title": "Nilai hasil ini",
+    "store": "Buka Google Play"
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   Text,
   View,
   Platform,
@@ -24,9 +25,8 @@ import { ProgressBar } from '../components/kinetik/progress-bar';
 import { PopDialog } from '../components/kinetik/pop-dialog';
 import { useOperation } from '../application/useOperation';
 import { PRIVACY_POLICY_URL } from '../application/privacy';
-import { languages } from '../ui/locale';
-import { ThemeSwitch } from '../components/kinetik/theme-switch';
-import { PulseToggle } from '../components/kinetik/pulse-toggle';
+import { LanguageSelector } from '../ui/languageSelector';
+import { ThemeSwitch, type ThemeMode } from '../components/kinetik/theme-switch';
 import { PressJelly } from '../components/kinetik/press-jelly';
 import { Profile } from '../components/kinetik/screens/profile';
 
@@ -60,18 +60,15 @@ export function SettingsScreen({
     state: 'absent', downloadedBytes: 0, totalBytes: 0, installedBytes: 0, error: '',
   });
   const [storage, setStorage] = useState<StorageUsage>({
-    cacheBytes: 0, sessionBytes: 0, temporaryBytes: 0, recreateModelBytes: 0, freeBytes: 0,
+    cacheBytes: 0, sessionBytes: 0, temporaryBytes: 0, recreateModelBytes: 0,
+    otherBytes: 0, totalBytes: 0, freeBytes: 0,
   });
   const { operation, error, setError, run } = useOperation();
   const busy = !!operation;
-  const usedCacheMiB = (storage.cacheBytes + storage.temporaryBytes) / 1048576;
-  const cacheCapacityMiB = settings.cacheLimitMiB > 0
-    ? settings.cacheLimitMiB
-    : Math.max(usedCacheMiB, 1);
+  const appStorageBytes = Math.max(0, storage.totalBytes);
   const formatMiB = (value: number) => number(value);
   const modelBytes = modelState.totalBytes || 1.88 * 1024 * 1024 * 1024;
   const modelMiB = modelBytes / 1048576;
-  const effectiveTheme: 'dark' | 'light' = dark ? 'dark' : 'light';
   useEffect(() => {
     refresh().catch(() => {});
   }, [refresh]);
@@ -88,13 +85,16 @@ export function SettingsScreen({
     };
     const subscription = Native.onRecreateModelChanged(model => {
       setModelState(model);
-      if (model.state === 'ready')
-        Native.getStorageUsage().then(setStorage).catch(() => {});
+      Native.getStorageUsage().then(setStorage).catch(() => {});
     });
     update();
+    const appStateSubscription = AppState.addEventListener('change', state => {
+      if (state === 'active') update();
+    });
     return () => {
       mounted = false;
       subscription.remove();
+      appStateSubscription.remove();
     };
   }, []);
   return (
@@ -178,35 +178,32 @@ export function SettingsScreen({
           <>
             <Text style={s.label}>{t.interface}</Text>
             <View style={s.card}>
-              <Button
-                title={languages.find(x => x.id === settings.language)?.name ?? t.system}
-                secondary
-                icon="globe"
-                onPress={() => navigation.navigate('Language')}
+              <LanguageSelector
+                testID="settings-language-selector"
+                value={settings.language}
+                onValueChange={value =>
+                  run(async () => {
+                    setSettings(await Native.updateSettings(value, settings.format, settings.theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
+                }
               />
             </View>
             <View style={s.card}>
-              <Text style={s.body}>{t.theme}</Text>
-              <View style={[s.row, { justifyContent: 'space-between' }]}>
-                <ThemeSwitch
-                  value={effectiveTheme}
-                  label={effectiveTheme === 'dark' ? t.dark : t.light}
-                  onValueChange={theme =>
-                    run(async () =>
-                      setSettings(await Native.updateSettings(settings.language, settings.format, theme)),
-                    )
-                  }
-                />
-                <PulseToggle
-                  value={settings.theme === 'system'}
-                  label={t.system}
-                  onValueChange={enabled =>
-                    run(async () =>
-                      setSettings(await Native.updateSettings(settings.language, settings.format, enabled ? 'system' : 'light')),
-                    )
-                  }
-                />
-              </View>
+              <ThemeSwitch
+                value={settings.theme as ThemeMode}
+                systemDark={dark}
+                label={t.theme}
+                optionLabels={{ system: t.system, light: t.light, dark: t.dark }}
+                accessibilityLabel={t.theme}
+                testID="theme-switch"
+                onValueChange={theme =>
+                  run(async () => {
+                    setSettings(await Native.updateSettings(settings.language, settings.format, theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
+                }
+              />
             </View>
             <Text style={s.label}>{t.notifications}</Text>
             <View style={s.card}>
@@ -248,15 +245,10 @@ export function SettingsScreen({
                 ]}
                 value={settings.format}
                 onChange={id =>
-                  run(async () =>
-                    setSettings(
-                      await Native.updateSettings(
-                        settings.language,
-                        id,
-                        settings.theme,
-                      ),
-                    ),
-                  )
+                  run(async () => {
+                    setSettings(await Native.updateSettings(settings.language, id, settings.theme));
+                    setStorage(await Native.getStorageUsage());
+                  })
                 }
               />
               <Text style={s.caption}>
@@ -288,15 +280,22 @@ export function SettingsScreen({
             </View>
             <View style={s.card}>
               <UsageMeter
-                title={t.recreate.storage}
+                breakdown
+                title={t.storageUsage.total}
                 unit="MiB"
-                total={cacheCapacityMiB}
+                total={Math.max(appStorageBytes / 1048576, 0.1)}
                 segments={[
-                  { label: t.files, value: storage.cacheBytes / 1048576 },
-                  { label: t.clear, value: storage.temporaryBytes / 1048576 },
+                  { label: t.storageUsage.sessions, value: storage.sessionBytes / 1048576 },
+                  { label: t.storageUsage.temporary, value: storage.temporaryBytes / 1048576 },
+                  { label: t.storageUsage.model, value: storage.recreateModelBytes / 1048576 },
+                  { label: t.storageUsage.cache, value: storage.cacheBytes / 1048576 },
+                  { label: t.storageUsage.other, value: storage.otherBytes / 1048576 },
                 ]}
                 formatValue={formatMiB}
               />
+              <Text style={s.caption}>
+                {t.storageUsage.free}: {formatMiB(storage.freeBytes / 1048576)} MiB
+              </Text>
               <Text style={s.label}>{t.cacheLimit}</Text>
               <ElasticSlider
                 label={t.cacheLimit}
@@ -309,7 +308,10 @@ export function SettingsScreen({
                   return value === 0 ? t.cacheNo : value === -1 ? t.cacheUnlimited : `${number(value)} MiB`;
                 }}
                 onSlidingComplete={index =>
-                  run(async () => setSettings(await Native.setCacheLimit(cacheLimits[Math.round(index)] ?? settings.cacheLimitMiB)))
+                  run(async () => {
+                    setSettings(await Native.setCacheLimit(cacheLimits[Math.round(index)] ?? settings.cacheLimitMiB));
+                    setStorage(await Native.getStorageUsage());
+                  })
                 }
               />
               <Text style={s.caption}>{t.cacheLimitNote}</Text>
@@ -332,6 +334,7 @@ export function SettingsScreen({
                     ) {
                       accept(await Native.discardSession());
                       track('ui_action', { action: 'session_deleted' });
+                      setStorage(await Native.getStorageUsage());
                       await refresh();
                     }
                   })

@@ -228,7 +228,7 @@
   },
   "speedTitle": "प्रक्रियेचा वेग",
   "speedQuality": "गुणवत्ता",
-  "speedFast": "जलद",
+  "speedFast": "वेग",
   "speedNote": "कमी वेळ. लहान तपशील साधे होऊ शकतात.",
   "sameInput": "या लहान चित्रासाठी दोन्ही वेगांत AI चे इनपुट सारखेच असते.",
   "aiInput": "AI इनपुट",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI लहान तपशील बदलू शकते"
   },
-  "selectModel": "निवडा"
+  "selectModel": "निवडा",
+  "storageUsage": {
+    "sessions": "सत्रे",
+    "temporary": "तात्पुरत्या फाइल्स",
+    "model": "मॉडेल",
+    "other": "इतर डेटा",
+    "free": "मोकळी जागा",
+    "cache": "कॅशे",
+    "total": "अ‍ॅप डेटा"
+  },
+  "rating": {
+    "title": "या परिणामाला रेटिंग द्या",
+    "store": "Google Play उघडा"
+  }
 }

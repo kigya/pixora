@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI சிறிய விவரங்களை மாற்றலாம்"
   },
-  "selectModel": "தேர்ந்தெடு"
+  "selectModel": "தேர்ந்தெடு",
+  "storageUsage": {
+    "sessions": "அமர்வுகள்",
+    "temporary": "தற்காலிகக் கோப்புகள்",
+    "model": "மாதிரி",
+    "other": "பிற தரவு",
+    "free": "காலி இடம்",
+    "cache": "தற்காலிக சேமிப்பு",
+    "total": "செயலித் தரவு"
+  },
+  "rating": {
+    "title": "இந்த முடிவை மதிப்பிடுங்கள்",
+    "store": "Google Play திறக்கவும்"
+  }
 }

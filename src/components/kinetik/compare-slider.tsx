@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -91,6 +92,7 @@ export function CompareSlider({
         ),
       ),
     );
+    return () => cancelAnimation(pos);
   }, [hint, reduced, width, initial, pos]);
 
   const report = (p: number) => {

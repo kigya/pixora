@@ -114,3 +114,23 @@ All newly added or changed 0.9 test scenarios are **NOT RUN**, including JS/TS, 
 FEAT-907/TEST-907 follow-up: the owner observed two splash compositions and a crash. Existing Xiaomi crash logs identify the navigation-context mismatch; source correction switches route hooks/types to Expo Router. Android's first branded splash is removed; Aurora displays only the logo for at least1500ms from first layout and until initialization is ready, fading in from the theme-matched system background.
 
 Future scenarios: cold launch in light/dark/system themes, saved appearance override, slow initialization, retry, Reduce Motion, rotation, foreground restoration, fresh onboarding and Settings/Back/replay navigation. All scenarios, test suites, lint, coverage and app verification launches are NOT RUN under the current owner instruction. Only release compilation, artifact inspection and requested package installation are performed separately. Installation is not startup acceptance.
+
+## TEST-909–913 — current 0.9 UX and result rating (24 October 2026)
+
+The owner now authorizes tests and physical Xiaomi checks. Earlier `not_run` statements record the earlier delivery boundary and do not prohibit these runs. No emulator or simulator is authorized for this revision.
+
+- **TEST-909 / FEAT-909:** navigation/onboarding suites cover the 1500 ms visible-frame gate, initialization failure/retry, migration, three horizontal pages, skip, replay and reduced motion. Physical Xiaomi confirms all three passive compositions and replay return. Android launch-theme overrides match explicit app themes on subsequent cold starts. Full font/RTL/accessibility matrix remains open.
+- **TEST-910 / FEAT-910:** component tests verify independent closed-card selection, mounted-on-expand comparison, Segment Bar choices, speed mapping, one output prediction and preservation of the imported Recreate preview. Real native smoke tests run all eight presets at 2×/4×, including alpha boundaries; this is execution smoke evidence, not image-quality acceptance.
+- **TEST-911 / FEAT-911:** Kinetik controls/dialog/storage tests cover actions, disabled state, search, three theme choices, layout and disjoint categories. Physical Xiaomi confirms inline language, direct theme/format controls, dialogs and cache decrease while retaining the current session. Model download/resume/deletion on this phone remains unverified; host tests use deterministic transports.
+- **TEST-912 / FEAT-912:** component/native tests cover actual-display persistence, 300000 ms cooldown, new successful-job eligibility, dismissal, no preselected stars, stale callbacks, 1–4 support routing with retained stars, 5-star external Play routing and fallback. Physical Xiaomi confirmed support routing and the Play product page. Actual store review publication and real support email are not tested or triggered.
+- **TEST-913 / FEAT-913:** native/JS tests cover allowlisted numeric generation context, immutable recommendation state, opt-out behavior, one durable rating event and prohibited content. Recreate must not inherit an enhancement recommendation. Firebase ingestion/custom-definition registration is blocked by authentication; it is not inferred from producer tests.
+
+Current measured totals, artifact scope and remaining strict coverage/security/platform gates are recorded in [the bounded verification report](../engineering/ux-090.md). All 100% thresholds and source-presence requirements remain in force; a passing test count with a failing coverage gate is not a whole-app release pass.
+
+| Test ID | Current 0.9 bounded status |
+|---|---|
+| TEST-909 | Launch/onboarding assertions and Xiaomi replay pass; full font/RTL/motion matrix open |
+| TEST-910 | Model/scale assertions and all-eight-preset physical smoke pass; smoothness/quality acceptance open |
+| TEST-911 | Controls/dialog/storage assertions and physical cache/language/theme flows pass |
+| TEST-912 | Rating eligibility/routing assertions and physical support/Play/cooldown flows pass |
+| TEST-913 | Local telemetry filters/context/opt-outs pass; Firebase ingestion blocked by authentication |

@@ -81,3 +81,23 @@ export function useTrackedScreen(
     };
   }, [focused, name]);
 }
+
+/** Explicit schema: no URI, filename, EXIF, prompt or comment can enter this context. */
+export function ratingContext(job: Session): EventContext {
+  const context: Record<string,string|number> = {
+    attempt_token:job.jobId, processing_kind:job.processingKind === 'recreate' ? 'recreate' : 'enhance',
+    profile_id:publicProfile(job.profileId || job.mode), model_version:job.modelId,
+    recommended_profile:job.recommendedProfile || 'none', recommendation_applied:job.recommendationApplied ? 1 : 0,
+    speed:job.speed || 'quality', scale:job.scale, backend:job.backend,
+    source_width:job.image?.width ?? 0, source_height:job.image?.height ?? 0,
+    input_width:job.aiInputWidth ?? job.image?.workWidth ?? 0, input_height:job.aiInputHeight ?? job.image?.workHeight ?? 0,
+    output_width:job.resultWidth, output_height:job.resultHeight,
+    source_format:job.image?.mime === 'image/png' ? 'png' : job.image?.mime === 'image/jpeg' ? 'jpeg' : job.image?.mime === 'image/webp' ? 'webp' : 'other',
+    has_alpha:job.image?.hasAlpha ? 1 : 0, duration_ms:job.elapsedMs,
+  };
+  if(job.processingKind === 'recreate') Object.assign(context,{
+    steps:job.recreateSteps ?? 4, strength:0.6, cfg:1,
+    recreate_revision:job.recreateModelRevision ?? '', prompt_present:job.recreatePrompt?.trim() ? 1 : 0,
+  });
+  return context;
+}

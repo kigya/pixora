@@ -11,8 +11,8 @@ object Telemetry {
     private lateinit var sink: TelemetrySink
     private var analyticsSuppressedForProcess = false
     private var crashesSuppressedForProcess = false
-    private val events = setOf("screen_view", "screen_engagement", "ui_action", "image_import_started", "image_import_finished", "profile_picker_opened", "profile_preview_interacted", "profile_selected", "processing_options_changed", "preparation_decision", "job_started", "job_backend_changed", "job_finished", "result_viewed", "comparison_used", "export_finished", "share_opened", "review_prompt_requested", "review_rating_selected", "review_submitted", "review_dismissed", "play_redirect_finished", "feedback_opened", "feedback_send_finished", "settings_changed", "remote_config_updated")
-    private val fields = setOf("screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile", "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase", "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms", "engagement_ms", "enabled_count")
+    private val events = setOf("screen_view", "screen_engagement", "ui_action", "image_import_started", "image_import_finished", "profile_picker_opened", "profile_preview_interacted", "profile_selected", "processing_options_changed", "preparation_decision", "job_started", "job_backend_changed", "job_finished", "result_viewed", "comparison_used", "export_finished", "share_opened", "review_prompt_requested", "review_prompt_shown", "review_rating_selected", "review_submitted", "result_rating_submitted", "review_dismissed", "play_redirect_finished", "feedback_opened", "feedback_send_finished", "settings_changed", "remote_config_updated")
+    private val fields = setOf("screen_name", "screen_class", "action", "source", "status", "profile_id", "previous_profile", "speed", "scale", "backend", "previous_backend", "size_bucket", "model_version", "phase", "error_code", "attempt_token", "format", "rating", "route", "setting", "value", "duration_ms", "engagement_ms", "enabled_count", "image_width", "image_height", "recommended_profile", "recommendation_applied", "processing_kind", "source_width", "source_height", "input_width", "input_height", "output_width", "output_height", "source_format", "has_alpha", "steps", "strength", "cfg", "recreate_revision", "prompt_present")
     internal fun prepare(ctx: Context): Boolean {
         context = ctx.applicationContext
         // Reconcile SDK-level collection switches before eager Firebase components initialize.
@@ -84,7 +84,39 @@ object Telemetry {
     fun jobContext(job: JSONObject): JSONObject {
         val image = job.optJSONObject("image")
         val pixels = (image?.optLong("workWidth") ?: 0) * (image?.optLong("workHeight") ?: 0)
-        return JSONObject().put("attempt_token", job.optString("jobId")).put("profile_id", ProcessingProfiles.publicId(job.optString("mode"))).put("speed", job.optString("speed", "quality")).put("scale", job.optInt("scale")).put("backend", job.optString("backend")).put("model_version", job.optString("modelId")).put("size_bucket", if (pixels <= 262144) "small" else if (pixels <= 786432) "medium" else "large").put("phase", job.optString("phase"))
+        return JSONObject().put("attempt_token", job.optString("jobId")).put("profile_id", ProcessingProfiles.publicId(job.optString("mode"))).put("speed", job.optString("speed", "quality")).put("scale", job.optInt("scale")).put("backend", job.optString("backend")).put("model_version", job.optString("modelId")).put("size_bucket", if (pixels <= 262144) "small" else if (pixels <= 786432) "medium" else "large").put("phase", job.optString("phase")).put("image_width", image?.optInt("width", 0) ?: 0).put("image_height", image?.optInt("height", 0) ?: 0).put("recommended_profile", job.optString("recommendedProfile")).put("recommendation_applied", if (job.optBoolean("recommendationApplied")) 1 else 0)
+    }
+    /** Exact privacy-safe result-rating schema; never includes the prompt or image identifiers. */
+    fun ratingContext(job: JSONObject, rating: Int): JSONObject {
+        val image = job.optJSONObject("image")
+        val kind = if (job.optString("processingKind") == "recreate") "recreate" else "enhance"
+        val context = JSONObject()
+            .put("attempt_token", job.optString("jobId"))
+            .put("processing_kind", kind)
+            .put("profile_id", ProcessingProfiles.publicId(job.optString("profileId", job.optString("mode"))))
+            .put("model_version", job.optString("modelId"))
+            .put("recommended_profile", job.optString("recommendedProfile").ifEmpty { "none" })
+            .put("recommendation_applied", if (job.optBoolean("recommendationApplied")) 1 else 0)
+            .put("speed", job.optString("speed", "quality"))
+            .put("scale", job.optInt("scale"))
+            .put("backend", job.optString("backend"))
+            .put("source_width", image?.optInt("width", 0) ?: 0)
+            .put("source_height", image?.optInt("height", 0) ?: 0)
+            .put("input_width", job.optInt("aiInputWidth", image?.optInt("workWidth", 0) ?: 0))
+            .put("input_height", job.optInt("aiInputHeight", image?.optInt("workHeight", 0) ?: 0))
+            .put("output_width", job.optInt("resultWidth"))
+            .put("output_height", job.optInt("resultHeight"))
+            .put("source_format", when (image?.optString("mime")) { "image/png" -> "png"; "image/jpeg" -> "jpeg"; "image/webp" -> "webp"; else -> "other" })
+            .put("has_alpha", if (image?.optBoolean("hasAlpha") == true) 1 else 0)
+            .put("duration_ms", job.optLong("elapsedMs"))
+            .put("rating", rating)
+        if (kind == "recreate") context
+            .put("steps", job.optInt("recreateSteps", 4))
+            .put("strength", 0.6)
+            .put("cfg", 1.0)
+            .put("recreate_revision", job.optString("recreateModelRevision"))
+            .put("prompt_present", if (job.optString("recreatePrompt").isNotBlank()) 1 else 0)
+        return context
     }
     fun observeJob(previous: JSONObject, next: JSONObject) {
         if (!::context.isInitialized) return

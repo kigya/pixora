@@ -228,7 +228,7 @@
   },
   "speedTitle": "Verarbeitungstempo",
   "speedQuality": "Qualität",
-  "speedFast": "Schnell",
+  "speedFast": "Tempo",
   "speedNote": "Weniger Zeit. Feine Details können einfacher sein.",
   "sameInput": "Bei diesem kleinen Bild ist die KI-Eingabe für beide Tempi gleich.",
   "aiInput": "KI-Eingabe",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "KI kann kleine Details verändern"
   },
-  "selectModel": "Auswählen"
+  "selectModel": "Auswählen",
+  "storageUsage": {
+    "sessions": "Sitzungen",
+    "temporary": "Temporäre Dateien",
+    "model": "Modell",
+    "other": "Weitere Daten",
+    "free": "Freier Speicher",
+    "cache": "Cache",
+    "total": "App-Daten"
+  },
+  "rating": {
+    "title": "Ergebnis bewerten",
+    "store": "Google Play öffnen"
+  }
 }

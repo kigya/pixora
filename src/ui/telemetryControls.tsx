@@ -145,8 +145,8 @@ export function TelemetryControls() {
     <View style={s.card}>
       <Text style={s.label}>{t.telemetryTitle}</Text>
       {(['analytics', 'crashes'] as const).map(key => (
-        <View key={key} style={[s.row, { flexWrap: 'nowrap' }]}>
-          <View style={{ flex: 1, gap: 6 }}>
+        <View key={key} style={[s.row, { alignItems: 'center', flexWrap: 'wrap' }]}>
+          <View style={{ flex: 1, flexShrink: 1, gap: 6 }}>
             <Text style={s.value}>
               {key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
             </Text>
@@ -155,7 +155,7 @@ export function TelemetryControls() {
             </Text>
           </View>
           <PulseToggle
-            label={key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
+            accessibilityLabel={key === 'analytics' ? t.analyticsTitle : t.crashesTitle}
             value={displayed[key]}
             onValueChange={value => change(key, value)}
           />

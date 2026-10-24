@@ -11,7 +11,7 @@ import com.facebook.react.bridge.CxxCallbackImpl
 import com.facebook.react.ReactPackage
 import com.facebook.soloader.nativeloader.NativeLoader
 import com.facebook.soloader.nativeloader.SystemDelegate
-import com.facebook.react.defaults.DefaultReactHost
+import expo.modules.ExpoReactHostFactory
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -124,7 +124,7 @@ class AndroidOwnedCoverageTest {
             }
             host
         }
-        mockStatic(DefaultReactHost::class.java, hostFactory).use {
+        mockStatic(ExpoReactHostFactory::class.java, hostFactory).use {
             assertSame(host, application.reactHost)
             assertNotNull(registeredPackages.get())
             assertTrue(registeredPackages.get().any { it is UpscalePackage })

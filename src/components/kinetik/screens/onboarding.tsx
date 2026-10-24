@@ -2,139 +2,108 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   AppState,
   StyleSheet,
-  Text,
   View,
+  useWindowDimensions,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
+  type TextStyle,
 } from 'react-native';
 import Animated, {
   useAnimatedRef,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withSpring,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PressJelly } from '../press-jelly';
-import { WordCascade } from '../word-cascade';
-import { spring, timing } from '../../../lib/kinetik/motion/motion';
 import { useReduceMotion } from '../../../lib/kinetik/hooks/use-reduce-motion';
 import { useKinetikTheme } from '../../../lib/kinetik/tokens/theme';
-import { minTouchTarget } from '../../../lib/kinetik/tokens/tokens';
 
 export type OnboardingSlide = {
   key: string;
-  /** Small chip above the title, e.g. "Easy sign-up". */
-  tag?: string;
   title: string;
-  /**
-   * Fills the rounded panel at the top. Receives whether its slide is the
-   * current one, so it can play only while visible. Defaults to built-in
-   * illustrations.
-   */
+  /** Passive illustration; callers should set pointerEvents="none". */
   visual?: (active: boolean) => ReactNode;
 };
 
 export type OnboardingProps = {
-  /** Called by the button on the last slide. */
   onFinish: () => void;
-  /** Called by the link under the button. Hidden when omitted. */
   onSkip?: () => void;
-  slides?: readonly OnboardingSlide[];
-  /** Button label before the last slide. Defaults to "Continue". */
-  nextLabel?: string;
-  /** Button label on the last slide. Defaults to "Get started". */
-  finishLabel?: string;
-  /** Link label. Defaults to "Maybe later". */
+  slides: readonly OnboardingSlide[];
+  nextLabel: string;
+  finishLabel: string;
   skipLabel?: string;
-  /** Localized accessibility label for the fixed progress indicator. */
-  stepLabel?: (current: number, total: number) => string;
+  stepLabel: (current: number, total: number) => string;
 };
 
-const DEFAULT_SLIDES: OnboardingSlide[] = [
-  { key: 'welcome', tag: 'Welcome', title: 'Everything you track, in one calm place' },
-  { key: 'setup', tag: 'Easy setup', title: 'Set up your account in under a minute' },
-  { key: 'nudge', tag: 'Stay on top', title: 'A nudge only when it really matters' },
-];
-
-const DEFAULT_VISUALS = [
-  (active: boolean) => <CardStack active={active} />,
-  (active: boolean) => <Checklist active={active} />,
-  (active: boolean) => <Nudge active={active} />,
-];
-
-/**
- * A paged welcome: a rounded illustration panel, a thin progress line that
- * follows the finger, a tag and a title that rises in word by word, and one
- * clear button with a quiet "Maybe later" under it.
- */
+/** A fixed footer with a horizontal-only pager and passive Kinetik visuals. */
 export function Onboarding({
   onFinish,
   onSkip,
-  slides = DEFAULT_SLIDES,
-  nextLabel = 'Continue',
-  finishLabel = 'Get started',
-  skipLabel = 'Maybe later',
-  stepLabel = (current, total) => `Step ${current} of ${total}`,
+  slides,
+  nextLabel,
+  finishLabel,
+  skipLabel,
+  stepLabel,
 }: OnboardingProps) {
   const { colors, space, font } = useKinetikTheme();
   const insets = useSafeAreaInsets();
+  const window = useWindowDimensions();
+  const reduced = useReduceMotion();
   const scroller = useAnimatedRef<Animated.ScrollView>();
   const offset = useSharedValue(0);
-  const widthRef = useRef(0);
-  const [width, setWidth] = useState(0);
+  const widthRef = useRef(window.width);
+  const [width, setWidth] = useState(window.width);
   const [height, setHeight] = useState(0);
   const [index, setIndex] = useState(0);
-  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  const [foreground, setForeground] = useState(
+    AppState.currentState !== 'background' && AppState.currentState !== 'inactive',
+  );
   const count = slides.length;
   const last = index >= count - 1;
+  const compact = window.height < 620 || window.fontScale >= 1.5;
+  const pad = space[5];
+  const titleSize = font.size['2xl'];
 
-  const onScroll = useAnimatedScrollHandler((e) => {
-    offset.set(e.contentOffset.x);
+  const onScroll = useAnimatedScrollHandler(event => {
+    offset.set(event.contentOffset.x);
   });
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    widthRef.current = e.nativeEvent.layout.width;
-    setWidth(e.nativeEvent.layout.width);
+  const onLayout = (event: LayoutChangeEvent) => {
+    widthRef.current = event.nativeEvent.layout.width;
+    setWidth(event.nativeEvent.layout.width);
+    setHeight(event.nativeEvent.layout.height);
   };
-
-  const settle = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const w = widthRef.current;
-    if (w > 0) setIndex(Math.round(e.nativeEvent.contentOffset.x / w));
+  const settle = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const pageWidth = widthRef.current;
+    if (pageWidth > 0)
+      setIndex(Math.max(0, Math.min(count - 1, Math.round(event.nativeEvent.contentOffset.x / pageWidth))));
   };
-
   const next = () => {
     if (last) return onFinish();
     const to = index + 1;
-    scroller.current?.scrollTo({ x: to * widthRef.current, animated: true });
+    scroller.current?.scrollTo({ x: to * widthRef.current, animated: !reduced });
     setIndex(to);
   };
 
-  const pad = space[6];
-
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => setForeground(state === 'active'));
+    const sub = AppState.addEventListener('change', state => setForeground(state === 'active'));
     return () => sub.remove();
   }, []);
 
   return (
     <View
       style={[
-        styles.fill,
+        styles.root,
         {
           backgroundColor: colors.background,
           paddingTop: insets.top + space[3],
-          paddingBottom: insets.bottom + space[4],
+          paddingBottom: insets.bottom + space[3],
         },
       ]}
-      onLayout={onLayout}
       testID="onboarding"
     >
       <Animated.ScrollView
@@ -142,420 +111,142 @@ export function Onboarding({
         testID="onboarding-pager"
         horizontal
         pagingEnabled
+        scrollEnabled={foreground}
         showsHorizontalScrollIndicator={false}
-        onScroll={onScroll}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
         scrollEventThrottle={16}
+        onScroll={onScroll}
         onMomentumScrollEnd={settle}
-        onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
-        style={styles.fill}
+        onScrollEndDrag={settle}
+        onLayout={onLayout}
+        style={[styles.pager, { direction: 'ltr' }]}
       >
-        {width > 0 &&
-          slides.map((slide, i) => {
-            const active = i === index;
-            return (
+        {width > 0 && slides.map((slide, page) => {
+          const active = page === index;
+          return (
+            <View
+              key={slide.key}
+              style={{
+                width,
+                height: height || undefined,
+                paddingHorizontal: pad,
+                paddingBottom: compact ? space[2] : space[4],
+                gap: compact ? space[3] : space[4],
+              }}
+              accessibilityElementsHidden={!active}
+              importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
+            >
               <View
-                key={slide.key}
-                style={{
-                  width,
-                  height: height || undefined,
-                  paddingHorizontal: pad,
-                  paddingBottom: space[6],
-                  gap: space[5],
-                }}
-                accessibilityElementsHidden={!active}
-                importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
+                style={[
+                  styles.illustration,
+                  { minHeight: compact ? 72 : 104, backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 24 },
+                ]}
               >
-                <Panel>{(slide.visual ?? DEFAULT_VISUALS[i % 3])?.(active && foreground)}</Panel>
-                <View style={{ gap: space[3], alignItems: 'flex-start' }}>
-                  {slide.tag ? (
-                    <View
-                      style={[
-                        styles.tag,
-                        { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
-                      ]}
-                    >
-                      <Text
-                        style={{
-                          color: colors.textMuted,
-                          fontSize: font.size.xs,
-                          fontWeight: font.weight.semibold,
-                        }}
-                      >
-                        {slide.tag}
-                      </Text>
-                    </View>
-                  ) : null}
-                  <WordCascade
-                    text={slide.title}
-                    active={active && foreground}
-                    replayKey={active ? `${slide.key}-on` : slide.key}
-                    stagger={55}
-                    rise={14}
-                    style={{
-                      color: colors.text,
-                      fontSize: font.size['2xl'],
-                      lineHeight: 34,
-                      fontWeight: font.weight.bold,
-                      letterSpacing: font.tracking.tight,
-                    }}
-                  />
-                </View>
+                {slide.visual?.(active && foreground)}
               </View>
-            );
-          })}
+              <SlideTitle
+                text={slide.title}
+                active={active && foreground}
+                size={titleSize}
+                color={colors.text}
+                weight={font.weight.bold}
+                tracking={font.tracking.tight}
+              />
+            </View>
+          );
+        })}
       </Animated.ScrollView>
 
-      <View style={{ paddingHorizontal: pad, paddingTop: space[3] }}>
-        <Track index={index} count={count} offset={offset} width={width} stepLabel={stepLabel} />
+      <View style={[styles.indicatorSlot, { paddingTop: space[2], paddingBottom: space[6] }]}>
+        <ProgressTrack count={count} offset={offset} width={Math.max(0, width - pad * 2)} pageWidth={width} label={stepLabel(index + 1, count)} />
       </View>
 
-      <View style={{ paddingHorizontal: pad, gap: space[2] }}>
+      <View style={[styles.footer, { paddingHorizontal: pad, gap: space[2] }]}>
         <PressJelly block size="lg" onPress={next}>
           {last ? finishLabel : nextLabel}
         </PressJelly>
-        {onSkip ? (
+        {onSkip && skipLabel ? (
           <PressJelly variant="surface" block size="md" onPress={onSkip}>
             {skipLabel}
           </PressJelly>
-        ) : (
-          <View style={styles.link} />
-        )}
+        ) : null}
       </View>
     </View>
   );
 }
 
-/** The rounded panel every illustration sits in. */
-function Panel({ children }: { children: ReactNode }) {
-  const { colors, radius } = useKinetikTheme();
+function SlideTitle({
+  text,
+  active,
+  size,
+  color,
+  weight,
+  tracking,
+}: {
+  text: string;
+  active: boolean;
+  size: number;
+  color: string;
+  weight: TextStyle['fontWeight'];
+  tracking: number;
+}) {
+  const reduced = useReduceMotion();
+  const arrive = useSharedValue(reduced ? 1 : 0);
+  useEffect(() => {
+    arrive.set(reduced ? (active ? 1 : 0) : 0);
+    if (active && !reduced) arrive.set(withTiming(1, { duration: 260 }));
+  }, [active, reduced, arrive]);
+  const style = useAnimatedStyle(() => ({ opacity: arrive.get(), transform: [{ translateY: (1 - arrive.get()) * 8 }] }));
   return (
-    <View
-      style={[
-        styles.panel,
-        {
-          backgroundColor: colors.surface,
-          borderColor: colors.border,
-          borderRadius: radius.xl,
-        },
-      ]}
+    <Animated.Text
+      accessibilityRole="header"
+      accessibilityLabel={text}
+      style={[styles.title, { color, fontSize: size, fontWeight: weight, letterSpacing: tracking }, style]}
     >
-      {children}
-    </View>
+      {text}
+    </Animated.Text>
   );
 }
 
-/**
- * One fixed hairline with a darker segment that follows the horizontal pager.
- */
-function Track({
-  index,
+function ProgressTrack({
   count,
   offset,
   width,
-  stepLabel,
+  pageWidth,
+  label,
 }: {
-  index: number;
   count: number;
   offset: SharedValue<number>;
   width: number;
-  stepLabel: (current: number, total: number) => string;
+  pageWidth: number;
+  label: string;
 }) {
-  const { colors, space } = useKinetikTheme();
-  const inner = width - space[6] * 2;
-  const segment = inner / count;
-  const style = useAnimatedStyle(() => {
-    const progress = width > 0 ? offset.get() / width : 0;
-    return { transform: [{ translateX: progress * segment }] };
-  });
+  const { colors } = useKinetikTheme();
+  const segment = width > 0 ? width / count : 0;
+  const progress = useAnimatedStyle(() => ({
+    transform: [{ translateX: Math.max(0, Math.min(count - 1, offset.get() / Math.max(1, pageWidth))) * segment }],
+  }));
   return (
     <Animated.View
       accessible
       accessibilityRole="text"
-      accessibilityLabel={stepLabel(index + 1, count)}
-      style={[styles.track, { width: inner, backgroundColor: colors.track }]}
+      accessibilityLabel={label}
+      testID="onboarding-progress"
+      style={[styles.track, { width, backgroundColor: colors.track }]}
     >
-      <Animated.View
-        style={[styles.segment, { width: segment, backgroundColor: colors.text }, style]}
-      />
+      <Animated.View style={[styles.progress, { width: segment, backgroundColor: colors.text }, progress]} />
     </Animated.View>
   );
 }
 
-/** Three cards that fan out and drift, standing for "everything in one place". */
-function CardStack({ active }: { active: boolean }) {
-  const { colors, radius, space } = useKinetikTheme();
-  const reduced = useReduceMotion();
-  const fan = useSharedValue(reduced ? 1 : 0);
-  const float = useSharedValue(0);
-
-  useEffect(() => {
-    fan.set(active ? withDelay(120, withSpring(1, spring('bouncy', reduced))) : 0);
-    float.set(
-      active && !reduced
-        ? withRepeat(withTiming(1, { ...timing('slow', false, 'inOut'), duration: 2400 }), -1, true)
-        : 0,
-    );
-  }, [active, reduced, fan, float]);
-
-  const face = (fill: string, lines: number[]) => (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: colors.surfaceRaised,
-          borderColor: colors.border,
-          borderRadius: radius.lg,
-          padding: space[3],
-          gap: space[2],
-        },
-      ]}
-    >
-      <View style={[styles.cardDot, { backgroundColor: fill }]} />
-      {lines.map((w, i) => (
-        <View key={i} style={[styles.line, { width: `${w}%`, backgroundColor: colors.track }]} />
-      ))}
-      <View style={[styles.cardBar, { backgroundColor: fill, borderRadius: radius.sm }]} />
-    </View>
-  );
-
-  return (
-    <View style={styles.center}>
-      <FanCard angle={-9} shift={-46} fan={fan} float={float}>
-        {face(colors.azure, [70, 46])}
-      </FanCard>
-      <FanCard angle={9} shift={46} fan={fan} float={float}>
-        {face(colors.success, [58, 80])}
-      </FanCard>
-      <FanCard angle={0} shift={0} fan={fan} float={float}>
-        {face(colors.ember, [82, 54])}
-      </FanCard>
-    </View>
-  );
-}
-
-function FanCard({
-  angle,
-  shift,
-  fan,
-  float,
-  children,
-}: {
-  angle: number;
-  shift: number;
-  fan: SharedValue<number>;
-  float: SharedValue<number>;
-  children: ReactNode;
-}) {
-  const style = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: shift * fan.get() },
-      { translateY: -float.get() * (angle === 0 ? 8 : 4) },
-      { rotate: `${angle * fan.get()}deg` },
-    ],
-  }));
-  return <Animated.View style={[styles.layer, style]}>{children}</Animated.View>;
-}
-
-const CHECKS = ['Create your profile', 'Pick what you follow', 'Turn on reminders'];
-
-/** A setup list that ticks itself off, row by row. */
-function Checklist({ active }: { active: boolean }) {
-  const { colors, radius, space, font } = useKinetikTheme();
-  return (
-    <View style={styles.center}>
-      <View
-        style={[
-          styles.sheet,
-          {
-            backgroundColor: colors.surfaceRaised,
-            borderColor: colors.border,
-            borderRadius: radius.lg,
-            padding: space[4],
-            gap: space[3],
-          },
-        ]}
-      >
-        {CHECKS.map((label, i) => (
-          <CheckRow key={label} label={label} index={i} active={active} />
-        ))}
-        <View style={[styles.line, { width: '40%', backgroundColor: colors.track }]} />
-        <Text style={{ color: colors.textSubtle, fontSize: font.size.xs }}>About a minute</Text>
-      </View>
-    </View>
-  );
-}
-
-function CheckRow({ label, index, active }: { label: string; index: number; active: boolean }) {
-  const { colors, font, space } = useKinetikTheme();
-  const reduced = useReduceMotion();
-  const done = useSharedValue(reduced ? 1 : 0);
-
-  useEffect(() => {
-    done.set(
-      active
-        ? withDelay(reduced ? 0 : 450 + index * 420, withSpring(1, spring('bouncy', reduced)))
-        : 0,
-    );
-  }, [active, reduced, index, done]);
-
-  const fill = useAnimatedStyle(() => ({
-    opacity: Math.min(1, done.get()),
-    transform: [{ scale: done.get() }],
-  }));
-  const text = useAnimatedStyle(() => ({ opacity: 0.55 + Math.min(1, done.get()) * 0.45 }));
-
-  return (
-    <View style={[styles.row, { gap: space[3] }]}>
-      <View style={[styles.box, { borderColor: colors.borderStrong }]}>
-        <Animated.View style={[styles.boxFill, { backgroundColor: colors.ember }, fill]}>
-          <Text style={{ color: colors.onEmber, fontSize: 11, fontWeight: font.weight.heavy }}>
-            ✓
-          </Text>
-        </Animated.View>
-      </View>
-      <Animated.Text
-        style={[
-          { color: colors.text, fontSize: font.size.sm, fontWeight: font.weight.medium },
-          text,
-        ]}
-      >
-        {label}
-      </Animated.Text>
-    </View>
-  );
-}
-
-/** A notification drops in over a quiet screen, then tucks away again. */
-function Nudge({ active }: { active: boolean }) {
-  const { colors, radius, space, font } = useKinetikTheme();
-  const reduced = useReduceMotion();
-  const drop = useSharedValue(reduced ? 1 : 0);
-  const ring = useSharedValue(0);
-
-  useEffect(() => {
-    if (!active || reduced) {
-      drop.set(reduced ? 1 : 0);
-      ring.set(0);
-      return;
-    }
-    drop.set(
-      withRepeat(
-        withSequence(
-          withDelay(300, withSpring(1, spring('bouncy'))),
-          withDelay(1800, withTiming(0, timing('base', false, 'exit'))),
-        ),
-        -1,
-      ),
-    );
-    ring.set(withRepeat(withTiming(1, { ...timing('slow', false, 'linear'), duration: 1600 }), -1));
-  }, [active, reduced, drop, ring]);
-
-  const banner = useAnimatedStyle(() => ({
-    opacity: Math.min(1, drop.get() * 1.4),
-    transform: [{ translateY: (1 - drop.get()) * -70 }, { scale: 0.94 + drop.get() * 0.06 }],
-  }));
-  const pulse = useAnimatedStyle(() => ({
-    opacity: (1 - ring.get()) * 0.5,
-    transform: [{ scale: 1 + ring.get() * 1.6 }],
-  }));
-
-  return (
-    <View style={styles.center}>
-      <View
-        style={[
-          styles.phone,
-          { borderColor: colors.borderStrong, backgroundColor: colors.background },
-        ]}
-      >
-        <Animated.View
-          style={[
-            styles.banner,
-            {
-              backgroundColor: colors.surfaceRaised,
-              borderColor: colors.border,
-              borderRadius: radius.md,
-              padding: space[2],
-              gap: space[2],
-            },
-            banner,
-          ]}
-        >
-          <View style={styles.bell}>
-            <Animated.View style={[styles.bellRing, { borderColor: colors.ember }, pulse]} />
-            <View style={[styles.bellDot, { backgroundColor: colors.ember }]} />
-          </View>
-          <View style={styles.fill}>
-            <Text
-              numberOfLines={1}
-              style={{ color: colors.text, fontSize: 11, fontWeight: font.weight.bold }}
-            >
-              Rent due tomorrow
-            </Text>
-            <Text numberOfLines={1} style={{ color: colors.textMuted, fontSize: 10 }}>
-              Tap to pay
-            </Text>
-          </View>
-        </Animated.View>
-        <View style={{ gap: space[2], marginTop: 'auto' }}>
-          <View style={[styles.line, { width: '70%', backgroundColor: colors.track }]} />
-          <View style={[styles.line, { width: '50%', backgroundColor: colors.track }]} />
-          <View style={[styles.line, { width: '84%', backgroundColor: colors.track }]} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  panel: { flex: 1, minHeight: 0, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  root: { flex: 1 },
+  pager: { flex: 1 },
+  illustration: { flex: 1, minHeight: 0, borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden' },
+  title: { flexShrink: 1, textAlign: 'left', paddingBottom: 1 },
+  indicatorSlot: { alignItems: 'center' },
   track: { height: 3, borderRadius: 2, overflow: 'hidden' },
-  segment: { height: 3, borderRadius: 2 },
-  tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  link: { minHeight: minTouchTarget, alignItems: 'center', justifyContent: 'center' },
-  layer: { position: 'absolute' },
-  card: { width: 132, height: 168, borderWidth: StyleSheet.hairlineWidth },
-  cardDot: { width: 28, height: 28, borderRadius: 14, marginBottom: 6 },
-  cardBar: { height: 44, marginTop: 'auto', opacity: 0.85 },
-  line: { height: 7, borderRadius: 4 },
-  sheet: { width: '78%', maxWidth: 280, borderWidth: StyleSheet.hairlineWidth },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  box: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  boxFill: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  phone: {
-    width: 196,
-    height: 236,
-    marginBottom: -48,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    padding: 12,
-    paddingBottom: 60,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  bell: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center' },
-  bellRing: { position: 'absolute', width: 14, height: 14, borderRadius: 7, borderWidth: 1.5 },
-  bellDot: { width: 12, height: 12, borderRadius: 6 },
+  progress: { height: 3, borderRadius: 2 },
+  footer: { gap: 8 },
 });

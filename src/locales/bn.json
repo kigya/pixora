@@ -228,7 +228,7 @@
   },
   "speedTitle": "প্রক্রিয়াকরণের গতি",
   "speedQuality": "মান",
-  "speedFast": "দ্রুত",
+  "speedFast": "গতি",
   "speedNote": "কম সময়। ছোট খুঁটিনাটি সরল হতে পারে।",
   "sameInput": "এই ছোট ছবির জন্য দুই গতিতেই AI একই ইনপুট ব্যবহার করে।",
   "aiInput": "AI ইনপুট",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI ছোট বিবরণ বদলে দিতে পারে"
   },
-  "selectModel": "বেছে নিন"
+  "selectModel": "বেছে নিন",
+  "storageUsage": {
+    "sessions": "সেশন",
+    "temporary": "অস্থায়ী ফাইল",
+    "model": "মডেল",
+    "other": "অন্যান্য ডেটা",
+    "free": "খালি জায়গা",
+    "cache": "ক্যাশ",
+    "total": "অ্যাপের ডেটা"
+  },
+  "rating": {
+    "title": "এই ফলাফলের রেটিং দিন",
+    "store": "Google Play খুলুন"
+  }
 }

@@ -228,7 +228,7 @@
   },
   "speedTitle": "પ્રક્રિયાની ઝડપ",
   "speedQuality": "ગુણવત્તા",
-  "speedFast": "ઝડપી",
+  "speedFast": "ઝડપ",
   "speedNote": "ઓછો સમય. નાની વિગતો સરળ બની શકે છે.",
   "sameInput": "આ નાની છબી બંને ઝડપે એક જ AI ઇનપુટ વાપરે છે.",
   "aiInput": "AI ઇનપુટ",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI નાની વિગતો બદલી શકે છે"
   },
-  "selectModel": "પસંદ કરો"
+  "selectModel": "પસંદ કરો",
+  "storageUsage": {
+    "sessions": "સત્રો",
+    "temporary": "કામચલાઉ ફાઇલો",
+    "model": "મોડેલ",
+    "other": "અન્ય ડેટા",
+    "free": "ખાલી જગ્યા",
+    "cache": "કૅશ",
+    "total": "ઍપ ડેટા"
+  },
+  "rating": {
+    "title": "આ પરિણામને રેટ કરો",
+    "store": "Google Play ખોલો"
+  }
 }

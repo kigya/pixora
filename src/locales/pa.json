@@ -228,7 +228,7 @@
   },
   "speedTitle": "ਪ੍ਰਕਿਰਿਆ ਦੀ ਗਤੀ",
   "speedQuality": "ਗੁਣਵੱਤਾ",
-  "speedFast": "ਤੇਜ਼",
+  "speedFast": "ਗਤੀ",
   "speedNote": "ਘੱਟ ਸਮਾਂ। ਛੋਟੇ ਵੇਰਵੇ ਸੌਖੇ ਹੋ ਸਕਦੇ ਹਨ।",
   "sameInput": "ਇਸ ਛੋਟੀ ਤਸਵੀਰ ਲਈ ਦੋਵੇਂ ਗਤੀਆਂ ਇੱਕੋ AI ਇਨਪੁੱਟ ਵਰਤਦੀਆਂ ਹਨ।",
   "aiInput": "AI ਇਨਪੁੱਟ",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI ਛੋਟੇ ਵੇਰਵੇ ਬਦਲ ਸਕਦੀ ਹੈ"
   },
-  "selectModel": "ਚੁਣੋ"
+  "selectModel": "ਚੁਣੋ",
+  "storageUsage": {
+    "sessions": "ਸੈਸ਼ਨ",
+    "temporary": "ਅਸਥਾਈ ਫ਼ਾਈਲਾਂ",
+    "model": "ਮਾਡਲ",
+    "other": "ਹੋਰ ਡਾਟਾ",
+    "free": "ਖਾਲੀ ਥਾਂ",
+    "cache": "ਕੈਸ਼",
+    "total": "ਐਪ ਡਾਟਾ"
+  },
+  "rating": {
+    "title": "ਇਸ ਨਤੀਜੇ ਨੂੰ ਰੇਟ ਕਰੋ",
+    "store": "Google Play ਖੋਲ੍ਹੋ"
+  }
 }

@@ -79,6 +79,10 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
       {children}
       <PopDialog
         visible={!!request}
+        onShow={() => {
+          const node=findNodeHandle(titleRef.current);
+          if(node)AccessibilityInfo.setAccessibilityFocus(node);
+        }}
         onClose={() => finish(false)}
         closeLabel={request?.cancel}
         // The visible, focusable heading is inside the bounded scroll region.

@@ -51,6 +51,10 @@ export type Session = {
   recreateModelRevision?: string;
   recreatePrompt?: string;
   recreateSteps?: number;
+  recommendedProfile?: string;
+  recommendationApplied?: boolean;
+  recommendationContextSet?: boolean;
+  resultRating?: number;
   resolution?: string;
   profileId?: string;
   speed?: string;
@@ -155,7 +159,9 @@ export type StorageUsage = {
   sessionBytes: number;
   temporaryBytes: number;
   recreateModelBytes: number;
+  otherBytes: number;
   freeBytes: number;
+  totalBytes: number;
 };
 export interface Spec extends TurboModule {
   getRecreateModelState(): Promise<RecreateModelState>;
@@ -167,6 +173,11 @@ export interface Spec extends TurboModule {
   markAiDetailNoticeSeen(): Promise<Settings>;
   getStorageUsage(): Promise<StorageUsage>;
   clearCache(): Promise<number>;
+  setRecommendationContext(
+    jobId: string,
+    recommendedProfile: string,
+    recommendationApplied: boolean,
+  ): Promise<Session>;
   finishStartup(): void;
   getProfileAvailability(): Promise<ProfileAvailability>;
   readonly onProfileAvailabilityChanged: CodegenTypes.EventEmitter<ProfileAvailability>;
@@ -233,6 +244,9 @@ export interface Spec extends TurboModule {
   markNotificationHint(): Promise<Settings>;
   markNotificationIntroSeen(): Promise<Settings>;
   claimReviewPrompt(jobId: string): Promise<boolean>;
+  markReviewPromptShown(jobId: string): Promise<boolean>;
+  submitResultRating(jobId: string, rating: number): Promise<Session>;
+  openStoreReview(): Promise<boolean>;
   requestReview(): Promise<boolean>;
   getFeedbackStatus(): Promise<boolean>;
   sendFeedback(

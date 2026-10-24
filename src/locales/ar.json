@@ -228,7 +228,7 @@
   },
   "speedTitle": "سرعة المعالجة",
   "speedQuality": "جودة",
-  "speedFast": "سريع",
+  "speedFast": "السرعة",
   "speedNote": "وقت أقل. قد تصبح التفاصيل الصغيرة أبسط.",
   "sameInput": "تستخدم هذه الصورة الصغيرة نفس مدخل AI في السرعتين.",
   "aiInput": "مدخل AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "قد يغيّر الذكاء الاصطناعي التفاصيل الصغيرة"
   },
-  "selectModel": "اختيار"
+  "selectModel": "اختيار",
+  "storageUsage": {
+    "sessions": "الجلسات",
+    "temporary": "الملفات المؤقتة",
+    "model": "النموذج",
+    "other": "بيانات أخرى",
+    "free": "المساحة المتاحة",
+    "cache": "ذاكرة التخزين المؤقت",
+    "total": "بيانات التطبيق"
+  },
+  "rating": {
+    "title": "قيّم هذه النتيجة",
+    "store": "فتح Google Play"
+  }
 }

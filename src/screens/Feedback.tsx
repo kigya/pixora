@@ -35,7 +35,7 @@ export function FeedbackScreen({
   useEffect(() => {
     track('feedback_opened', {
       ...route.params?.context,
-      source: 'settings',
+      source: route.params?.source ?? 'settings',
     });
   }, [route.params]);
   const { colors } = useTheme();
@@ -104,6 +104,7 @@ export function FeedbackScreen({
           </Text>
           <View style={{ width: 48 }} />
         </View>
+        {route.params?.rating ? <Text style={s.body}>{'★'.repeat(route.params.rating)} · {route.params.rating}/5</Text> : null}
         <Text style={s.body}>{t.feedbackPrivacy}</Text>
         <Text style={s.label}>{t.email}</Text>
         <TextInput
@@ -168,7 +169,7 @@ export function FeedbackScreen({
             }
             run(async () => {
               try {
-                await Native.sendFeedback(email.trim(), message.trim(), 0, id);
+                await Native.sendFeedback(email.trim(), message.trim(), route.params?.rating ?? 0, id);
               } catch (failure) {
                 track('feedback_send_finished', {
                   ...route.params?.context,

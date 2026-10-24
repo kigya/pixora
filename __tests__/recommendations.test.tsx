@@ -51,6 +51,7 @@ beforeEach(() => {
   seed();
   Native.getCurrentSession.mockImplementation(async () => session);
   Native.getImageRecommendation.mockResolvedValue(null);
+  capabilities.modes = ['quality', 'lite', 'natural', 'details', 'balanced', 'sharp', 'art', 'pixel'];
 });
 
 test('recommendation shows only the model name and applies only after its action', async () => {
@@ -60,7 +61,7 @@ test('recommendation shows only the model name and applies only after its action
       <RecommendationCard value={recommendation} copy={copy} onApply={onApply} />
     </AppProvider>,
   );
-  expect(screen.getByRole('heading', { name: copy.presets.art.title })).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: copy.presets.art.title })).toBeOnTheScreen();
   expect(onApply).not.toHaveBeenCalled();
   await userEvent.press(screen.getByRole('button', { name: copy.recommendationApply }));
   expect(onApply).toHaveBeenCalledWith(recommendation);
@@ -77,7 +78,7 @@ test.each([
       <RecommendationCard value={{ ...recommendation, profileId, reasonId }} copy={copy} onApply={jest.fn()} />
     </AppProvider>,
   );
-  expect(screen.getByRole('heading', { name: copy.presets[profileId].title })).toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: copy.presets[profileId].title })).toBeOnTheScreen();
   expect(screen.queryByText(copy.recommendationReason[reasonId])).not.toBeOnTheScreen();
   expect(screen.queryByText(/\d+\s*%/)).not.toBeOnTheScreen();
 });
@@ -105,7 +106,7 @@ test('home preserves manual choices until Apply and then hides the suggestion un
       <Home {...props} />
     </AppProvider>,
   );
-  expect(await screen.findByRole('heading', { name: copy.presets.art.title })).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: copy.presets.art.title })).toBeOnTheScreen();
   expect(
     screen.getByRole('button', { name: copy.presets.standard.title }),
   ).toBeOnTheScreen();
@@ -114,17 +115,17 @@ test('home preserves manual choices until Apply and then hides the suggestion un
   await userEvent.press(
     screen.getByRole('button', { name: copy.presets.standard.title }),
   );
-  await userEvent.press(screen.getByRole('radio', { name: copy.presets.natural.title }));
+  await userEvent.press(screen.getByTestId('select-model-natural'));
   expect(
     screen.getByRole('button', { name: copy.presets.natural.title }),
   ).toBeOnTheScreen();
-  expect(screen.getByRole('radio', { name: '4×' })).toBeSelected();
+  expect(screen.getByRole('radio', { name: '4×' })).toBeChecked();
   await userEvent.press(screen.getByRole('button', { name: copy.recommendationApply }));
   expect(
     screen.getByRole('button', { name: copy.presets.art.title }),
   ).toBeOnTheScreen();
-  expect(screen.getByRole('radio', { name: '4×' })).toBeSelected();
-  expect(screen.queryByRole('heading', { name: copy.presets.art.title })).not.toBeOnTheScreen();
+  expect(screen.getByRole('radio', { name: '4×' })).toBeChecked();
+  expect(screen.queryByRole('header', { name: copy.presets.art.title })).not.toBeOnTheScreen();
   expect(screen.queryByRole('button', { name: copy.recommendationApply })).toBeNull();
 });
 
@@ -139,12 +140,13 @@ test('big-image preparation keeps dimensions and cancellation available without 
   expect(screen.queryByText(copy.preparationWhy)).not.toBeOnTheScreen();
   expect(screen.queryByText(copy.preparationDetailLoss)).not.toBeOnTheScreen();
   expect(screen.getAllByText(/2,048/).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/1,024/).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/2,048/).length).toBeGreaterThanOrEqual(3);
+  expect(screen.queryByText(copy.aiInput)).toBeNull();
+  expect(screen.queryByText(copy.preparationLabel)).toBeNull();
+  expect(screen.getAllByText(copy.output)).toHaveLength(1);
   await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
   expect(await screen.findByText(copy.prepareTitle)).toBeOnTheScreen();
   expect(screen.queryByText(copy.preparationDetailLoss)).not.toBeOnTheScreen();
-  expect(screen.getAllByText(/2,048/)).toHaveLength(4);
+  expect(screen.getAllByText(/2,048/)).toHaveLength(3);
   await userEvent.press(screen.getByRole('button', { name: copy.cancel }));
   expect(Native.startJobWithProfile).not.toHaveBeenCalled();
 });
@@ -156,9 +158,9 @@ test('fast preparation confirmation distinguishes the 512 px AI input cap', asyn
       <Home {...props} />
     </AppProvider>,
   );
-  await screen.findByText(copy.aiInput);
+  await screen.findByLabelText(copy.speedTitle);
   await fireEvent(screen.getByLabelText(copy.speedTitle), 'accessibilityAction', {
-    nativeEvent: { actionName: 'decrement' },
+    nativeEvent: { actionName: 'increment' },
   });
   expect(screen.queryByText(copy.preparationFast)).not.toBeOnTheScreen();
   await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
@@ -169,33 +171,45 @@ test('fast preparation confirmation distinguishes the 512 px AI input cap', asyn
 test('recreation is explicit, keeps the prompt local, and starts with selected steps', async () => {
   seed({ state: 'READY', image, scale: 4 });
   emitRecreateModel({ state: 'ready', installedBytes: 1881812340 });
-  await render(<AppProvider><Home {...props} /></AppProvider>);
-  await userEvent.press(screen.getByRole('radio', { name: copy.recreate.title }));
-  expect(screen.getByTestId('recreate-preview')).toBeOnTheScreen();
-  expect(screen.getAllByText(/512 × 384/).length).toBeGreaterThan(0);
-  expect(screen.getAllByText(/2,048 × 1,536/).length).toBeGreaterThan(0);
-  const prompt = screen.getByPlaceholderText(copy.recreate.prompt);
-  await userEvent.type(prompt, 'A tabby cat in daylight');
-  await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
-  expect(Native.startRecreateJob).toHaveBeenCalledWith(
-    image.id,
-    4,
-    'fast',
-    'A tabby cat in daylight',
-    true,
-  );
+  Native.getImageRecommendation.mockResolvedValue(recommendation);
+  const setRecommendationContext = jest.fn(async () => session);
+  Object.defineProperty(Native, 'setRecommendationContext', {
+    configurable: true,
+    value: setRecommendationContext,
+  });
+  try {
+    await render(<AppProvider><Home {...props} /></AppProvider>);
+    await userEvent.press(screen.getByRole('radio', { name: copy.recreate.title }));
+    expect(screen.getByTestId('recreate-preview')).toBeOnTheScreen();
+    expect(screen.queryByText(copy.aiInput)).toBeNull();
+    expect(screen.getAllByText(/2,048/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/1,536/).length).toBeGreaterThan(0);
+    const prompt = screen.getByPlaceholderText(copy.recreate.prompt);
+    await userEvent.type(prompt, 'A tabby cat in daylight');
+    await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
+    expect(Native.startRecreateJob).toHaveBeenCalledWith(
+      image.id,
+      4,
+      'fast',
+      'A tabby cat in daylight',
+      true,
+    );
+    expect(setRecommendationContext).not.toHaveBeenCalled();
+  } finally {
+    delete (Native as typeof Native & { setRecommendationContext?: unknown }).setRecommendationContext;
+  }
 });
 
-test('AI detail notice is persisted and acknowledged before the first processing attempt', async () => {
+test('AI detail notice is shown only during processing and then acknowledged', async () => {
   seed({ state: 'READY', image }, { aiDetailNoticeSeen: false });
   await render(<AppProvider><Home {...props} /></AppProvider>);
-  expect(await screen.findByText(copy.notice.aiDetailsMayChange)).toBeOnTheScreen();
+  expect(screen.queryByText(copy.notice.aiDetailsMayChange)).toBeNull();
   await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
-  expect(Native.markAiDetailNoticeSeen).toHaveBeenCalledTimes(1);
-  expect(Native.startJobWithProfile).not.toHaveBeenCalled();
-  expect(await screen.findByText(copy.prepareTitle)).toBeOnTheScreen();
-  await userEvent.press(screen.getByRole('button', { name: copy.cancel }));
-  expect(Native.startJobWithProfile).not.toHaveBeenCalled();
+  expect(Native.markAiDetailNoticeSeen).not.toHaveBeenCalled();
+  await userEvent.press(screen.getByRole('button', {name:copy.prepare}));
+  await act(async()=>{emitSession({state:'RUNNING'});});
+  expect(await screen.findByText(copy.notice.aiDetailsMayChange)).toBeOnTheScreen();
+  await waitFor(()=>expect(Native.markAiDetailNoticeSeen).toHaveBeenCalledTimes(1));
 });
 
 test('completion aperture is triggered by a live native success transition only', async () => {
@@ -295,7 +309,7 @@ test('rejected native recommendation requests quietly leave the card hidden', as
   await act(async () => {
     await Promise.resolve();
   });
-  expect(screen.queryByRole('heading', { name: copy.presets.art.title })).not.toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: copy.presets.art.title })).not.toBeOnTheScreen();
 });
 
 test('settings contains a failed refresh and still renders', async () => {
@@ -344,8 +358,8 @@ test('a delayed recommendation for a replaced image cannot replace the new sugge
   await waitFor(() => expect(Native.getImageRecommendation).toHaveBeenCalledWith(image.id));
   const replacement = { ...image, id: 'replacement' };
   await act(async () => { emitSession({ state: 'READY', image: replacement }); });
-  expect(await screen.findByRole('heading', { name: copy.presets.natural.title })).toBeOnTheScreen();
+  expect(await screen.findByRole('header', { name: copy.presets.natural.title })).toBeOnTheScreen();
   await act(async () => { resolveOld(recommendation); });
-  expect(screen.queryByRole('heading', { name: copy.presets.art.title })).not.toBeOnTheScreen();
-  expect(screen.getByRole('heading', { name: copy.presets.natural.title })).toBeOnTheScreen();
+  expect(screen.queryByRole('header', { name: copy.presets.art.title })).not.toBeOnTheScreen();
+  expect(screen.getByRole('header', { name: copy.presets.natural.title })).toBeOnTheScreen();
 });

@@ -43,7 +43,7 @@ class MainActivity : ReactActivity() {
         if (!startupReady) return false
         content.viewTreeObserver.removeOnPreDrawListener(this)
         startupDrawCleanup = null
-        window.setBackgroundDrawableResource(R.color.window_background)
+        window.setBackgroundDrawableResource(if (ThemePolicy.isDark(savedTheme(), resources.configuration)) R.color.window_background_dark else R.color.window_background_light)
         return true
       }
     }
@@ -65,11 +65,20 @@ class MainActivity : ReactActivity() {
     updateSystemBars()
   }
 
-  private fun updateSystemBars() {
-    val theme=getSharedPreferences("settings", MODE_PRIVATE).getString("theme","system")
+  internal fun updateSystemBars() {
+    val theme=savedTheme()
+    val dark=ThemePolicy.isDark(theme,resources.configuration)
+    window.setBackgroundDrawableResource(if(dark)R.color.window_background_dark else R.color.window_background_light)
+    window.navigationBarColor=getColor(if(dark)R.color.window_background_dark else R.color.window_background_light)
     androidx.core.view.WindowInsetsControllerCompat(window,window.decorView).isAppearanceLightNavigationBars=
-        !ThemePolicy.isDark(theme,resources.configuration)
+        !dark
+    if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.S) {
+      val platformSplash=splashScreen
+      if(platformSplash!=null) ThemePolicy.updateLaunchSplash(Build.VERSION.SDK_INT,theme,platformSplash::setSplashScreenTheme)
+    }
   }
+
+  private fun savedTheme()=getSharedPreferences("settings", MODE_PRIVATE).getString("theme","system")
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule

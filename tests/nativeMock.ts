@@ -62,7 +62,15 @@ const native = {
   cancelRecreateDownload: jest.fn(async () => emitRecreateModel({state:'paused'})),
   deleteRecreateModel: jest.fn(async () => emitRecreateModel({state:'absent',downloadedBytes:0,installedBytes:0})),
   onRecreateModelChanged: jest.fn((listener: (s: RecreateModelState) => void) => {recreateListeners.add(listener);return {remove:()=>recreateListeners.delete(listener)};}),
-  getStorageUsage: jest.fn(async () => ({cacheBytes:1024,sessionBytes:2048,temporaryBytes:0,recreateModelBytes:recreateModel.installedBytes,freeBytes:1e10})),
+  getStorageUsage: jest.fn(async () => ({
+    cacheBytes: 1024,
+    sessionBytes: 2048,
+    temporaryBytes: 0,
+    recreateModelBytes: recreateModel.installedBytes,
+    otherBytes: 0,
+    totalBytes: 3072 + recreateModel.installedBytes,
+    freeBytes: 1e10,
+  })),
   clearCache: jest.fn(async () => 1024),
   markAiDetailNoticeSeen: jest.fn(async () => (settings={...settings,aiDetailNoticeSeen:true})),
   startRecreateJob: jest.fn(async (_id:string,scale:number,speed:string,prompt:string,_confirmed:boolean) => emitSession({state:'RUNNING',processingKind:'recreate',mode:'recreate',scale,speed,recreatePrompt:prompt,recreateSeed:123,recreateSteps:speed==='fast'?4:8,jobId:'recreate-job'})),
@@ -210,6 +218,11 @@ const native = {
       }),
   ),
   claimReviewPrompt: jest.fn(async () => false),
+  markReviewPromptShown: jest.fn(async () => true),
+  submitResultRating: jest.fn(async (_jobId: string, rating: number) =>
+    emitSession({ resultRating: rating }),
+  ),
+  openStoreReview: jest.fn(async () => true),
   requestReview: jest.fn(async () => false),
   getFeedbackStatus: jest.fn(async () => false),
   sendFeedback: jest.fn(

@@ -17,6 +17,7 @@ const routes={_layout:Root,index:Index,Home:HomeRoute,Settings:SettingsRoute,Onb
 async function launch() {
   const result=await renderRouter(routes);
   await fireEvent(screen.getByTestId('startup-brand'),'layout',{nativeEvent:{layout:{width:400,height:800,x:0,y:0}}});
+  await act(async()=>{jest.advanceTimersByTime(32);});
   await act(async()=>{jest.advanceTimersByTime(1500);});
   return result;
 }
@@ -29,11 +30,18 @@ beforeEach(()=>{
 });
 afterEach(()=>{jest.useRealTimers();jest.restoreAllMocks();});
 test('native launch gives way to the first Aurora frame; Home waits at least 1500 ms',async()=>{
+  let visibleFrameAt = 0;
+  Native.finishStartup.mockImplementation(() => {
+    visibleFrameAt = Date.now();
+  });
   await renderRouter(routes);
   expect(screen.queryByRole('button',{name:strings.en.choose})).not.toBeOnTheScreen();
   await fireEvent(screen.getByTestId('startup-brand'),'layout',{nativeEvent:{layout:{width:400,height:800,x:0,y:0}}});
+  expect(Native.finishStartup).not.toHaveBeenCalled();
+  await act(async()=>{jest.advanceTimersByTime(32);});
   expect(Native.finishStartup).toHaveBeenCalledTimes(1);
-  await act(async()=>{jest.advanceTimersByTime(1499);});
+  const elapsed = Date.now() - visibleFrameAt;
+  await act(async()=>{jest.advanceTimersByTime(Math.max(0,1499-elapsed));});
   expect(screen.queryByRole('button',{name:strings.en.choose})).not.toBeOnTheScreen();
   await act(async()=>{jest.advanceTimersByTime(1);});
   expect(await screen.findByRole('button',{name:strings.en.choose})).toBeOnTheScreen();

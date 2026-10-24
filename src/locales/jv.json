@@ -228,7 +228,7 @@
   },
   "speedTitle": "Kacepetan pangolahan",
   "speedQuality": "Kualitas",
-  "speedFast": "Cepet",
+  "speedFast": "Kacepetan",
   "speedNote": "Luwih cepet. Rincian cilik bisa luwih prasaja.",
   "sameInput": "Gambar cilik iki nggunakake input AI sing padha ing loro kacepetan.",
   "aiInput": "Input AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI bisa ngowahi rincian cilik"
   },
-  "selectModel": "Pilih"
+  "selectModel": "Pilih",
+  "storageUsage": {
+    "sessions": "Sesi",
+    "temporary": "Berkas sauntara",
+    "model": "Model",
+    "other": "Data liyane",
+    "free": "Papan kosong",
+    "cache": "Cache",
+    "total": "Data aplikasi"
+  },
+  "rating": {
+    "title": "Wenehana rating asil iki",
+    "store": "Bukak Google Play"
+  }
 }

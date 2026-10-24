@@ -228,7 +228,7 @@
   },
   "speedTitle": "Bearbetningshastighet",
   "speedQuality": "Kvalitet",
-  "speedFast": "Snabbt",
+  "speedFast": "Hastighet",
   "speedNote": "Kortare tid. Små detaljer kan bli enklare.",
   "sameInput": "Den här lilla bilden använder samma AI-indata vid båda hastigheterna.",
   "aiInput": "AI-indata",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI kan ändra små detaljer"
   },
-  "selectModel": "Välj"
+  "selectModel": "Välj",
+  "storageUsage": {
+    "sessions": "Sessioner",
+    "temporary": "Tillfälliga filer",
+    "model": "Modell",
+    "other": "Övriga data",
+    "free": "Ledigt utrymme",
+    "cache": "Cache",
+    "total": "Appdata"
+  },
+  "rating": {
+    "title": "Betygsätt resultatet",
+    "store": "Öppna Google Play"
+  }
 }

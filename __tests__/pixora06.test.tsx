@@ -1,7 +1,7 @@
 import { formatEta } from '../src/ui/eta';
 import React from 'react';
 import { AccessibilityInfo, AppState } from 'react-native';
-import { render, screen, userEvent, act } from '@testing-library/react-native';
+import { render, screen, userEvent, act, fireEvent } from '@testing-library/react-native';
 import { publicProfile, aiSize, profileIds } from '../src/domain/profiles';
 import { ProcessingOverlay } from '../src/ui/processingOverlay';
 import { Home } from '../src/screens/Home';
@@ -29,6 +29,9 @@ const props = {
 beforeEach(() => {
   seed();
   jest.clearAllMocks();
+  Native.getTelemetrySettings.mockResolvedValue({
+    analytics: false, crashes: false, noticeSeen: true, consentVersion: 2,
+  });
   jest
     .spyOn(AccessibilityInfo, 'isReduceMotionEnabled')
     .mockResolvedValue(false);
@@ -86,10 +89,11 @@ test('fast selection shows actual AI input and reaches the new native contract',
       <Home {...props} />
     </AppProvider>,
   );
-  await userEvent.press(
-    await screen.findByRole('radio', { name: t.speedFast }),
-  );
-  expect(screen.getByText(t.speedNote)).toBeOnTheScreen();
+  const speed = await screen.findByRole('adjustable', { name: t.speedTitle });
+  await fireEvent(speed, 'accessibilityAction', {
+    nativeEvent: { actionName: 'increment' },
+  });
+  expect(speed).toHaveAccessibilityValue({ min: 0, max: 1, now: 1, text: t.speedFast });
   expect(screen.queryByText(t.sameInput)).toBeNull();
   await userEvent.press(screen.getByRole('button', { name: t.upscale }));
   expect(Native.startJobWithProfile).toHaveBeenCalledWith(
@@ -126,13 +130,16 @@ test.each([
 });
 test('pixel has no speed control or artificial ETA', async () => {
   seed({ state: 'READY', image, mode: 'pixel' });
+  const { capabilities } = require('../tests/nativeMock');
+  Native.getCapabilities.mockResolvedValueOnce({ ...capabilities, modes: profileIds });
   await render(
     <AppProvider>
       <Home {...props} />
     </AppProvider>,
   );
-  expect(await screen.findByText(t.presets.pixel.note)).toBeOnTheScreen();
-  expect(screen.queryByRole('radio', { name: t.speedFast })).toBeNull();
+  await userEvent.press(await screen.findByTestId('select-model-pixel'));
+  expect(await screen.findByTestId('select-model-pixel')).toBeOnTheScreen();
+  expect(screen.queryByRole('adjustable', { name: t.speedTitle })).toBeNull();
   await userEvent.press(screen.getByRole('button', { name: t.upscale }));
   expect(Native.startJobWithProfile).toHaveBeenCalledWith(
     'input',
@@ -252,18 +259,15 @@ test('retry of an interrupted legacy illustration keeps its old network until th
   );
 });
 
-test('a neutral Play request result is not reported as a submitted review', async () => {
+test('saving an export does not trigger the separate in-app result-rating prompt', async () => {
   seed({state:'SUCCEEDED',image,jobId:'review-job',resultUri:'file:///result.png'});
   Native.claimReviewPrompt.mockResolvedValue(true);
   Native.requestReview.mockResolvedValue(false);
   await render(<AppProvider><Home {...props}/></AppProvider>);
   await userEvent.press(await screen.findByRole('button',{name:t.save}));
   expect(await screen.findByText(t.exportSuccess)).toBeOnTheScreen();
-  expect(Native.claimReviewPrompt).toHaveBeenCalledWith('review-job');
-  expect(Native.requestReview).toHaveBeenCalledTimes(1);
-  expect(Native.logTelemetryEvent).not.toHaveBeenCalledWith(
-    'review_prompt_requested',expect.any(String),
-  );
+  expect(Native.claimReviewPrompt).not.toHaveBeenCalled();
+  expect(Native.requestReview).not.toHaveBeenCalled();
   expect(screen.queryByText(t.rateTitle)).toBeNull();
 });
 

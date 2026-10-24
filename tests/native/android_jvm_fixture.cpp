@@ -58,6 +58,9 @@ Java_dev_kigya_pixora_NativeEngine_resetCancellation(JNIEnv*, jobject) {}
 extern "C" JNIEXPORT void JNICALL
 Java_dev_kigya_pixora_NativeEngine_cancel(JNIEnv*, jobject) {}
 
+extern "C" JNIEXPORT void JNICALL
+Java_dev_kigya_pixora_NativeEngine_cancelRecreate(JNIEnv*, jobject) {}
+
 // Host JVM boundary fixture only: tests forwarding/transport, not classification.
 // The shared C++ suite and real JNI suite own classifier/availability assertions.
 extern "C" JNIEXPORT jstring JNICALL

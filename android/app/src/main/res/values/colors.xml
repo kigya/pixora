@@ -1,1 +1,1 @@
-<resources><color name="launcher_background">#7C3AED</color><color name="window_background">#FAFAFC</color><bool name="light_bars">true</bool></resources>
+<resources><color name="launcher_background">#7C3AED</color><color name="window_background">#FAFAFC</color><color name="window_background_light">#FAFAFC</color><color name="window_background_dark">#09090B</color><bool name="light_bars">true</bool></resources>

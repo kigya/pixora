@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, screen, userEvent, act, fireEvent} from '@testing-library/react-native';
+import {render, screen, userEvent, act, fireEvent, within} from '@testing-library/react-native';
 import {AppState, Platform} from 'react-native';
 import {AppProvider} from '../src/application/AppProvider';
 import {Home} from '../src/screens/Home';
@@ -110,7 +110,7 @@ test.each([undefined,{code:'BOGUS'},{code:'DECODE_FAILED'},{localKey:'busyClear'
 });
 test('comparison supports buttons without a gesture', async () => {
  await render(<Comparison before="file:///b" after="file:///a" ratio={1} t={t}/>);
- for(const name of [t.before,t.after,t.compare]){await userEvent.press(screen.getByRole('radio',{name}));expect(screen.getByRole('radio',{name})).toBeSelected();}
+ for(const name of [t.before,t.after,t.compare]){await userEvent.press(screen.getByRole('radio',{name}));expect(screen.getByRole('radio',{name})).toHaveProp('accessibilityState',{checked:true,disabled:false});}
  await fireEvent(screen.getByTestId('comparison'),'layout',{nativeEvent:{layout:{width:200}}});
 });
 test.each(['en','ar'] as const)('icons support locale %s and explicit/default colours', async lang => {
@@ -121,9 +121,9 @@ test.each(['en','ar'] as const)('icons support locale %s and explicit/default co
 test('settings changes theme, follows system, and preserves export defaults', async () => {
  seed({}, {theme:'light'});
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
- await userEvent.press(await screen.findByRole('switch',{name:t.light}));
+ await userEvent.press(await screen.findByRole('radio',{name:t.dark}));
  expect(Native.updateSettings).toHaveBeenCalledWith('en','png','dark');
- await userEvent.press(screen.getByRole('switch',{name:t.system}));
+ await userEvent.press(screen.getByRole('radio',{name:t.system}));
  expect(Native.updateSettings).toHaveBeenLastCalledWith('en','png','system');
  await userEvent.press(screen.getByRole('radio',{name:'JPEG'}));
  expect(Native.updateSettings).toHaveBeenLastCalledWith('en','jpeg','system');
@@ -134,7 +134,7 @@ test('system theme switch reflects the effective dark palette without profile id
  seed({}, {theme:'system'});
  const scheme = jest.spyOn(require('react-native'),'useColorScheme').mockReturnValue('dark');
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
- expect(screen.getByRole('switch',{name:t.dark})).toBeChecked();
+ expect(screen.getByRole('radio',{name:t.system})).toHaveProp('accessibilityState',{checked:true,disabled:false});
  expect(screen.queryByText('Account')).not.toBeOnTheScreen();
  expect(screen.queryByText('On')).not.toBeOnTheScreen();
  scheme.mockRestore();
@@ -142,14 +142,14 @@ test('system theme switch reflects the effective dark palette without profile id
 test('settings selects every language and preserves session', async () => {
  seed({state:'READY',image});await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
  for(const [code,name] of [['ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439'],['zh-Hans','简体中文'],['es','Español'],['hi','हिन्दी'],['ar','العربية'],['pt-BR','Português (Brasil)'],['fr','Français'],['de','Deutsch'],['ja','日本語'],['en','English']]) {
-   await userEvent.press(screen.getByTestId('language-picker'));await userEvent.press(screen.getByRole('radio',{name}));
+   await userEvent.press(within(screen.getByTestId('settings-language-selector')).getByRole('button'));await userEvent.press(screen.getByRole('menuitem',{name}));
    expect(Native.updateSettings).toHaveBeenLastCalledWith(code,'png','light');
  }
 });
 test('settings supports licenses, clear, discard and back', async () => {
  await render(<AppProvider><SettingsScreen {...props}/></AppProvider>);
  await userEvent.press(await screen.findByRole('button',{name:t.licenses}));expect(await screen.findByText('Local license text')).toBeOnTheScreen();
- await userEvent.press(screen.getByRole('button',{name:t.back}));await userEvent.press(screen.getByRole('button',{name:t.clear}));expect(Native.clearTemporaryFiles).toHaveBeenCalled();
+ await userEvent.press(screen.getByRole('button',{name:t.back}));await userEvent.press(screen.getByRole('button',{name:t.recreate.clearCache}));expect(Native.clearCache).toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.discard}));await userEvent.press(screen.getByRole('button',{name:t.cancel}));expect(Native.discardSession).not.toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.discard}));await userEvent.press(screen.getByRole('button',{name:t.delete}));expect(Native.discardSession).toHaveBeenCalled();
  await userEvent.press(screen.getByRole('button',{name:t.back}));expect(navigation.goBack).toHaveBeenCalled();
@@ -165,7 +165,7 @@ test('help explains the model and closes with one action', async () => {
 });
 test('fast selection is available only when capabilities allow it', async () => {
  seed({state:'READY',image});capabilities.modes=['quality','fast'];await viewHome();
- await userEvent.press(await screen.findByRole('button',{name:`${t.profileTitle}: ${t.presets.standard.title}`}));await userEvent.press(screen.getByRole('button',{name:t.presets.lite.title}));expect(screen.getByText(t.presets.lite.note)).toBeOnTheScreen();
+ await userEvent.press(await screen.findByTestId('select-model-lite'));expect(screen.getByTestId('select-model-lite')).toBeDisabled();
  await userEvent.press(screen.getByRole('button',{name:t.upscale}));expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id,2,'lite','quality',true);
 });
 test('Home opens settings and JPEG share cancellation retains result',async()=>{
@@ -184,8 +184,8 @@ test('a restored image remains visible if device capabilities are unavailable',a
 
 test('retry restores the persisted fast mode and scale after interruption', async () => {
  seed({state:'INTERRUPTED',image,mode:'fast',scale:4,error:'INTERRUPTED'});capabilities.modes=['quality','fast'];await viewHome();
- expect(await screen.findByRole('button',{name:`${t.profileTitle}: ${t.presets.lite.title}`})).toBeOnTheScreen();
- expect(screen.getByRole('radio',{name:'4×',selected:true})).toBeOnTheScreen();
+ expect(await screen.findByTestId('select-model-lite')).toBeDisabled();
+ expect(screen.getByRole('radio',{name:'4×',checked:true})).toBeOnTheScreen();
  await userEvent.press(screen.getByRole('button',{name:t.retry}));
  expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id,4,'lite','quality',true);
 });
@@ -200,8 +200,8 @@ test('backgrounding the notification explanation cancels launch without persisti
  await viewHome();
  await userEvent.press(await screen.findByRole('button',{name:t.upscale}));
  expect(screen.getByText(Platform.OS==='ios'?t.notificationIntroTitleIos:t.notificationIntroTitle)).toBeOnTheScreen();
- await act(() => changes[0]?.('background'));
- expect(screen.queryByTestId('information-panel')).toBeNull();
+ await act(() => changes.forEach(change => change('background')));
+ expect(screen.queryByText(Platform.OS==='ios'?t.notificationIntroTitleIos:t.notificationIntroTitle)).not.toBeOnTheScreen();
  expect(Native.markNotificationIntroSeen).not.toHaveBeenCalled();
  expect(Native.startJobWithProfile).not.toHaveBeenCalled();
  listener.mockRestore();

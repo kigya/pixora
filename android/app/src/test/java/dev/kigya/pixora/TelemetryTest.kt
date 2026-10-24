@@ -251,6 +251,47 @@ class TelemetryTest {
         Telemetry.observeJob(next,offline);Telemetry.update(true,false,true);Telemetry.observeJob(offline,offline)
         assertEquals(6,received.size)
     }
+    @Test fun ratingTelemetryContainsBoundedRecreateContextButNeverPromptOrSourceData() {
+        val job = JSONObject().put("jobId", "attempt-7").put("processingKind", "recreate")
+            .put("profileId", "standard").put("modelId", "sd15-q4").put("recommendedProfile", "")
+            .put("recommendationApplied", false).put("speed", "fast").put("scale", 2).put("backend", "CPU")
+            .put("aiInputWidth", 256).put("aiInputHeight", 192).put("resultWidth", 512).put("resultHeight", 384)
+            .put("elapsedMs", 1234).put("recreateSteps", 4).put("recreateModelRevision", "revision-1")
+            .put("recreatePrompt", "private cat details")
+            .put("image", JSONObject().put("width", 800).put("height", 600).put("workWidth", 256)
+                .put("workHeight", 192).put("mime", "image/jpeg").put("hasAlpha", true)
+                .put("sourcePath", "/private/image.jpg"))
+        val context = Telemetry.ratingContext(job, 5)
+        assertEquals(24, context.length())
+        assertEquals("recreate", context.getString("processing_kind"))
+        assertEquals("jpeg", context.getString("source_format"))
+        assertEquals(1, context.getInt("has_alpha"))
+        assertEquals(4, context.getInt("steps"))
+        assertEquals(1, context.getInt("prompt_present"))
+        assertFalse(context.toString().contains("private cat details"))
+        assertFalse(context.toString().contains("/private/image.jpg"))
+    }
+    @Test fun enhanceRatingSchemaHandlesEveryKnownFormatAndMissingImageWithoutInventingData() {
+        val mimeFormats = listOf("image/png" to "png", "image/jpeg" to "jpeg", "image/webp" to "webp", "image/gif" to "other")
+        mimeFormats.forEachIndexed { index, (mime, expected) ->
+            val image = JSONObject().put("width", 20).put("height", 10).put("workWidth", 8)
+                .put("workHeight", 4).put("mime", mime).put("hasAlpha", false)
+            val job = JSONObject().put("jobId", "enhance-$index").put("processingKind", "enhance")
+                .put("mode", "details").put("modelId", "realesrgan").put("scale", 2)
+                .put("speed", "quality").put("backend", "CPU").put("resultWidth", 16)
+                .put("resultHeight", 8).put("elapsedMs", 10).put("image", image)
+            val context = Telemetry.ratingContext(job, 3)
+            assertEquals(19, context.length())
+            assertEquals(expected, context.getString("source_format"))
+            assertEquals(8, context.getInt("input_width"))
+            assertEquals(0, context.getInt("has_alpha"))
+            assertFalse(context.has("prompt_present"))
+        }
+        val noImage = Telemetry.ratingContext(JSONObject().put("jobId", "no-image"), 1)
+        assertEquals("other", noImage.getString("source_format"))
+        assertEquals(0, noImage.getInt("source_width"))
+        assertEquals(0, noImage.getInt("input_height"))
+    }
     @Test fun jobSizeCategoriesAndLegacyModelIdsContainNoFileInformation() {
         for((size,category) in listOf(100 to "small",700 to "medium",1024 to "large")) {
             val job=JSONObject().put("mode","quality").put("image",JSONObject().put("workWidth",size).put("workHeight",size).put("previewUri","file:///private"))
@@ -259,5 +300,12 @@ class TelemetryTest {
             assertFalse(result.toString().contains("private"))
         }
         assertEquals("small",Telemetry.jobContext(JSONObject()).getString("size_bucket"))
+    }
+    @Test fun ratingContextCarriesOnlyBoundedJobScalarsAndNoUserContent() {
+        val job=JSONObject().put("jobId","safe-token").put("mode","quality").put("speed","quality").put("scale",4).put("backend","CPU").put("modelId","realesrgan-x4plus").put("phase","complete").put("recommendedProfile","balanced").put("recommendationApplied",true).put("recreatePrompt","private words").put("image",JSONObject().put("width",1200).put("height",900).put("workWidth",800).put("workHeight",600).put("sourcePath","/private/cat.png"))
+        val context=Telemetry.jobContext(job)
+        assertTrue(context.length()<=25)
+        assertEquals(1200,context.getInt("image_width"));assertEquals(900,context.getInt("image_height"));assertEquals("balanced",context.getString("recommended_profile"));assertEquals(1,context.getInt("recommendation_applied"))
+        assertFalse(context.toString().contains("private"));assertFalse(context.toString().contains("cat.png"))
     }
 }

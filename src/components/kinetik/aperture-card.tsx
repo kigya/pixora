@@ -55,6 +55,7 @@ export type ApertureCardProps = {
   /** Corner radius. Defaults to the theme `xl` radius. */
   radius?: number;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 };
 
 /**
@@ -63,6 +64,7 @@ export type ApertureCardProps = {
  */
 export function ApertureCard({
   children,
+  testID,
   cover,
   open: controlled,
   defaultOpen = false,
@@ -167,6 +169,7 @@ export function ApertureCard({
   return (
     <GestureDetector gesture={tap}>
       <View
+        testID={testID}
         collapsable={false}
         accessible
         accessibilityRole={toggleOnPress ? 'button' : undefined}

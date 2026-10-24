@@ -228,7 +228,7 @@
   },
   "speedTitle": "İşleme hızı",
   "speedQuality": "Kaliteli",
-  "speedFast": "Hızlı",
+  "speedFast": "Hız",
   "speedNote": "Daha az süre. Küçük ayrıntılar daha basit olabilir.",
   "sameInput": "Bu küçük görüntü, iki hızda da aynı yapay zekâ girdisini kullanır.",
   "aiInput": "Yapay zekâ girdisi",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "Yapay zekâ küçük ayrıntıları değiştirebilir"
   },
-  "selectModel": "Seç"
+  "selectModel": "Seç",
+  "storageUsage": {
+    "sessions": "Oturumlar",
+    "temporary": "Geçici dosyalar",
+    "model": "Model",
+    "other": "Diğer veriler",
+    "free": "Boş alan",
+    "cache": "Önbellek",
+    "total": "Uygulama verileri"
+  },
+  "rating": {
+    "title": "Sonucu değerlendir",
+    "store": "Google Play’i aç"
+  }
 }

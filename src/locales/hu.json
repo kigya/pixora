@@ -228,7 +228,7 @@
   },
   "speedTitle": "Feldolgozási sebesség",
   "speedQuality": "Minőségi",
-  "speedFast": "Gyors",
+  "speedFast": "Sebesség",
   "speedNote": "Kevesebb idő. Az apró részletek egyszerűbbek lehetnek.",
   "sameInput": "Ennél a kis képnél mindkét sebesség ugyanazt az AI-bemenetet használja.",
   "aiInput": "AI-bemenet",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "Az MI apró részleteket módosíthat"
   },
-  "selectModel": "Kiválasztás"
+  "selectModel": "Kiválasztás",
+  "storageUsage": {
+    "sessions": "Munkamenetek",
+    "temporary": "Ideiglenes fájlok",
+    "model": "Modell",
+    "other": "Egyéb adatok",
+    "free": "Szabad hely",
+    "cache": "Gyorsítótár",
+    "total": "Alkalmazásadatok"
+  },
+  "rating": {
+    "title": "Értékeld az eredményt",
+    "store": "Google Play megnyitása"
+  }
 }

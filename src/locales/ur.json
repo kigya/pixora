@@ -228,7 +228,7 @@
   },
   "speedTitle": "کام کی رفتار",
   "speedQuality": "معیار",
-  "speedFast": "تیز",
+  "speedFast": "رفتار",
   "speedNote": "کم وقت۔ چھوٹی تفصیلات سادہ ہو سکتی ہیں۔",
   "sameInput": "اس چھوٹی تصویر کے لیے دونوں رفتاروں پر AI کی ایک ہی ان پٹ استعمال ہوتی ہے۔",
   "aiInput": "AI کی ان پٹ",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI چھوٹی تفصیلات بدل سکتی ہے"
   },
-  "selectModel": "منتخب کریں"
+  "selectModel": "منتخب کریں",
+  "storageUsage": {
+    "sessions": "سیشن",
+    "temporary": "عارضی فائلیں",
+    "model": "ماڈل",
+    "other": "دیگر ڈیٹا",
+    "free": "خالی جگہ",
+    "cache": "کیش",
+    "total": "ایپ کا ڈیٹا"
+  },
+  "rating": {
+    "title": "اس نتیجے کی درجہ بندی کریں",
+    "store": "Google Play کھولیں"
+  }
 }

@@ -29,10 +29,6 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import org.robolectric.util.ReflectionHelpers
-import com.google.android.play.core.review.ReviewInfo
-import com.google.android.play.core.review.ReviewManager
-import com.google.android.play.core.review.ReviewManagerFactory
-import com.google.android.gms.tasks.Tasks
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
@@ -102,10 +98,11 @@ class ModuleUnitTest {
         ctx=RuntimeEnvironment.getApplication();resetStore()
         ctx.filesDir.deleteRecursively();ctx.filesDir.mkdirs();ctx.cacheDir.deleteRecursively();ctx.cacheDir.mkdirs();ctx.getSharedPreferences("settings",0).edit().clear().commit()
         org.robolectric.shadows.ShadowStatFs.registerStats(ctx.filesDir.path,1000000,1000000,1000000)
+        org.robolectric.shadows.ShadowStatFs.registerStats(ctx.dataDir.path,1000000,1000000,1000000)
         memory(4L*1024*1024*1024)
         ReflectionHelpers.setStaticField(Build::class.java,"SUPPORTED_ABIS",arrayOf("arm64-v8a"))
         react=BoundaryContext(ctx)
-        module=UpscaleModule(react,javaBridge,ModelVerifier{modelFailure?.let{throw it};valid},object:JobControl {override fun reset(){resets++};override fun cancel(){cancels++}},feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"))
+        module=UpscaleModule(react,javaBridge,ModelVerifier{modelFailure?.let{throw it};valid},object:JobControl {override fun reset(){resets++};override fun cancel(){cancels++}},feedback=FeedbackClient("https://script.google.com/macros/s/test/exec"),recreateDownloadIo=java.util.concurrent.Executor { })
     }
     private fun memory(bytes:Long){Shadows.shadowOf(ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).setMemoryInfo(ActivityManager.MemoryInfo().apply{totalMem=bytes})}
     private fun resetStore(){for(name in listOf("context","journal"))SessionStore::class.java.getDeclaredField(name).apply{isAccessible=true}.set(SessionStore,null);SessionStore.listeners.clear();SessionStore.workerAlive=false;SessionStore.serviceAlive=false;WindowLayout.listeners.clear()}
@@ -122,6 +119,60 @@ class ModuleUnitTest {
         assertEquals(0.0,call(module::clearCache))
         SessionStore.update{it.put("state","RUNNING")}
         fails("BUSY",module::clearCache)
+    }
+    @Test fun recreateBridgeStateDeleteCancelDownloadAndNoticeStayOfflineAndIdleOnly() {
+        assertEquals("absent", (call(module::getRecreateModelState) as ReadableMap).getString("state"))
+        assertEquals("absent", (call(module::downloadRecreateModel) as ReadableMap).getString("state"))
+        assertEquals("absent", (call(module::cancelRecreateDownload) as ReadableMap).getString("state"))
+        assertEquals("absent", (call(module::deleteRecreateModel) as ReadableMap).getString("state"))
+        val settings = call(module::markAiDetailNoticeSeen) as ReadableMap
+        assertTrue(settings.getBoolean("aiDetailNoticeSeen"))
+        SessionStore.update { it.put("state", "RUNNING") }
+        fails("BUSY", module::downloadRecreateModel)
+        fails("BUSY", module::deleteRecreateModel)
+    }
+    @Test fun reviewPromptWriteFailureDoesNotReserveTheJob() {
+        image(); SessionStore.update { it.put("jobId", "review-write").put("state", "SUCCEEDED") }
+        react.rejectSettingsWrite = true
+        fails("SETTINGS_WRITE_FAILED") { module.markReviewPromptShown("review-write", it) }
+        react.rejectSettingsWrite = false
+        assertEquals(true, call { module.claimReviewPrompt("review-write", it) })
+        assertEquals(true, call { module.markReviewPromptShown("review-write", it) })
+        assertEquals(false, call { module.claimReviewPrompt("review-write", it) })
+    }
+    @Test fun storageUsageReportsDisjointManagedCategoriesAndRealFilesystemSpace() {
+        val payload=ByteArray(17){it.toByte()}
+        File(ctx.filesDir,"sessions/job/source.png").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        File(ctx.filesDir,"session.json").apply{writeBytes(payload)}
+        File(ctx.filesDir,"recreate-model/diffusion.gguf").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        File(ctx.filesDir,"recreate-model/lora.gguf.part").apply{writeBytes(payload)}
+        File(ctx.filesDir,"settings/metadata.json").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        File(ctx.cacheDir,"preview/cache.bin").apply{parentFile!!.mkdirs();writeBytes(payload)}
+        val usage=call(module::getStorageUsage) as ReadableMap
+        assertTrue(usage.getDouble("sessionBytes")>=payload.size*2.0)
+        assertEquals(payload.size.toDouble(),usage.getDouble("recreateModelBytes"),0.0)
+        assertEquals(payload.size.toDouble(),usage.getDouble("temporaryBytes"),0.0)
+        assertTrue(usage.getDouble("otherBytes")>=payload.size.toDouble())
+        assertEquals(payload.size.toDouble(),usage.getDouble("cacheBytes"),0.0)
+        assertTrue(usage.getDouble("freeBytes")>0.0)
+        assertEquals(listOf("cacheBytes","sessionBytes","temporaryBytes","recreateModelBytes","otherBytes").sumOf{usage.getDouble(it)},usage.getDouble("totalBytes"),0.0)
+    }
+    @Test fun recommendationContextIsImmutablePerJobAndResultRatingPersistsOnce() {
+        image();SessionStore.update{it.put("jobId","rated-job").put("state","RUNNING")}
+        val context=call{module.setRecommendationContext("rated-job","balanced",true,it)} as ReadableMap
+        assertEquals("balanced",context.getString("recommendedProfile"));assertTrue(context.getBoolean("recommendationApplied"))
+        assertEquals("balanced",(call{module.setRecommendationContext("rated-job","balanced",true,it)} as ReadableMap).getString("recommendedProfile"))
+        fails("RECOMMENDATION_CONTEXT_ALREADY_SET"){module.setRecommendationContext("rated-job","sharp",false,it)}
+        fails("SOURCE_UNAVAILABLE"){module.setRecommendationContext("stale-job","balanced",false,it)}
+        fails("INFERENCE_FAILED"){module.setRecommendationContext("rated-job","",true,it)}
+        SessionStore.update{it.put("state","SUCCEEDED")}
+        val rated=call{module.submitResultRating("rated-job",4.0,it)} as ReadableMap
+        assertEquals(4.0,rated.getDouble("resultRating"),0.0)
+        assertEquals(4.0,(call{module.submitResultRating("rated-job",4.0,it)} as ReadableMap).getDouble("resultRating"),0.0)
+        fails("RATING_ALREADY_SUBMITTED"){module.submitResultRating("rated-job",5.0,it)}
+        fails("FEEDBACK_INVALID"){module.submitResultRating("rated-job",3.5,it)}
+        fails("FEEDBACK_INVALID"){module.submitResultRating("rated-job",6.0,it)}
+        fails("SOURCE_UNAVAILABLE"){module.submitResultRating("another-job",3.0,it)}
     }
     private fun image():String {
         val b=Bitmap.createBitmap(8,8,Bitmap.Config.ARGB_8888)
@@ -171,16 +222,16 @@ class ModuleUnitTest {
         val prefs=ctx.getSharedPreferences("settings",0)
         assertEquals(false,call{module.claimReviewPrompt("wrong",it)})
         image();SessionStore.update{it.put("jobId","review").put("state","READY")};assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        SessionStore.update{it.put("state","SUCCEEDED")};assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        prefs.edit().putInt("savedJobs",3).putInt("reviewPrompts",2).commit();assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        prefs.edit().putInt("reviewPrompts",0).putLong("reviewShownAt",System.currentTimeMillis()).commit();assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        prefs.edit().putLong("reviewShownAt",0).commit()
-        react.rejectSettingsWrite=true
+        SessionStore.update{it.put("state","SUCCEEDED")};assertEquals(true,call{module.claimReviewPrompt("review",it)})
+        assertEquals(true,call{module.markReviewPromptShown("review",it)})
         assertEquals(false,call{module.claimReviewPrompt("review",it)})
-        assertEquals(0,prefs.getInt("reviewPrompts",0))
-        react.rejectSettingsWrite=false
-        assertEquals(true,call{module.claimReviewPrompt("review",it)})
-        assertEquals(false,call{module.claimReviewPrompt("review",it)})
+        assertEquals(true,call{module.markReviewPromptShown("review",it)}) // onShow may re-enter; timestamp is unchanged.
+        assertTrue(prefs.getLong("reviewPromptLastShownAt",0L)>0L)
+        SessionStore.update{it.put("jobId","next").put("state","SUCCEEDED")}
+        assertEquals(false,call{module.claimReviewPrompt("next",it)})
+        prefs.edit().putLong("reviewPromptLastShownAt",System.currentTimeMillis()-ReviewPromptPolicy.COOLDOWN_MS).commit()
+        assertEquals(true,call{module.claimReviewPrompt("next",it)})
+        assertEquals(true,call{module.markReviewPromptShown("next",it)})
     }
     @Test fun capabilitiesSettingsAndValidation() {
         assertEquals("NativeUpscale",module.name)
@@ -264,28 +315,18 @@ class ModuleUnitTest {
         prefs.edit().putBoolean("notificationAsked",false).commit();val pending=Reply();module.requestNotifications(pending.promise);Shadows.shadowOf(Looper.getMainLooper()).idle()
         prefs.edit().putBoolean("notificationAsked",false).commit();assertEquals(false,call(module::requestNotifications));module.invalidate();assertEquals(false,pending.await())
     }
-    @Test fun reviewRequestHandlesNoActivityAndEachPlayTaskOutcome() {
-        assertEquals(false,call(module::requestReview))
-        val activity=Robolectric.buildActivity(Activity::class.java).setup().get();react.onHostResume(activity)
-        val manager=mock(ReviewManager::class.java)
-        val info=mock(ReviewInfo::class.java)
-        mockStatic(ReviewManagerFactory::class.java,Answer<Any?>{manager}).use {
-            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forResult(info))
-            `when`(manager.launchReviewFlow(activity,info)).thenReturn(Tasks.forResult<Void>(null))
-            assertEquals(true,call(module::requestReview))
-            org.mockito.Mockito.verify(manager).requestReviewFlow()
-            org.mockito.Mockito.verify(manager).launchReviewFlow(activity,info)
-
-            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forException(java.io.IOException("controlled review request failure")))
-            assertEquals(false,call(module::requestReview))
-
-            `when`(manager.requestReviewFlow()).thenReturn(Tasks.forResult(info))
-            `when`(manager.launchReviewFlow(activity,info)).thenReturn(Tasks.forException(java.io.IOException("controlled review launch failure")))
-            assertEquals(false,call(module::requestReview))
-        }
-        mockStatic(ReviewManagerFactory::class.java,Answer<Any?>{throw IllegalStateException("Play unavailable")}).use {
-            assertEquals(false,call(module::requestReview))
-        }
+    @Test fun reviewRequestUsesExternalStoreAndReturnsFalseWhenNoHandlerCanOpenIt() {
+        val marketIntent=UpscaleModule.marketReviewIntent("dev.kigya.pixora")
+        assertEquals("com.android.vending",marketIntent.`package`)
+        assertEquals("market",marketIntent.data!!.scheme)
+        assertEquals("dev.kigya.pixora",marketIntent.data!!.getQueryParameter("id"))
+        assertEquals(true,call(module::openStoreReview))
+        val intent=Shadows.shadowOf(ctx as Application).nextStartedActivity
+        assertEquals(Intent.ACTION_VIEW,intent.action)
+        assertTrue(intent.dataString!!.startsWith("market://details?id=") || intent.dataString!!.startsWith("https://play.google.com/store/apps/details?id="))
+        if(intent.dataString!!.startsWith("market://"))assertEquals("com.android.vending",intent.`package`)
+        react.rejectActivity=true
+        assertEquals(false,call(module::openStoreReview))
     }
     @Test @Config(sdk=[29]) fun oldAndroidNeedsNoNotificationPermission(){
         assertEquals(true,call(module::requestNotifications))

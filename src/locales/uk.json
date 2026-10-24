@@ -228,7 +228,7 @@
   },
   "speedTitle": "Швидкість обробки",
   "speedQuality": "Якісно",
-  "speedFast": "Швидко",
+  "speedFast": "Швидкість",
   "speedNote": "Менше часу. Дрібні деталі можуть бути простішими.",
   "sameInput": "Для цього малого зображення вхід AI однаковий за обох швидкостей.",
   "aiInput": "Вхід AI",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "ШІ може змінювати дрібні деталі"
   },
-  "selectModel": "Вибрати"
+  "selectModel": "Вибрати",
+  "storageUsage": {
+    "sessions": "Сесії",
+    "temporary": "Тимчасові файли",
+    "model": "Модель",
+    "other": "Інші дані",
+    "free": "Вільно",
+    "cache": "Кеш",
+    "total": "Дані застосунку"
+  },
+  "rating": {
+    "title": "Оцініть результат",
+    "store": "Відкрити Google Play"
+  }
 }

@@ -228,7 +228,7 @@
   },
   "speedTitle": "Verwerkingssnelheid",
   "speedQuality": "Kwaliteit",
-  "speedFast": "Snel",
+  "speedFast": "Snelheid",
   "speedNote": "Minder tijd. Kleine details kunnen eenvoudiger zijn.",
   "sameInput": "Deze kleine afbeelding gebruikt bij beide snelheden dezelfde AI-invoer.",
   "aiInput": "AI-invoer",
@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI kan kleine details veranderen"
   },
-  "selectModel": "Kiezen"
+  "selectModel": "Kiezen",
+  "storageUsage": {
+    "sessions": "Sessies",
+    "temporary": "Tijdelijke bestanden",
+    "model": "Model",
+    "other": "Overige gegevens",
+    "free": "Vrije ruimte",
+    "cache": "Cache",
+    "total": "Appgegevens"
+  },
+  "rating": {
+    "title": "Beoordeel dit resultaat",
+    "store": "Google Play openen"
+  }
 }

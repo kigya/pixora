@@ -20,6 +20,8 @@ export type UsageMeterProps = {
   segments: readonly UsageSegment[];
   /** The allowance, e.g. 200 for 200 GB. */
   total: number;
+  /** Show category shares without treating app data as a storage allowance. */
+  breakdown?: boolean;
   /** Unit after figures, e.g. "GB". */
   unit?: string;
   /** Formats figures. Defaults to one decimal place below 10, whole numbers above. */
@@ -49,6 +51,7 @@ const defaultFormat = (v: number) => (Math.abs(v) < 10 ? v.toFixed(1) : String(M
 export function UsageMeter({
   segments,
   total,
+  breakdown = false,
   unit,
   formatValue = defaultFormat,
   warnAt = 0.85,
@@ -65,8 +68,9 @@ export function UsageMeter({
 
   const used = segments.reduce((a, s) => a + Math.max(0, s.value), 0);
   const share = total > 0 ? used / total : 0;
-  const left = total - used;
-  const state = share >= 1 ? 'over' : share >= warnAt ? 'warn' : 'ok';
+  const rawLeft = total - used;
+  const left = Math.abs(rawLeft) < 1e-9 ? 0 : rawLeft;
+  const state = left < 0 ? 'over' : share >= warnAt ? 'warn' : 'ok';
   const shown = useCountUp(used, { instant: reduced, duration: 1000 });
   const u = unit ? ` ${unit}` : '';
 
@@ -94,7 +98,7 @@ export function UsageMeter({
         min: 0,
         max: total,
         now: Math.min(used, total),
-        text: `${formatValue(used)} of ${formatValue(total)}${u} used, ${leftText}. ${segments
+        text: `${breakdown ? `${formatValue(used)}${u}` : `${formatValue(used)} of ${formatValue(total)}${u} used, ${leftText}`}. ${segments
           .map((s) => `${s.label} ${formatValue(s.value)}${u}`)
           .join(', ')}`,
       }}
@@ -114,15 +118,15 @@ export function UsageMeter({
                 fontWeight: font.weight.regular,
               }}
             >
-              {` of ${formatValue(total)}${u}`}
+              {breakdown ? u : ` of ${formatValue(total)}${u}`}
             </Text>
           </Text>
         </View>
-        <Text
+        {!breakdown && <Text
           style={{ color: leftColor, fontSize: font.size.sm, fontWeight: font.weight.semibold }}
         >
           {leftText}
-        </Text>
+        </Text>}
       </View>
 
       <View

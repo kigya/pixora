@@ -327,5 +327,18 @@
   "notice": {
     "aiDetailsMayChange": "AI చిన్న వివరాలను మార్చవచ్చు"
   },
-  "selectModel": "ఎంచుకోండి"
+  "selectModel": "ఎంచుకోండి",
+  "storageUsage": {
+    "sessions": "సెషన్‌లు",
+    "temporary": "తాత్కాలిక ఫైల్‌లు",
+    "model": "మోడల్",
+    "other": "ఇతర డేటా",
+    "free": "ఖాళీ స్థలం",
+    "cache": "కాష్",
+    "total": "యాప్ డేటా"
+  },
+  "rating": {
+    "title": "ఈ ఫలితానికి రేటింగ్ ఇవ్వండి",
+    "store": "Google Play తెరవండి"
+  }
 }

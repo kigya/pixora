@@ -1,6 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Modal,
+  AccessibilityInfo,
+  findNodeHandle,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +17,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { useReduceMotion } from '../../lib/kinetik/hooks/use-reduce-motion';
@@ -45,6 +48,7 @@ export type PopDialogProps = {
   testID?: string;
   backdropTestID?: string;
   style?: StyleProp<ViewStyle>;
+  onShow?: () => void;
 };
 
 const MAX_W = 360;
@@ -66,10 +70,12 @@ export function PopDialog({
   testID,
   backdropTestID,
   style,
+  onShow,
 }: PopDialogProps) {
   const { colors, font, radius, space, shadow } = useKinetikTheme();
   const reduced = useReduceMotion();
   const window = useWindowDimensions();
+  const titleRef = useRef<React.ElementRef<typeof Text>>(null);
   const [mounted, setMounted] = useState(visible);
   if (visible && !mounted) setMounted(true);
   const t = useSharedValue(0);
@@ -81,8 +87,8 @@ export function PopDialog({
     }
     if (reduced) {
       t.set(0);
-      setTimeout(() => setMounted(false), 0);
-      return;
+      const timer = setTimeout(() => setMounted(false), 0);
+      return () => clearTimeout(timer);
     }
     t.set(
       withTiming(0, { duration: durations.quick, easing: easings.exit }, (done) => {
@@ -106,6 +112,11 @@ export function PopDialog({
     <Modal
       testID={testID ? `${testID}-modal` : undefined}
       visible={mounted}
+      onShow={() => {
+        const node=findNodeHandle(titleRef.current);
+        if(node)AccessibilityInfo.setAccessibilityFocus(node);
+        onShow?.();
+      }}
       transparent
       animationType="none"
       onRequestClose={onClose}
@@ -113,16 +124,16 @@ export function PopDialog({
       navigationBarTranslucent
     >
       {/* The modal is its own window, so focus stays inside; escape closes it. */}
-      <View style={styles.root} onAccessibilityEscape={onClose}>
+      <GestureHandlerRootView style={styles.root} onAccessibilityEscape={onClose}>
         <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }, scrim]}>
           <Pressable
             testID={backdropTestID}
             style={StyleSheet.absoluteFill}
             onPress={dismissable ? onClose : undefined}
-            accessible={dismissable}
+            accessible={false}
             accessibilityRole="button"
             accessibilityLabel={closeLabel}
-            importantForAccessibility={dismissable ? 'auto' : 'no-hide-descendants'}
+            importantForAccessibility="no-hide-descendants"
           />
         </Animated.View>
         <Animated.View
@@ -143,6 +154,7 @@ export function PopDialog({
           ]}
         >
           {!!title && <Text
+            ref={titleRef}
             accessibilityRole="header"
             style={{ color: colors.text, fontSize: font.size.lg, fontWeight: font.weight.semibold }}
           >
@@ -160,23 +172,24 @@ export function PopDialog({
             ))}
           </View>}
         </Animated.View>
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 function ActionButton({ action, fill }: { action: PopDialogAction; fill: boolean }) {
   const tone = action.tone ?? 'default';
+  const {colors,font}=useKinetikTheme();
   return (
     <PressJelly
       onPress={action.onPress}
       accessibilityLabel={action.label}
-      variant={tone === 'primary' ? 'ember' : tone === 'danger' ? 'ice' : 'surface'}
+      variant={tone === 'primary' ? 'ember' : 'surface'}
       size="md"
       block={fill}
-      style={fill ? { flex: 1 } : undefined}
+      style={[fill ? { flex: 1 } : undefined,tone==='danger'?{backgroundColor:colors.danger}:undefined]}
     >
-      {action.label}
+      {tone==='danger'?<Text style={{color:colors.background,fontSize:font.size.sm,fontWeight:font.weight.semibold}}>{action.label}</Text>:action.label}
     </PressJelly>
   );
 }

@@ -5,7 +5,6 @@ import {
 import React, { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,7 +20,7 @@ import Native, {
   type ProfileId,
   type ProcessingSpeed,
 } from '../specs/NativeUpscale';
-import { publicProfile, aiSize, profileIds } from '../domain/profiles';
+import { publicProfile, profileIds } from '../domain/profiles';
 import { isActive } from '../domain/session';
 import { ProcessingCard } from '../ui/processingCard';
 import {
@@ -50,17 +49,19 @@ import { beginUpscale } from '../application/beginUpscale';
 import { RecommendationRequestGate } from '../domain/recommendation';
 import { RecommendationCard } from '../ui/recommendationCard';
 import { NoticeBar } from '../components/kinetik/notice-bar';
-import { GlideRadio } from '../components/kinetik/glide-radio';
+import { SegmentBar } from '../components/kinetik/segment-bar';
+import { ResultRating } from '../ui/resultRating';
 import { StepSlider } from '../components/kinetik/step-slider';
 import { ScanProgress } from '../components/kinetik/scan-progress';
 import { AuroraVeil } from '../components/kinetik/aurora-veil';
 import { ApertureCard } from '../components/kinetik/aperture-card';
 import { ConfettiBurst } from '../components/kinetik/confetti-burst';
+import { Image } from 'expo-image';
 import { CompareSlider } from '../components/kinetik/compare-slider';
 import { PressJelly } from '../components/kinetik/press-jelly';
 
 const recreateBefore = require('../../assets/recreate/before.png');
-const recreateAfter = require('../../assets/recreate/after.png');
+const recreateAfter = require('../../assets/recreate/cat-unsplash-source.jpg');
 
 function workingSize(width: number, height: number) {
   if (width <= 0 || height <= 0) return { width: 0, height: 0 };
@@ -79,6 +80,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const confirm = useConfirm();
   const pane = usePane();
   const previewHeight = Math.max(120, Math.min(320, pane.height * 0.4));
+  const [detailNoticeJob, setDetailNoticeJob] = useState('');
   const [profileChanged, setProfileChanged] = useState(false);
   const notificationIntro = useNotificationIntro();
   const {
@@ -108,11 +110,12 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
   const completionEffectsShown = useRef(new Set<string>());
   const pendingCompletionJob = useRef('');
   const previousSession = useRef({ jobId: v.jobId, state: v.state });
-  const [foreground, setForeground] = useState(AppState.currentState === 'active');
+  const [foreground, setForeground] = useState(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
   const [scale, setScale] = useState(2),
     [format, setFormat] = useState(settings.format);
   const [recommendation, setRecommendation] =
     useState<Awaited<ReturnType<typeof Native.getImageRecommendation>>>(null);
+  const recommendationContext = useRef<{imageId:string; profile:string; applied:boolean} | null>(null);
   const recommendationGate = useRef(new RecommendationRequestGate());
   const appliedRecommendationImage = useRef<string | undefined>(undefined);
   const { operation, error, run } = useOperation(() => setMessage(''));
@@ -159,6 +162,14 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
     v.resolution,
   ]);
   const busy = isActive(v);
+  useEffect(() => {
+    if (!busy || !foreground || settings.aiDetailNoticeSeen) return;
+    setDetailNoticeJob(v.jobId);
+    const frame = requestAnimationFrame(() => {
+      Native.markAiDetailNoticeSeen().then(setSettings).catch(() => {});
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [busy, foreground, settings.aiDetailNoticeSeen, setSettings, v.jobId]);
   useTrackedScreen(`home_${v.state.toLowerCase()}`, jobContext(v), navigation);
   const resultSeen = useRef('');
   useEffect(() => {
@@ -184,8 +195,10 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
 
     Native.getImageRecommendation(imageId)
       .then(value => {
-        if (gate.accepts(request, imageId, value, availability))
+        if (gate.accepts(request, imageId, value, availability)) {
+          recommendationContext.current = {imageId, profile:value!.profileId, applied:false};
           setRecommendation(value);
+        }
       })
       .catch(() => {});
     return () => gate.invalidate();
@@ -254,11 +267,16 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
       setScale(2);
       setResolution('prepared');
     });
+  const attachRecommendation = async (started: import('../specs/NativeUpscale').Session) => {
+    const context = recommendationContext.current;
+    try {
+      return await Native.setRecommendationContext(started.jobId,
+        context && context.imageId === started.image?.id ? context.profile : '',
+        !!context && context.imageId === started.image?.id && context.applied);
+    } catch { return started; }
+  };
   const start = () =>
     perform('start', async () => {
-      if (!settings.aiDetailNoticeSeen) {
-        setSettings(await Native.markAiDetailNoticeSeen());
-      }
       if (processingKind === 'recreate') {
         if (recreateState?.state !== 'ready') {
           navigation.navigate('Settings');
@@ -285,13 +303,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
         scale,
         legacyMode || mode,
         async image => {
-          const selectedMode = legacyMode || mode;
-          const selectedSpeed =
-            selectedMode === 'fast' || selectedMode.endsWith('-fast')
-              ? 'fast'
-              : selectedMode === 'pixel'
-              ? 'quality'
-              : speed;
           return confirm(
             t.prepareTitle,
             `${t.original}: ${ltrValue(
@@ -318,7 +329,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
         },
         'prepared',
       );
-      if (started) accept(started);
+      if (started) accept(await attachRecommendation(started));
     });
   const alphaConfirm = async () =>
     format !== 'jpeg' ||
@@ -330,10 +341,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
       await Native.exportResult(v.jobId, format);
       await refresh();
       setMessage('exportSuccess');
-      if (await Native.claimReviewPrompt(v.jobId)) {
-        if (await Native.requestReview())
-          track('review_prompt_requested', jobContext(v));
-      }
     });
   const share = () =>
     perform('share', async () => {
@@ -382,16 +389,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
           </PressJelly>
         </View>
         <TelemetryNotice />
-        {!loading && !settings.aiDetailNoticeSeen && (
-          <NoticeBar
-                dismissLabel={t.understood}
-            tone="neutral"
-            messages={[{ text: t.notice.aiDetailsMayChange }]}
-            onDismiss={() => {
-              Native.markAiDetailNoticeSeen().then(setSettings).catch(() => {});
-            }}
-          />
-        )}
         {notificationIntro.element}
         {!anyProfiles && !busy ? (
           <Text style={s.errorText}>{t.profilesUnavailable}</Text>
@@ -454,17 +451,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
             <Text style={s.heading}>{t.upscale}</Text>
             <Workbench
               preview={
-                processingKind === 'recreate' ? (
-                  <CompareSlider
-                    testID="recreate-preview"
-                    accessibilityLabel={t.comparisonHelp}
-                    beforeLabel={t.before}
-                    afterLabel={t.after}
-                    aspectRatio={512 / 340}
-                    before={<Image source={recreateBefore} resizeMode="cover" style={StyleSheet.absoluteFill} />}
-                    after={<Image source={recreateAfter} resizeMode="cover" style={StyleSheet.absoluteFill} />}
-                  />
-                ) : (
                   <ImagePreview
                     uri={working.previewUri}
                     width={working.workWidth}
@@ -472,19 +458,18 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     maxHeight={previewHeight}
                     label={t.original}
                   />
-                )
+
               }
             >
               <View style={s.card}>
-                <Text style={s.label}>{t.recreate.title}</Text>
-                <GlideRadio
-                  accessibilityLabel={t.recreate.title}
+                <SegmentBar
+                  label={t.recreate.title}
                   value={processingKind}
                   options={[
                     { value: 'enhance', label: t.recreate.enhance },
                     { value: 'recreate', label: t.recreate.title },
                   ]}
-                  onValueChange={value => setProcessingKind(value as 'enhance' | 'recreate')}
+                  onChange={value => setProcessingKind(value as 'enhance' | 'recreate')}
                 />
                 {profileChanged && anyProfiles ? (
                   <Text style={s.caption}>{t.profileChanged}</Text>
@@ -497,30 +482,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     )}
                   </Text>
                 </View>
-                {working.needsPreparation && resolution === 'prepared' && (
-                  <>
-                    <View style={s.row}>
-                      <Text style={s.caption}>{t.preparationLabel}</Text>
-                      <Text style={s.value}>
-                        {ltrValue(
-                          `${number(working.workWidth)} × ${number(
-                            working.workHeight,
-                          )}`,
-                        )}
-                      </Text>
-                    </View>
-                    <View style={s.row}>
-                      <Text style={s.caption}>{t.output}</Text>
-                      <Text style={s.value}>
-                        {ltrValue(
-                          `${number(outputDimensions.width * scale)} × ${number(
-                            outputDimensions.height * scale,
-                          )}`,
-                        )}
-                      </Text>
-                    </View>
-                  </>
-                )}
                 {recommendation && processingKind === 'enhance' && (
                   <RecommendationCard
                     value={recommendation}
@@ -530,6 +491,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                       setMode(value.profileId);
                       setSpeed(value.speed);
                       if (resolution === 'original') setSpeed('quality');
+                      if (recommendationContext.current) recommendationContext.current.applied = true;
                       appliedRecommendationImage.current = v.image?.id;
                       setRecommendation(null);
                     }}
@@ -550,11 +512,11 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     <Text style={s.label}>{t.speedTitle}</Text>
                     <StepSlider
                       label={t.speedTitle}
-                      value={speed === 'fast' ? 0 : 1}
+                      value={speed === 'fast' ? 1 : 0}
                       steps={2}
-                      labels={[t.speedFast, t.speedQuality]}
+                      labels={[t.speedQuality, t.speedFast]}
                       onValueChange={index => {
-                        const next = index === 0 ? 'fast' : 'quality';
+                        const next = index === 0 ? 'quality' : 'fast';
                         setLegacyMode('');
                         setSpeed(next);
                         track('processing_options_changed', {
@@ -565,39 +527,45 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                         });
                       }}
                     />
-                    {Math.max(dimensions.width, dimensions.height) <= 512 ? (
-                      <Text style={s.caption}>{t.sameInput}</Text>
-                    ) : null}
-                    <View style={s.row}>
-                      <Text style={s.caption}>{t.aiInput}</Text>
-                      <Text style={s.value}>
-                        {ltrValue(
-                          `${number(
-                            aiSize(
-                              dimensions.width,
-                              dimensions.height,
-                              speed,
-                              mode,
-                            ).width,
-                          )} × ${number(
-                            aiSize(
-                              dimensions.width,
-                              dimensions.height,
-                              speed,
-                              mode,
-                            ).height,
-                          )}`,
-                        )}
-                      </Text>
-                    </View>
+                    <View style={s.row}><Text style={s.caption}>{t.speedQuality}</Text><Text style={s.caption}>{t.speedFast}</Text></View>
                   </>
                 ) : null}
+                </> : <View style={{ gap: 12 }}>
+                  <TextInput
+                    value={recreatePrompt}
+                    onChangeText={setRecreatePrompt}
+                    placeholder={t.recreate.prompt}
+                    placeholderTextColor={colors.muted}
+                    maxLength={160}
+                    returnKeyType="done"
+                    style={{ color: colors.text, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, minHeight: 48 }}
+                  />
+                  <StepSlider
+                    label={t.speedTitle}
+                    value={recreateSteps === 0 ? 1 : 0}
+                    steps={2}
+                    labels={[t.speedQuality, t.speedFast]}
+                    onValueChange={index => setRecreateSteps(index === 0 ? 1 : 0)}
+                  />
+                  <View style={s.row}><Text style={s.caption}>{t.speedQuality}</Text><Text style={s.caption}>{t.speedFast}</Text></View>
+                  <CompareSlider
+                    testID="recreate-preview" accessibilityLabel={t.comparisonHelp}
+                    beforeLabel={t.before} afterLabel={t.after} aspectRatio={512 / 340}
+                    before={<Image source={recreateBefore} contentFit="cover" style={StyleSheet.absoluteFill} />}
+                    after={<Image source={recreateAfter} contentFit="cover" allowDownscaling style={StyleSheet.absoluteFill} />}
+                  />
+                  {recreateState?.state !== 'ready' && <Button
+                    title={t.recreate.download}
+                    secondary
+                    onPress={() => navigation.navigate('Settings')}
+                  />}
+                </View>}
                 <Text style={s.label}>{t.scale}</Text>
-                <GlideRadio
-                  accessibilityLabel={t.scale}
+                <SegmentBar
+                  label={t.scale}
                   options={[{ value: '2', label: '2×' }, { value: '4', label: '4×' }]}
                   value={String(scale)}
-                  onValueChange={id => {
+                  onChange={id => {
                     setScale(Number(id));
                     track('processing_options_changed', {
                       profile_id: mode,
@@ -617,41 +585,6 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                     )}
                   </Text>
                 </View>
-                </> : <View style={{ gap: 12 }}>
-                  <View style={s.row}>
-                    <Text style={s.caption}>{t.aiInput}</Text>
-                    <Text style={s.value}>
-                      {ltrValue(`${number(generationSize.width)} × ${number(generationSize.height)}`)}
-                    </Text>
-                  </View>
-                  <View style={s.row}>
-                    <Text style={s.caption}>{t.output}</Text>
-                    <Text style={s.value}>
-                      {ltrValue(`${number(outputDimensions.width * scale)} × ${number(outputDimensions.height * scale)}`)}
-                    </Text>
-                  </View>
-                  <TextInput
-                    value={recreatePrompt}
-                    onChangeText={setRecreatePrompt}
-                    placeholder={t.recreate.prompt}
-                    placeholderTextColor={colors.muted}
-                    maxLength={160}
-                    returnKeyType="done"
-                    style={{ color: colors.text, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, minHeight: 48 }}
-                  />
-                  <StepSlider
-                    label={t.recreate.steps}
-                    value={recreateSteps}
-                    steps={2}
-                    labels={['4', '8']}
-                    onValueChange={setRecreateSteps}
-                  />
-                  {recreateState?.state !== 'ready' && <Button
-                    title={t.recreate.download}
-                    secondary
-                    onPress={() => navigation.navigate('Settings')}
-                  />}
-                </View>}
               </View>
               {v.state === 'INTERRUPTED' && (
                 <Text style={s.body}>{t.interrupted}</Text>
@@ -692,6 +625,11 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
         )}
         {busy && working && (
           <>
+            {detailNoticeJob === v.jobId && <NoticeBar
+              dismissLabel={t.understood} tone="neutral"
+              messages={[{text:t.notice.aiDetailsMayChange}]}
+              onDismiss={() => setDetailNoticeJob('')}
+            />}
             <Text style={s.heading}>
               {v.state === 'PREPARING'
                 ? t.preparing
@@ -750,6 +688,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
                 >
                   {completionAnimationJob === v.jobId ? (
                     <ApertureCard
+                      testID="aperture-card"
                       open={apertureOpenJob === v.jobId}
                       toggleOnPress={false}
                       accessibilityLabel={t.done}
@@ -859,6 +798,7 @@ export function Home({ navigation }: NativeStackScreenProps<Routes, 'Home'>) {
           </Text>
         )}
       </ScrollView>
+      <ResultRating job={v} eligible={foreground && v.state === 'SUCCEEDED' && completionAnimationJob === v.jobId && apertureOpenJob === v.jobId && !operation} navigation={navigation} />
     </SafeAreaView>
   );
 }
