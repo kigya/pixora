@@ -1,6 +1,6 @@
 import React from 'react';
-import {render, screen, userEvent, act, fireEvent, within} from '@testing-library/react-native';
-import {AppState, Platform, StyleSheet, Text} from 'react-native';
+import {render, screen, userEvent, act, fireEvent, within, waitFor} from '@testing-library/react-native';
+import {AccessibilityInfo, AppState, Platform, StyleSheet, Text} from 'react-native';
 import {AppProvider, useApp} from '../src/application/AppProvider';
 import {Home} from '../src/screens/Home';
 import {SettingsScreen} from '../src/screens/Settings';
@@ -85,7 +85,7 @@ test('first resolved app theme is applied immediately while later theme changes 
     </PixoraThemeProvider>,
   );
   expect(animationFrame).toHaveBeenCalled();
-  expect(view.getByTestId('palette-probe')).toHaveTextContent('false:#09090B');
+  expect(view.getByTestId('palette-probe').props.children.toLowerCase()).toBe('false:#09090b');
 
   await view.unmount();
   animationFrame.mockClear();
@@ -100,6 +100,44 @@ test('first resolved app theme is applied immediately while later theme changes 
     </PixoraThemeProvider>,
   );
   expect(reverse.getByTestId('palette-probe')).toHaveTextContent('false:#FAFAFC');
+  expect(animationFrame).not.toHaveBeenCalled();
+});
+
+test('theme initialization remains usable when the accessibility motion query fails', async () => {
+  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockRejectedValueOnce(new Error('accessibility service unavailable'));
+  function PaletteProbe() {
+    const {dark, colors} = useTheme();
+    return <Text testID="palette-after-motion-query-error">{`${dark}:${colors.bg}`}</Text>;
+  }
+
+  await render(<PixoraThemeProvider dark resolved><PaletteProbe /></PixoraThemeProvider>);
+  expect(await screen.findByTestId('palette-after-motion-query-error')).toHaveTextContent('true:#09090B');
+});
+
+test('resolving the already displayed theme again does not restart its palette animation', async () => {
+  function PaletteProbe() {
+    const {colors} = useTheme();
+    return <Text testID="unchanged-theme-palette">{colors.bg}</Text>;
+  }
+  const animationFrame = jest.spyOn(globalThis, 'requestAnimationFrame');
+  const view = await render(
+    <PixoraThemeProvider dark>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  await view.rerender(
+    <PixoraThemeProvider dark resolved={false}>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+  animationFrame.mockClear();
+  await view.rerender(
+    <PixoraThemeProvider dark resolved>
+      <PaletteProbe />
+    </PixoraThemeProvider>,
+  );
+
+  expect(view.getByTestId('unchanged-theme-palette')).toHaveTextContent('#09090B');
   expect(animationFrame).not.toHaveBeenCalled();
 });
 
@@ -219,6 +257,17 @@ test('recreate setup returns safely to image selection if its source image disap
  expect(await screen.findByRole('button',{name:t.choose})).toBeOnTheScreen();
  expect(screen.queryByRole('button',{name:t.recreate.title})).not.toBeOnTheScreen();
  expect(Native.startRecreateJob).not.toHaveBeenCalled();
+});
+test('recreate speed control persists the selected quality step when starting a ready model', async () => {
+ seed({state:'READY',image});
+ emitRecreateModel({state:'ready',downloadedBytes:1881812340,installedBytes:1881812340,error:''});
+ await viewHome();
+ await userEvent.press(await screen.findByRole('radio',{name:t.recreate.title}));
+ const speed=await screen.findByRole('adjustable',{name:t.speedTitle});
+ await fireEvent(speed,'accessibilityAction',{nativeEvent:{actionName:'decrement'}});
+ expect(speed.props.accessibilityValue.now).toBe(0);
+ await userEvent.press(screen.getByRole('button',{name:t.recreate.title}));
+ await waitFor(()=>expect(Native.startRecreateJob).toHaveBeenCalledWith(image.id,2,'quality','',true));
 });
 test.each([undefined,{code:'BOGUS'},{code:'DECODE_FAILED'},{localKey:'busyClear'}])('errors have a safe translated fallback %#', error => {
  expect(errorText(error,'en')).toBe(error && 'localKey' in error?t.busyClear:error && error.code==='DECODE_FAILED'?t.errors.DECODE_FAILED:t.errors.INFERENCE_FAILED);

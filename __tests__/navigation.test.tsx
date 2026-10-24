@@ -1,7 +1,7 @@
 import React from 'react';
 import {AccessibilityInfo,AppState,BackHandler,TurboModuleRegistry} from 'react-native';
 import {renderRouter,screen,act,fireEvent} from 'expo-router/testing-library';
-import {render,screen as componentScreen} from '@testing-library/react-native';
+import {render,screen as componentScreen,userEvent} from '@testing-library/react-native';
 import Root from '../src/navigation/ExpoRoot';
 import Index from '../app/index';
 import HomeRoute from '../app/Home';
@@ -256,8 +256,21 @@ test('startup failure has a retry action and does not open a partially initializ
  Native.getCapabilities.mockRejectedValueOnce(new Error('unavailable'));
  await launch();expect(await screen.findByRole('alert')).toHaveTextContent(strings.en.error);
  expect(screen.queryByRole('button',{name:strings.en.choose})).not.toBeOnTheScreen();
- await fireEvent.press(screen.getByRole('button',{name:strings.en.retry}));
+ await userEvent.press(screen.getByRole('button',{name:strings.en.retry}));
  expect(await screen.findByRole('button',{name:strings.en.choose})).toBeOnTheScreen();
+});
+test('startup retry remains actionable after a second initialization failure',async()=>{
+ Native.getCapabilities
+   .mockRejectedValueOnce(new Error('initial capabilities unavailable'))
+   .mockRejectedValueOnce(new Error('retry capabilities unavailable'));
+ await renderReadyRouter();
+ await screen.findByRole('alert');
+ const retry=screen.getByRole('button',{name:strings.en.retry});
+ await userEvent.press(retry);
+ await act(async()=>{for(let turn=0;turn<20;turn++)await Promise.resolve();});
+ expect(await screen.findByRole('alert')).toHaveTextContent(strings.en.error);
+ expect(screen.getByRole('button',{name:strings.en.retry})).toBeEnabled();
+ expect(screen.queryByRole('button',{name:strings.en.choose})).not.toBeOnTheScreen();
 });
 test('fresh installation opens the three-page skippable introduction',async()=>{
  seed({},{language:'system',systemLanguage:'ru-RU',onboardingVersion:0});const route=await launch();

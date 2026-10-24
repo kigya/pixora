@@ -106,6 +106,10 @@ test('feedback re-scrolls the focused field after keyboard resize and removes it
   await fireEvent(field, 'focus', { nativeEvent: { target: 731 } });
   expect(keyboardDidShow).toEqual(expect.any(Function));
   await act(async () => keyboardDidShow?.());
+  await fireEvent(field, 'blur');
+  await act(async () => keyboardDidShow?.()); // A delayed keyboard event must not retain a blurred input.
+  await fireEvent(field, 'focus', { nativeEvent: { target: null } }); // A missing native tag is also safe.
+  await act(async () => keyboardDidShow?.());
   await view.unmount();
   expect(subscriptions).toBeGreaterThan(0);
   expect(remove).toHaveBeenCalledTimes(subscriptions);

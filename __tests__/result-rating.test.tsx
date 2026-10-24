@@ -475,6 +475,47 @@ test('a pending rating write resolved after blur does not navigate or open the s
   expect(Native.openStoreReview).not.toHaveBeenCalled();
 });
 
+test('a queued star activation from a replaced prompt cannot submit the old job', async () => {
+  const navigation = makeNavigation();
+  const view = await render(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'old-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await advanceRatingDelay();
+  const oldStars = screen.getByRole('adjustable', { name: t.rating.title });
+  await fireEvent(oldStars, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+  const queuedAction = screen.getByRole('adjustable', { name: t.rating.title }).props.onAccessibilityAction;
+
+  await view.rerender(
+    <AppProvider>
+      <ResultRating job={successfulJob({ jobId: 'new-job' })} eligible navigation={navigation as any} />
+    </AppProvider>,
+  );
+  await act(async () => queuedAction({ nativeEvent: { actionName: 'activate' } }));
+
+  expect(Native.submitResultRating).not.toHaveBeenCalled();
+  expect(navigation.navigate).not.toHaveBeenCalled();
+});
+
+test('a rejected rating write after blur does not restore a stale prompt or error', async () => {
+  let rejectWrite!: (reason: Error) => void;
+  (Native.submitResultRating as jest.Mock).mockReturnValueOnce(
+    new Promise((_resolve, reject) => { rejectWrite = reject; }),
+  );
+  const navigation = await renderRating();
+  await advanceRatingDelay();
+  await addStars(1);
+  expect(Native.submitResultRating).toHaveBeenCalledWith('rating-job', 1);
+
+  await act(async () => navigation.emit('blur'));
+  await act(async () => { rejectWrite(new Error('late write failure')); });
+
+  expect(screen.queryByTestId('rating-dialog')).not.toBeOnTheScreen();
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(navigation.navigate).not.toHaveBeenCalled();
+});
+
 test('a pending native rating write settling after unmount does not restore the dialog', async () => {
   let resolveWrite!: (value: typeof session) => void;
   (Native.submitResultRating as jest.Mock).mockReturnValueOnce(
@@ -535,6 +576,8 @@ test('a completed Play Store request records its outcome after backgrounding wit
 test('rating context covers enhance/recreate metadata and all source-format fallbacks', () => {
   const base = successfulJob();
   expect(ratingContext(base)).toMatchObject({ processing_kind: 'enhance', source_format: 'jpeg' });
+  expect(ratingContext({ ...base, recommendationApplied: true, recommendedProfile: 'details' }))
+    .toMatchObject({ recommendation_applied: 1, recommended_profile: 'details' });
   const recreate = ratingContext({
     ...base, processingKind: 'recreate', recreateSteps: 8, recreateModelRevision: 'r1',
     recreatePrompt: 'A cat', image: { ...base.image!, mime: 'image/png', hasAlpha: true },
@@ -549,4 +592,7 @@ test('rating context covers enhance/recreate metadata and all source-format fall
     ...base, processingKind: undefined, profileId: '', mode: '', speed: undefined,
     image: { ...base.image!, mime: 'image/gif', workWidth: 0, workHeight: 0, width: 0, height: 0 },
   })).toMatchObject({ processing_kind: 'enhance', source_format: 'other', profile_id: 'standard', speed: 'quality', input_width: 0 });
+  const noImage = ratingContext({ ...base, image: null, recommendedProfile: undefined, recommendationApplied: false });
+  expect(noImage).toMatchObject({ source_width: 0, source_height: 0, input_width: 0, input_height: 0, has_alpha: 0, recommended_profile: 'none', recommendation_applied: 0 });
+  expect(JSON.stringify(noImage)).not.toMatch(/private-image-id|private-photo|file:\/\//);
 });

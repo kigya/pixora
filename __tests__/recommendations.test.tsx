@@ -138,6 +138,13 @@ test('home preserves scale until Apply and updates the collapsed model only afte
   expect(screen.getByRole('button', { name: `${copy.recreate.model}: ${copy.presets.art.title}` })).toBeOnTheScreen();
   expect(screen.getByRole('radio', { name: '4×' })).toBeChecked();
   expect(screen.getByRole('adjustable', { name: copy.speedTitle })).toHaveAccessibilityValue({ now: 0 });
+  await fireEvent(screen.getByRole('adjustable', { name: copy.speedTitle }), 'accessibilityAction', {
+    nativeEvent: { actionName: 'increment' },
+  });
+  await fireEvent(screen.getByRole('adjustable', { name: copy.speedTitle }), 'accessibilityAction', {
+    nativeEvent: { actionName: 'decrement' },
+  });
+  expect(screen.getByRole('adjustable', { name: copy.speedTitle })).toHaveAccessibilityValue({ now: 0 });
   expect(screen.queryByRole('header', { name: copy.presets.art.title })).not.toBeOnTheScreen();
   expect(screen.queryByRole('button', { name: copy.recommendationApply })).toBeNull();
 });
@@ -183,6 +190,25 @@ test('a failed native recommendation-context write does not discard a successful
     expect(setContext).toHaveBeenCalledWith('job', '', false);
     expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id, 2, 'standard', 'quality', true);
     expect(await screen.findByRole('button', { name: copy.cancelJob })).toBeOnTheScreen();
+  } finally {
+    delete (Native as typeof Native & { setRecommendationContext?: unknown }).setRecommendationContext;
+  }
+});
+
+test('an applied recommendation for the current image is attached to the started job', async () => {
+  seed({ state: 'READY', image, scale: 2, mode: 'quality' });
+  Native.getImageRecommendation.mockResolvedValue(recommendation);
+  const setContext = jest.fn(async () => session);
+  Object.defineProperty(Native, 'setRecommendationContext', { configurable: true, value: setContext });
+  try {
+    await render(<AppProvider><Home {...props} /></AppProvider>);
+    await userEvent.press(await screen.findByRole('button', { name: copy.recommendationApply }));
+    await userEvent.press(screen.getByRole('button', { name: copy.upscale }));
+    await screen.findByText(copy.prepareTitle);
+    await userEvent.press(screen.getByRole('button', { name: copy.prepare }));
+
+    expect(setContext).toHaveBeenCalledWith('job', 'art', true);
+    expect(Native.startJobWithProfile).toHaveBeenCalledWith(image.id, 2, 'art', 'quality', true);
   } finally {
     delete (Native as typeof Native & { setRecommendationContext?: unknown }).setRecommendationContext;
   }
@@ -320,6 +346,33 @@ test('recreation trims the local prompt and maps the quality stop to eight nativ
   expect(Native.startRecreateJob).toHaveBeenCalledWith(image.id, 2, 'quality', 'soft watercolor', true);
 });
 
+test('recreation defaults a missing prompt to empty and maps the fast stop to four native steps', async () => {
+  seed({ state: 'READY', image, recreatePrompt: undefined });
+  emitRecreateModel({ state: 'ready', installedBytes: 1881812340 });
+  await render(<AppProvider><Home {...props} /></AppProvider>);
+  await userEvent.press(screen.getByRole('radio', { name: copy.recreate.title }));
+  expect(screen.getByPlaceholderText(copy.recreate.prompt)).toHaveDisplayValue('');
+  await fireEvent(screen.getByRole('adjustable', { name: copy.speedTitle }), 'accessibilityAction', {
+    nativeEvent: { actionName: 'increment' },
+  });
+
+  await userEvent.press(screen.getByRole('button', { name: copy.recreate.title }));
+  expect(Native.startRecreateJob).toHaveBeenCalledWith(image.id, 2, 'fast', '', true);
+});
+
+test('recreation can switch from the default fast stop to the quality stop before starting', async () => {
+  seed({ state: 'READY', image });
+  emitRecreateModel({ state: 'ready', installedBytes: 1881812340 });
+  await render(<AppProvider><Home {...props} /></AppProvider>);
+  await userEvent.press(screen.getByRole('radio', { name: copy.recreate.title }));
+  const steps = screen.getByRole('adjustable', { name: copy.speedTitle });
+  expect(steps).toHaveAccessibilityValue({ min: 0, max: 1, now: 1, text: copy.speedFast });
+  await fireEvent(steps, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+  expect(screen.getByRole('adjustable', { name: copy.speedTitle })).toHaveAccessibilityValue({
+    min: 0, max: 1, now: 0, text: copy.speedQuality,
+  });
+});
+
 test('a failed recreate start preserves the selected image and remains retryable', async () => {
   seed({ state: 'READY', image });
   emitRecreateModel({ state: 'ready', installedBytes: 1881812340 });
@@ -358,6 +411,18 @@ test('acknowledging the AI detail notice persists across a later job', async () 
   await act(async () => { emitSession({ state: 'RUNNING', jobId: 'second-job' }); });
   expect(screen.queryByText(copy.notice.aiDetailsMayChange)).not.toBeOnTheScreen();
   expect(Native.markAiDetailNoticeSeen).toHaveBeenCalledTimes(1);
+});
+
+test('a failed one-time AI notice acknowledgement keeps the notice dismissible and processing visible', async () => {
+  seed({ state: 'RUNNING', image, jobId: 'notice-write-failed' }, { aiDetailNoticeSeen: false });
+  Native.markAiDetailNoticeSeen.mockRejectedValueOnce(new Error('settings write failed'));
+  await render(<AppProvider><Home {...props} /></AppProvider>);
+
+  expect(await screen.findByText(copy.notice.aiDetailsMayChange)).toBeOnTheScreen();
+  await waitFor(() => expect(Native.markAiDetailNoticeSeen).toHaveBeenCalledTimes(1));
+  await userEvent.press(screen.getByRole('button', { name: copy.understood }));
+  expect(screen.queryByText(copy.notice.aiDetailsMayChange)).toBeNull();
+  expect(screen.getByRole('button', { name: copy.cancel })).toBeEnabled();
 });
 
 test('live success triggers one confetti job identity without aperture or early rating request', async () => {
@@ -466,6 +531,16 @@ test('rejected native recommendation requests quietly leave the card hidden', as
     await Promise.resolve();
   });
   expect(screen.queryByRole('header', { name: copy.presets.art.title })).not.toBeOnTheScreen();
+});
+
+test('an unavailable Recreate model-state read leaves image enhancement usable', async () => {
+  seed({ state: 'READY', image });
+  Native.getRecreateModelState.mockRejectedValueOnce(new Error('model store unavailable'));
+  await render(<AppProvider><Home {...props} /></AppProvider>);
+
+  expect(await screen.findByRole('button', { name: copy.upscale })).toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: `${copy.recreate.model}: ${copy.presets.standard.title}` })).toBeEnabled();
+  expect(screen.queryByRole('alert')).toBeNull();
 });
 
 test('settings contains a failed refresh and still renders', async () => {

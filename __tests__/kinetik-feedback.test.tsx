@@ -137,6 +137,28 @@ test('UsageMeter reports warning, over-limit, and zero-total states without a le
   });
 });
 
+test('UsageMeter omits an optional unit cleanly and keeps zero-byte categories invisible', async () => {
+  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+  const view = await render(app(
+    <UsageMeter
+      title="Local cache"
+      total={100}
+      legend={false}
+      segments={[{ label: 'Empty category', value: 0 }]}
+      testID="unitless-cache-meter"
+    />,
+  ));
+  const meter = view.getByRole('progressbar', { name: 'Local cache' });
+  expect(meter.props.accessibilityValue.text).toBe('0.0 of 100 used, 100 left. Empty category 0.0');
+  const track = findInstance(meter, node => typeof node.props?.onLayout === 'function');
+  await act(async () => track.props.onLayout({ nativeEvent: { layout: { width: 200, height: 12 } } }));
+  const bar = findInstance(meter, node => {
+    const style = StyleSheet.flatten(node.props?.style);
+    return style?.position === 'absolute' && typeof style.left === 'number';
+  });
+  expect(StyleSheet.flatten(bar.props.style)).toMatchObject({ width: 0, opacity: 0 });
+});
+
 test('NoticeBar rotates messages and dismisses after folding', async () => {
   const onDismiss = jest.fn();
   const onAction = jest.fn();
@@ -287,6 +309,30 @@ test('ProgressBar supports an active compact visual-only state and measures its 
   await view.unmount();
 });
 
+test('ProgressBar defaults to a concise accessible name without rendering an empty header', async () => {
+  const view = await render(app(<ProgressBar value={null} showValue={false} testID="unnamed-progress" />));
+  const progress = view.getByRole('progressbar', { name: 'Progress' });
+  expect(progress.props.accessibilityValue).toBeUndefined();
+  expect(progress.props.accessibilityState.busy).toBe(true);
+  expect(view.queryByText('Progress')).toBeNull();
+  expect(view.queryByText(/%$/)).toBeNull();
+});
+
+test('ProgressBar keeps unknown work genuinely indeterminate while active', async () => {
+  const view = await render(
+    <KinetikProvider scheme="dark" reduceMotion="never">
+      <ProgressBar value={null} active testID="active-unknown-progress" />
+    </KinetikProvider>,
+  );
+  const progress = view.getByRole('progressbar', { name: 'Progress' });
+  expect(progress.props.accessibilityValue).toBeUndefined();
+  expect(progress.props.accessibilityState.busy).toBe(true);
+  const track = findInstance(progress, node => typeof node.props?.onLayout === 'function');
+  await act(async () => track.props.onLayout({ nativeEvent: { layout: { width: 220, height: 10 } } }));
+  expect(view.getByTestId('active-unknown-progress')).toBeOnTheScreen();
+  await view.unmount();
+});
+
 test('ScanProgress distinguishes unknown progress from real zero and 100 percent native values', async () => {
   jest.useFakeTimers();
   jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
@@ -391,6 +437,12 @@ test('RingSpinner is static in reduced motion and exposes determinate/success/er
   expect(announce).toHaveBeenLastCalledWith('Failed');
 });
 
+test('RingSpinner default loading state has its documented accessible name and dimensions', async () => {
+  const view = await render(app(<RingSpinner testID="default-spinner" />));
+  expect(view.getByRole('progressbar', { name: 'Loading' }).props.style[0]).toEqual({ width: 40, height: 40 });
+  expect(view.getByTestId('default-spinner').props.accessibilityValue).toBeUndefined();
+});
+
 test('RingSpinner starts and pauses indeterminate motion and clamps spring-driven progress', async () => {
   jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(false);
   const reanimated = require('react-native-reanimated');
@@ -419,4 +471,28 @@ test('RingSpinner starts and pauses indeterminate motion and clamps spring-drive
     </KinetikProvider>,
   );
   expect(view.getByTestId('motion-spinner').props.accessibilityValue).toEqual({ min: 0, max: 100, now: 63 });
+});
+
+test('RingSpinner announces animated success and failure after ordinary processing', async () => {
+  jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(false);
+  const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => Promise.resolve());
+  const view = await render(
+    <KinetikProvider scheme="dark" reduceMotion="never">
+      <RingSpinner accessibilityLabel="Native job" testID="ordinary-spinner" />
+    </KinetikProvider>,
+  );
+  await view.rerender(
+    <KinetikProvider scheme="dark" reduceMotion="never">
+      <RingSpinner status="success" accessibilityLabel="Native job" testID="ordinary-spinner" />
+    </KinetikProvider>,
+  );
+  expect(announce).toHaveBeenCalledWith('Done');
+  expect(view.getByTestId('ordinary-spinner').props.accessibilityValue).toEqual({ text: 'Done' });
+  await view.rerender(
+    <KinetikProvider scheme="dark" reduceMotion="never">
+      <RingSpinner status="error" accessibilityLabel="Native job" testID="ordinary-spinner" />
+    </KinetikProvider>,
+  );
+  expect(announce).toHaveBeenLastCalledWith('Failed');
+  expect(view.getByTestId('ordinary-spinner').props.accessibilityValue).toEqual({ text: 'Failed' });
 });

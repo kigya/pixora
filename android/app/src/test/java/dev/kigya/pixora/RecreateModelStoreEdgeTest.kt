@@ -687,6 +687,91 @@ class RecreateModelStoreEdgeTest {
         assertFalse(genericIo.snapshot().toString().contains("private write details"))
     }
 
+    @Test fun cyclicGenericWriteCauseChainTerminatesAndKeepsTheSafeDownloadError() {
+        val outer = java.io.IOException("private outer detail")
+        val inner = java.io.IOException("private inner detail")
+        outer.initCause(inner)
+        inner.initCause(outer)
+        val store = makeStore(
+            openOutput = { file, append ->
+                object : FileOutputStream(file, append) {
+                    override fun write(buffer: ByteArray, offset: Int, length: Int) {
+                        throw outer
+                    }
+                }
+            },
+        )
+
+        store.download()
+
+        assertEquals("failed", store.snapshot().getString("state"))
+        assertEquals("MODEL_DOWNLOAD_FAILED", store.snapshot().getString("error"))
+        assertFalse(store.isReady())
+        assertFalse(store.snapshot().toString().contains("private"))
+    }
+
+    @Test fun storageErrnoDuringOutputOpenMapsToLowStorageAndDisconnectsTheResponse() {
+        val connection = FakeConnection(200, bytes)
+        val store = makeStore(
+            openConnection = { connection },
+            openOutput = { _, _ ->
+                throw java.io.IOException(
+                    "private open detail",
+                    android.system.ErrnoException("open", android.system.OsConstants.ENOSPC),
+                )
+            },
+        )
+
+        store.download()
+
+        assertEquals("failed", store.snapshot().getString("state"))
+        assertEquals("LOW_STORAGE", store.snapshot().getString("error"))
+        assertEquals(1, connection.disconnectCount)
+        assertEquals(0L, store.modelBytes())
+        assertFalse(store.snapshot().toString().contains("private"))
+    }
+
+    @Test fun unrelatedFilesystemErrnoRemainsADownloadFailure() {
+        val store = makeStore(
+            openOutput = { file, append ->
+                object : FileOutputStream(file, append) {
+                    override fun write(buffer: ByteArray, offset: Int, length: Int) {
+                        throw java.io.IOException(
+                            "private write detail",
+                            android.system.ErrnoException("write", android.system.OsConstants.EIO),
+                        )
+                    }
+                }
+            },
+        )
+
+        store.download()
+
+        assertEquals("failed", store.snapshot().getString("state"))
+        assertEquals("MODEL_DOWNLOAD_FAILED", store.snapshot().getString("error"))
+        assertFalse(store.isReady())
+        assertFalse(store.snapshot().toString().contains("private"))
+    }
+
+    @Test fun flushFailureKeepsPartialBytesAndNeverMarksAnUnsyncedAssetInstalled() {
+        val store = makeStore(
+            openOutput = { file, append ->
+                object : FileOutputStream(file, append) {
+                    override fun flush() { throw java.io.IOException("private flush detail") }
+                }
+            },
+        )
+
+        store.download()
+
+        assertEquals("failed", store.snapshot().getString("state"))
+        assertEquals("MODEL_DOWNLOAD_FAILED", store.snapshot().getString("error"))
+        assertEquals(bytes.size.toLong(), store.partialBytes())
+        assertEquals(0L, store.modelBytes())
+        assertFalse(store.isReady())
+        assertFalse(store.snapshot().toString().contains("private"))
+    }
+
     @Test fun responseCodeFailureDisconnectsTheActiveConnectionAndMapsToSafeError() {
         val connection = FakeConnection(200, bytes, responseFailure = java.io.IOException("private server detail"))
         val store = makeStore(openConnection = { connection })

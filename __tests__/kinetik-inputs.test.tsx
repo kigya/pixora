@@ -6,6 +6,7 @@ import { CompareSlider } from '../src/components/kinetik/compare-slider';
 import { ElasticSlider } from '../src/components/kinetik/elastic-slider';
 import { StepSlider } from '../src/components/kinetik/step-slider';
 import { MorphSelect } from '../src/components/kinetik/morph-select';
+import { PressJelly } from '../src/components/kinetik/press-jelly';
 
 type GestureDescriptor = { handlers: Record<string, ((...args: any[]) => unknown) | unknown> };
 
@@ -81,6 +82,22 @@ test('CompareSlider starts its one-time divider hint after it has a measured wid
   const control = screen.getByRole('adjustable', { name: 'Hint comparison' });
   await setLayout(control, 240);
   expect(screen.getByRole('adjustable', { name: 'Hint comparison' }).props.accessibilityValue.now).toBe(90);
+  await view.unmount();
+});
+
+test('CompareSlider reports an animated drag position in ordinary motion settings', async () => {
+  const onPositionChange = jest.fn();
+  const view = await renderKinetik(
+    <CompareSlider before={<Text>Before</Text>} after={<Text>After</Text>}
+      accessibilityLabel="Motion comparison" initial={0.4} hint={false} haptics={false}
+      onPositionChange={onPositionChange} />,
+    'never',
+  );
+  const control = screen.getByRole('adjustable', { name: 'Motion comparison' });
+  await setLayout(control, 200);
+  await fireGesture('compare-slider-tap', 'onEnd', { x: 150 });
+  expect(onPositionChange).toHaveBeenCalledWith(0.75);
+  expect(screen.getByRole('adjustable', { name: 'Motion comparison' }).props.accessibilityValue.now).toBe(75);
   await view.unmount();
 });
 
@@ -232,6 +249,46 @@ test('StepSlider keeps the in-progress stop when a parent value update arrives d
   expect(onValueChange).toHaveBeenCalledTimes(1);
   await fireGesture('step-slider', 'onFinalize', { x: 190 });
   expect(onValueChange).toHaveBeenCalledTimes(1);
+});
+
+test('StepSlider default scale and untranslated accessibility fallback stay bounded', async () => {
+  const onValueChange = jest.fn();
+  const view = await renderKinetik(
+    <StepSlider value={0} label="Default step scale" onValueChange={onValueChange} haptics={false} />,
+    'always',
+  );
+  const control = screen.getByRole('adjustable', { name: 'Default step scale' });
+  expect(control.props.accessibilityValue).toEqual({ min: 0, max: 3, now: 0, text: 'Step 1 of 4' });
+
+  await fireEvent(control, 'accessibilityAction', event('decrement'));
+  expect(onValueChange).not.toHaveBeenCalled();
+  await fireEvent(control, 'accessibilityAction', event('increment'));
+  expect(onValueChange).toHaveBeenCalledWith(1);
+  await view.rerender(
+    <KinetikProvider scheme="light" reduceMotion="always" haptics={false}>
+      <StepSlider value={3} label="Default step scale" onValueChange={onValueChange} haptics={false} />
+    </KinetikProvider>,
+  );
+  expect(screen.getByRole('adjustable', { name: 'Default step scale' }).props.accessibilityValue)
+    .toEqual({ min: 0, max: 3, now: 3, text: 'Step 4 of 4' });
+  await fireEvent(screen.getByRole('adjustable', { name: 'Default step scale' }), 'accessibilityAction', event('increment'));
+  expect(onValueChange).toHaveBeenCalledTimes(1);
+});
+
+test('PressJelly preserves the child label and ignores a gesture cancelled before activation', async () => {
+  const onPress = jest.fn();
+  await renderKinetik(<PressJelly onPress={onPress}>Open details</PressJelly>);
+  expect(screen.getByRole('button', { name: 'Open details' })).toBeOnTheScreen();
+  const handler = gesture('press-jelly').handlers.onEnd;
+  expect(typeof handler).toBe('function');
+  await act(async () => (handler as (event: unknown, success: boolean) => unknown)({ x: 8, y: 8 }, false));
+  expect(onPress).not.toHaveBeenCalled();
+  await act(async () => (handler as (event: unknown, success: boolean) => unknown)({ x: 8, y: 8 }, true));
+  expect(onPress).toHaveBeenCalledTimes(1);
+  await renderKinetik(
+    <PressJelly accessibilityLabel="Image options" onPress={onPress}><Text>•••</Text></PressJelly>,
+  );
+  expect(screen.getByRole('button', { name: 'Image options' })).toBeOnTheScreen();
 });
 
 test('MorphSelect searches case-insensitively, ignores disabled choices, selects, dismisses, and handles empty results', async () => {

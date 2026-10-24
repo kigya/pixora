@@ -389,6 +389,22 @@ test('screen engagement excludes background and loss of native navigation focus'
   expect(removed).toHaveBeenCalled();
 });
 
+test('screen telemetry keeps approved context and drops prompt and email fields', async () => {
+  function Screen() {
+    useTrackedScreen('feedback', {
+      source: 'result', status: 'opened', attempt_token: 'attempt-1',
+      prompt: 'private prompt', email: 'person@example.test', filename: 'private.jpg',
+    });
+    return null;
+  }
+  await render(<Screen />);
+  const viewEvent = events().find(([name]) => name === 'screen_view')?.[1];
+  expect(viewEvent).toMatchObject({ source: 'result', status: 'opened', attempt_token: 'attempt-1' });
+  expect(viewEvent).not.toHaveProperty('prompt');
+  expect(viewEvent).not.toHaveProperty('email');
+  expect(viewEvent).not.toHaveProperty('filename');
+});
+
 test('job analytics categorises sizes without image URI or filenames', () => {
   const context = jobContext(emptySession);
   expect(context.size_bucket).toBe('small');

@@ -111,6 +111,20 @@ class StoreAndLocalizationTest {
             LocaleList.setDefault(originalDefaultLocales)
         }
     }
+    @Test fun emptySystemServiceLocaleListFallsBackToSystemResources() {
+        val localeManager = mock(LocaleManager::class.java)
+        `when`(localeManager.systemLocales).thenReturn(LocaleList.getEmptyLocaleList())
+        val app = ctx.applicationContext as Application
+        val shadow = org.robolectric.Shadows.shadowOf(app)
+        val originalManager = ctx.getSystemService(LocaleManager::class.java)
+        val expected = android.content.res.Resources.getSystem().configuration.locales[0].toLanguageTag()
+        try {
+            shadow.setSystemService(Context.LOCALE_SERVICE, localeManager)
+            assertEquals(expected, SessionStore.systemLanguage(ctx))
+        } finally {
+            shadow.setSystemService(Context.LOCALE_SERVICE, originalManager)
+        }
+    }
     @Test fun missingLocaleManagerUsesTheSystemResourceLocaleFallback() {
         SessionStore.init(ctx)
         val app = ctx.applicationContext as Application

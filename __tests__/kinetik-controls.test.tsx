@@ -8,6 +8,8 @@ import { ThemeSwitch } from '../src/components/kinetik/theme-switch';
 import { PressJelly } from '../src/components/kinetik/press-jelly';
 import { StarRating } from '../src/components/kinetik/star-rating';
 import { PulseToggle } from '../src/components/kinetik/pulse-toggle';
+import { Onboarding as KinetikOnboarding } from '../src/components/kinetik/screens/onboarding';
+import { KinetikProvider, useKinetikTheme } from '../src/lib/kinetik/tokens/theme';
 import Native, { seed } from '../tests/nativeMock';
 
 beforeEach(() => {
@@ -22,6 +24,21 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 const renderInApp = (children: React.ReactNode) => render(<AppProvider>{children}</AppProvider>);
+
+test.each([
+  ['light', '#FFFFFF'],
+  ['dark', '#000000'],
+  [null, '#000000'],
+] as const)('default Kinetik theme follows system appearance %s', async (systemScheme, expectedBackground) => {
+  jest.spyOn(require('react-native'), 'useColorScheme').mockReturnValue(systemScheme);
+  function ThemeProbe() {
+    const { colors } = useKinetikTheme();
+    return <Text testID="kinetik-theme-scheme">{colors.background}</Text>;
+  }
+
+  await render(<KinetikProvider><ThemeProbe /></KinetikProvider>);
+  expect(screen.getByTestId('kinetik-theme-scheme')).toHaveTextContent(expectedBackground);
+});
 
 test('ExpandCard mounts its preview only when open and keeps selection available while closed', async () => {
   const onSelect = jest.fn();
@@ -43,6 +60,24 @@ test('ExpandCard mounts its preview only when open and keeps selection available
   expect(screen.getByTestId('comparison-preview')).toBeOnTheScreen();
   await user.press(screen.getByRole('button', { name: 'Balanced' }));
   expect(screen.queryByTestId('comparison-preview')).toBeNull();
+});
+
+test('Kinetik onboarding works without optional skip or busy controls', async () => {
+  const onFinish = jest.fn();
+  await renderInApp(
+    <KinetikOnboarding
+      slides={[{ key: 'single', title: 'One concise step' }]}
+      onFinish={onFinish}
+      nextLabel="Continue"
+      finishLabel="Finish"
+      stepLabel={(current, total) => `${current} of ${total}`}
+    />,
+  );
+
+  expect(screen.getByRole('button', { name: 'Finish' })).toBeEnabled();
+  expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull();
+  await userEvent.press(screen.getByRole('button', { name: 'Finish' }));
+  expect(onFinish).toHaveBeenCalledTimes(1);
 });
 
 test('controlled ExpandCard requests changes without changing state until its owner updates it', async () => {
@@ -294,6 +329,13 @@ test('PulseToggle supports successful and cancelled gestures plus accessible act
   expect(screen.getByTestId('gesture-boundary').props.gesture.handlers.enabled).toBe(false);
   await fireEvent(disabled, 'accessibilityAction', { nativeEvent: { actionName: 'activate' } });
   expect(onValueChange).toHaveBeenCalledTimes(2);
+  await view.rerender(
+    <AppProvider>
+      <PulseToggle value={false} onValueChange={onValueChange} label="Use detail mode" haptics={false} />
+    </AppProvider>,
+  );
+  expect(screen.getByRole('switch', { name: 'Use detail mode' })).toBeOnTheScreen();
+  expect(screen.queryByText('Keep fine texture')).toBeNull();
 });
 
 test('PulseToggle uses the reduced-motion path while syncing its checked value', async () => {

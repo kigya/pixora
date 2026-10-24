@@ -69,6 +69,21 @@ test('three passive pages use horizontal paging, a separate indicator and fixed 
   expect(mockRouterReplace).toHaveBeenCalledWith('/Home');
 });
 
+test('a spacious display keeps the full onboarding illustration and fixed actions visible', async () => {
+  jest.spyOn(require('react-native'), 'useWindowDimensions').mockReturnValue({
+    width: 390, height: 844, scale: 1, fontScale: 1,
+  });
+  await render(<AppProvider><Onboarding {...props} /></AppProvider>);
+  await screen.findByRole('header', { name: copy.detailsTitle });
+
+  const illustration = screen.getByTestId('onboarding-visual-bridge-active').parent;
+  expect(illustration?.props.style).toEqual(expect.arrayContaining([
+    expect.objectContaining({ minHeight: 104 }),
+  ]));
+  expect(screen.getByRole('button', { name: copy.next })).toBeOnTheScreen();
+  expect(screen.getByRole('button', { name: copy.skip })).toBeOnTheScreen();
+});
+
 test('a horizontal swipe changes the slide without a vertical-scrolling container', async () => {
   await render(<AppProvider><Onboarding {...props} /></AppProvider>);
   await screen.findByRole('header', { name: copy.detailsTitle });
@@ -84,6 +99,37 @@ test('a horizontal swipe changes the slide without a vertical-scrolling containe
   expect(screen.getByTestId('onboarding-progress')).toHaveAccessibleName(
     copy.step.replace('{current}', '2').replace('{total}', '3'),
   );
+});
+
+test('the scroll handler updates the animated indicator offset as the pager moves', async () => {
+  const reanimated = jest.requireMock('react-native-reanimated') as {
+    useSharedValue: (initial: number) => { get: () => number };
+    useAnimatedScrollHandler: (handler: (event: any) => void) => (event: any) => void;
+  };
+  const createSharedValue = reanimated.useSharedValue;
+  const offsets: Array<{ get: () => number }> = [];
+  const sharedSpy = jest.spyOn(reanimated, 'useSharedValue').mockImplementation(initial => {
+    const value = createSharedValue(initial);
+    if (initial === 0) offsets.push(value);
+    return value;
+  });
+  const scrollSpy = jest.spyOn(reanimated, 'useAnimatedScrollHandler').mockImplementation(handler =>
+    event => handler(event.nativeEvent ?? event),
+  );
+
+  try {
+    await render(<AppProvider><Onboarding {...props} /></AppProvider>);
+    await screen.findByRole('header', { name: copy.detailsTitle });
+    const pager = screen.getByTestId('onboarding-pager');
+    await fireEvent(pager, 'scroll', {
+      nativeEvent: { contentOffset: { x: 180, y: 0 }, layoutMeasurement: { width: 360, height: 480 } },
+    });
+
+    expect(offsets.some(value => value.get() === 180)).toBe(true);
+  } finally {
+    sharedSpy.mockRestore();
+    scrollSpy.mockRestore();
+  }
 });
 
 test('background pauses scrolling and makes every illustration inactive until foreground', async () => {
